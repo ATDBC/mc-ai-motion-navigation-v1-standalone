@@ -549,6 +549,128 @@ class _B10FormalDriverScenarioResult:
     worker_injection: dict
 
 
+def _b10_body_pose_is_settled(
+    body,
+    *,
+    target_position: tuple[float, float, float],
+    yaw_degrees: float,
+    position_tolerance: float,
+) -> bool:
+    yaw_error = abs(
+        (math.degrees(body.yaw_radians) - yaw_degrees + 180.0) % 360.0
+        - 180.0
+    )
+    horizontal_speed = math.hypot(
+        body.velocity_blocks_per_second[0],
+        body.velocity_blocks_per_second[2],
+    )
+    return bool(
+        math.dist(body.position, target_position) <= position_tolerance
+        and body.is_on_ground
+        and horizontal_speed <= .03
+        and yaw_error <= 1.0
+    )
+
+
+def _wait_for_b10_teleport_settlement(
+    advance_frame: Callable[[], object],
+    *,
+    starting_movement_tick: int,
+    starting_position: tuple[float, float, float],
+    starting_yaw_degrees: float,
+    starting_on_ground: bool,
+    target_position: tuple[float, float, float],
+    yaw_degrees: float,
+    position_tolerance: float,
+    max_frames: int = 16,
+    minimum_ticks: int = 3,
+    stable_frames: int = 2,
+):
+    """Wait past the server command boundary and require repeated stability."""
+    if (type(max_frames) is not int or type(minimum_ticks) is not int
+            or type(stable_frames) is not int or max_frames < 1
+            or minimum_ticks < 1 or stable_frames < 1
+            or minimum_ticks > max_frames or stable_frames > max_frames):
+        raise ValueError("B10 teleport settlement bounds are invalid")
+    consecutive = 0
+    last_body = None
+    previous_movement_tick = starting_movement_tick
+    observed_application = False
+    starting_yaw_error = abs(
+        (starting_yaw_degrees - yaw_degrees + 180.0) % 360.0 - 180.0
+    )
+    same_target_pose = bool(
+        math.dist(starting_position, target_position) <= position_tolerance
+        and starting_yaw_error <= 1.0
+    )
+    if type(starting_movement_tick) is not int or starting_movement_tick < 0:
+        raise ValueError("B10 teleport starting movement tick is invalid")
+    for _ in range(max_frames):
+        last_body = advance_frame()
+        if _b10_body_pose_is_settled(
+            last_body,
+            target_position=target_position,
+            yaw_degrees=yaw_degrees,
+            position_tolerance=position_tolerance,
+        ):
+            consecutive += 1
+        else:
+            consecutive = 0
+        movement_tick = last_body.movement_tick_id
+        if (type(movement_tick) is not int
+                or movement_tick <= previous_movement_tick):
+            raise RuntimeError("B10 teleport movement tick did not advance monotonically")
+        previous_movement_tick = movement_tick
+        target_yaw_error = abs(
+            (math.degrees(last_body.yaw_radians) - yaw_degrees
+             + 180.0) % 360.0 - 180.0
+        )
+        # A same-pose teleport cannot be distinguished from the old stable
+        # observation by position or yaw. Fabric consistently exposes its
+        # arrival as a one-frame on_ground=false transition. For a different
+        # target pose, entering the target tolerance is the causal evidence.
+        application_seen_now = (
+            starting_on_ground and not last_body.is_on_ground
+            if same_target_pose
+            else math.dist(last_body.position, target_position)
+                <= position_tolerance and target_yaw_error <= 1.0
+        )
+        observed_application = bool(
+            observed_application or application_seen_now
+        )
+        if not observed_application:
+            consecutive = 0
+        if (observed_application
+                and movement_tick - starting_movement_tick >= minimum_ticks
+                and consecutive >= stable_frames):
+            return last_body
+    if last_body is None:
+        raise RuntimeError("B10 teleport settlement did not advance")
+    yaw_error = abs(
+        (math.degrees(last_body.yaw_radians) - yaw_degrees + 180.0) % 360.0
+        - 180.0
+    )
+    horizontal_speed = math.hypot(
+        last_body.velocity_blocks_per_second[0],
+        last_body.velocity_blocks_per_second[2],
+    )
+    raise RuntimeError(
+        "B10 teleport application was not observed or did not settle: "
+        f"target={target_position}, actual={last_body.position}, "
+        f"on_ground={last_body.is_on_ground}, speed={horizontal_speed}, "
+        f"yaw_error={yaw_error}"
+    )
+
+
+def _b10_frame_has_no_movement_intent(proposals) -> bool:
+    """Use the proposed body ownership, not route submit_input, as waiting."""
+    return not any(
+        ordered.intent.movement is not None
+        for control in proposals
+        for ordered in control.intents
+    )
+
+
 def _runtime_movement_tick(runtime) -> int:
     observation = runtime.observation
     own = None if observation is None else observation.self_state.value
@@ -582,6 +704,8 @@ def _run_b10_formal_driver_scenario(
     goal_revision: int,
     task: TaskIntentV0,
     behavior: BehaviorProfileV0,
+    expected_start_position: tuple[float, float, float],
+    expected_start_yaw_degrees: float,
     manual_source=None,
     clock_ns: Callable[[], int] = time.perf_counter_ns,
     max_control_frames: int = 64,
@@ -603,7 +727,6 @@ def _run_b10_formal_driver_scenario(
         raise TypeError("B10 formal driver requires a GoalState")
     if type(max_control_frames) is not int or max_control_frames < 1:
         raise ValueError("B10 formal driver frame limit must be positive")
-
     manual_intents: set[str] = set()
     manual_intent_prefix = None
     if manual_source is not None:
@@ -633,6 +756,16 @@ def _run_b10_formal_driver_scenario(
     delayed_motion_worker.begin_trial(scenario, movement_tick=movement_tick)
     delayed_motion_worker.install_read_gate(session._motion_result_inbox)
     try:
+        start_body = _runtime_navigation_frame(runtime).body
+        if not _b10_body_pose_is_settled(
+            start_body,
+            target_position=expected_start_position,
+            yaw_degrees=expected_start_yaw_degrees,
+            position_tolerance=.03,
+        ):
+            raise RuntimeError(
+                "B10 formal driver start is not settled at the fixture origin"
+            )
         driver.start(
             goal_id,
             goal_revision,
@@ -668,11 +801,7 @@ def _run_b10_formal_driver_scenario(
                 driver.discard_prepared()
                 discarded_frame_count += 1
                 raise RuntimeError("B10 formal driver omitted its prepared proposal")
-            if not any(
-                ordered.intent.movement is not None
-                for control in proposals
-                for ordered in control.intents
-            ):
+            if _b10_frame_has_no_movement_intent(proposals):
                 waiting_frame_count += 1
             current_intents = {
                 ordered.intent.intent_id
@@ -786,6 +915,7 @@ def _run_b10_formal_driver_scenario(
                         "B10 formal driver frame limit left body responsibility "
                         "unresolved"
                     )
+            raise RuntimeError("B10 formal driver reached its frame limit")
     except BaseException as error:
         primary_error = error
         raise
@@ -1027,6 +1157,113 @@ def _b10_formal_trial_fields(
         "left_start_support": left_start_support,
         "worker_injection": formal_result.worker_injection,
     }
+
+
+def _build_b10_coordinator_trial(
+    *,
+    trial_name: str,
+    scenario: _B10CoordinatorScenario,
+    formal_result: _B10FormalDriverScenarioResult,
+    samples,
+    receiver_delivery,
+    recorded_control_frames: int,
+    start_position: tuple[float, float, float],
+    target_position: tuple[float, float, float],
+    final_position: tuple[float, float, float],
+    landed: bool,
+    damage_points: float,
+) -> dict:
+    """Assemble the exact coordinator record used by components and Fabric."""
+    delivery_fields = _b10_delivery_chain_fields(samples, receiver_delivery)
+    formal_fields = _b10_formal_trial_fields(
+        formal_result,
+        samples=samples,
+        recorded_control_frames=recorded_control_frames,
+        start_position=start_position,
+    )
+    return dict(
+        name=trial_name,
+        scenario=scenario.name,
+        scenario_kind=scenario.kind,
+        direction_index=scenario.direction_index,
+        repetition=scenario.repetition,
+        fabric_supported=scenario.fabric_supported,
+        unsupported_reason=scenario.unsupported_reason,
+        worker_delay_ticks=scenario.worker_delay_ticks,
+        worker_never_return=scenario.never_return,
+        waiting_polls=formal_result.waiting_frame_count,
+        entry_alignment_frames=sum(
+            sample["reason_code"] == "aligning_verified_motion_heading"
+            for sample in samples
+        ),
+        command_count=len(samples),
+        final_position=list(final_position),
+        horizontal_error_blocks=math.hypot(
+            final_position[0] - target_position[0],
+            final_position[2] - target_position[2],
+        ),
+        level_error_blocks=abs(final_position[1] - target_position[1]),
+        landed=landed,
+        damage_points=damage_points,
+        worker_delivery=receiver_delivery,
+        **delivery_fields,
+        horizontal_collisions=sum(
+            int(sample["horizontal_collision"])
+            for sample in samples
+        ),
+        samples=samples,
+        **formal_fields,
+    )
+
+
+def _summarize_b10_coordinator_trials(
+    coordinator_trials,
+    *,
+    preregistered_count: int,
+) -> dict:
+    """Return the coordinator-only counts consumed by the outer acceptance."""
+    executed = [
+        trial for trial in coordinator_trials
+        if trial.get("fabric_supported") is True
+    ]
+    unsupported = [
+        trial for trial in coordinator_trials
+        if trial.get("fabric_supported") is False
+    ]
+    return dict(
+        coordinator_preregistered_count=preregistered_count,
+        coordinator_executed_count=len(executed),
+        coordinator_unsupported_count=len(unsupported),
+        coordinator_validation_count=len(executed),
+        coordinator_validation_success_count=sum(
+            trial["waiting_polls"] > 0
+            and _b10_coordinator_completed(trial)
+            for trial in executed
+        ),
+        coordinator_baseline_success_count=sum(
+            _b10_coordinator_completed(trial)
+            for trial in executed
+            if trial["scenario_kind"] == "baseline"
+        ),
+        coordinator_delay_2_5_success_count=sum(
+            _b10_coordinator_completed(trial)
+            for trial in executed
+            if trial["scenario_kind"] == "worker_delay"
+            and trial["worker_delay_ticks"] in {2, 5}
+        ),
+        coordinator_delay_10_safe_count=sum(
+            _b10_coordinator_completed(trial)
+            or _b10_coordinator_typed_safe_terminal(trial)
+            for trial in executed
+            if trial["scenario_kind"] == "worker_delay"
+            and trial["worker_delay_ticks"] == 10
+        ),
+        coordinator_never_return_safe_count=sum(
+            _b10_coordinator_never_return_safe(trial)
+            for trial in executed
+            if trial["scenario_kind"] == "worker_never_return"
+        ),
+    )
 
 
 def _b10_uncommanded_body_departed(
@@ -1801,7 +2038,6 @@ def _input_window_diagnostics(
 class _B10CapturedFormalFrame:
     navigation_frame: NavigationFrame
     latest_application: object
-    waiting: bool
     sample: dict | None
     evidence: dict
 
@@ -1932,7 +2168,6 @@ def _capture_b10_formal_driver_frame(
     return _B10CapturedFormalFrame(
         navigation_frame,
         latest_application,
-        not submit_input,
         sample,
         evidence,
     )
@@ -2210,23 +2445,23 @@ def _run_b10_gap_solver_runtime(
             origin_x + .5, float(feet_y), origin_z + .5,
         )
         active_request = observation_request or request
+        starting_body = frame.body
+        starting_movement_tick = starting_body.movement_tick_id
         player_teleporter(*target_position, yaw, 0.0)
-        for _ in range(16):
+
+        def advance_teleport_frame():
             step(request=active_request)
-            yaw_error = abs((math.degrees(frame.body.yaw_radians) - yaw + 180) % 360 - 180)
-            speed = math.hypot(
-                frame.body.velocity_blocks_per_second[0],
-                frame.body.velocity_blocks_per_second[2],
-            )
-            if (math.dist(frame.body.position, target_position) <= position_tolerance
-                    and frame.body.is_on_ground and speed <= .03
-                    and yaw_error <= 1.0):
-                return
-        raise RuntimeError(
-            "B10 teleport did not settle: "
-            f"target={target_position}, actual={frame.body.position}, "
-            f"on_ground={frame.body.is_on_ground}, speed={speed}, "
-            f"yaw_error={yaw_error}"
+            return frame.body
+
+        _wait_for_b10_teleport_settlement(
+            advance_teleport_frame,
+            starting_movement_tick=starting_movement_tick,
+            starting_position=starting_body.position,
+            starting_yaw_degrees=math.degrees(starting_body.yaw_radians),
+            starting_on_ground=starting_body.is_on_ground,
+            target_position=target_position,
+            yaw_degrees=yaw,
+            position_tolerance=position_tolerance,
         )
 
     def look_at_cell(
@@ -2696,13 +2931,12 @@ def _run_b10_gap_solver_runtime(
             motion_worker=delayed_motion_worker,
             observation_adapter=runtime.navigation_observation_adapter,
         )
-        waiting_polls = 0
         samples: list[dict] = []
 
         def capture_formal_frame(
             driver_frame: _B10FormalDriverFrame,
         ) -> None:
-            nonlocal frame, latest_application, waiting_polls
+            nonlocal frame, latest_application
             collect_receiver_diagnostics(session, trial_name)
             captured = _capture_b10_formal_driver_frame(
                 driver_frame=driver_frame,
@@ -2716,8 +2950,6 @@ def _run_b10_gap_solver_runtime(
             frame = captured.navigation_frame
             latest_application = captured.latest_application
             diagnostic()
-            if captured.waiting:
-                waiting_polls += 1
             if captured.sample is not None:
                 samples.append(captured.sample)
 
@@ -2751,6 +2983,8 @@ def _run_b10_gap_solver_runtime(
                 goal_revision=scenario_index + 1,
                 task=task,
                 behavior=behavior,
+                expected_start_position=start_position,
+                expected_start_yaw_degrees=yaw,
                 manual_source=manual_source,
                 clock_ns=time.perf_counter_ns,
                 max_control_frames=96,
@@ -2771,7 +3005,12 @@ def _run_b10_gap_solver_runtime(
                         "shared_cleanup_not_signed_after_error"
                     ),
                     "source_released": False,
-                    "recorded_control_frames": len(samples) + waiting_polls,
+                    "recorded_control_frames": sum(
+                        row.get("trial") == trial_name
+                        for row in evidence_buffer.rows(
+                            "b10-coordinator-control-frames.jsonl"
+                        )
+                    ),
                 },
             )
             raise
@@ -2785,59 +3024,26 @@ def _run_b10_gap_solver_runtime(
         receiver_delivery = _receiver_diagnostic_summary(
             receiver_rows,
         )["deliveries"]
-        delivery_fields = _b10_delivery_chain_fields(
-            samples,
-            receiver_delivery,
-        )
         recorded_control_frames = sum(
             row.get("trial") == trial_name
             for row in evidence_buffer.rows(
                 "b10-coordinator-control-frames.jsonl"
             )
         )
-        formal_fields = _b10_formal_trial_fields(
-            formal_result,
+        trial = _build_b10_coordinator_trial(
+            trial_name=trial_name,
+            scenario=scenario,
+            formal_result=formal_result,
             samples=samples,
+            receiver_delivery=receiver_delivery,
             recorded_control_frames=recorded_control_frames,
             start_position=start_position,
-        )
-        trial = dict(
-            name=trial_name,
-            scenario=scenario.name,
-            scenario_kind=scenario.kind,
-            direction_index=direction_index,
-            repetition=repetition,
-            fabric_supported=True,
-            unsupported_reason=None,
-            worker_delay_ticks=scenario.worker_delay_ticks,
-            worker_never_return=scenario.never_return,
-            waiting_polls=waiting_polls,
-            entry_alignment_frames=sum(
-                sample["reason_code"] == "aligning_verified_motion_heading"
-                for sample in samples
-            ),
-            command_count=len(samples),
-            final_position=list(frame.body.position),
-            horizontal_error_blocks=math.hypot(
-                frame.body.position[0] - target_position[0],
-                frame.body.position[2] - target_position[2],
-            ),
-            level_error_blocks=abs(
-                frame.body.position[1] - target_position[1]
-            ),
+            target_position=target_position,
+            final_position=frame.body.position,
             landed=frame.body.is_on_ground,
             damage_points=max(
-                0.0,
-                start_health - float(frame.body.health_points),
+                0.0, start_health - float(frame.body.health_points),
             ),
-            worker_delivery=receiver_delivery,
-            **delivery_fields,
-            horizontal_collisions=sum(
-                int(sample["horizontal_collision"])
-                for sample in samples
-            ),
-            samples=samples,
-            **formal_fields,
         )
         coordinator_trials.append(trial)
         evidence_buffer.append("b10-coordinator-trials.jsonl", trial)
@@ -3169,37 +3375,9 @@ def _run_b10_gap_solver_runtime(
         ),
         moving_negative_case_count=len(moving_negative_trials) * 2,
         moving_negative_trials=moving_negative_trials,
-        coordinator_preregistered_count=len(coordinator_trials),
-        coordinator_executed_count=len(coordinator_executed),
-        coordinator_unsupported_count=len(coordinator_unsupported),
-        coordinator_validation_count=len(coordinator_executed),
-        coordinator_validation_success_count=sum(
-            trial["waiting_polls"] > 0
-            and _b10_coordinator_completed(trial)
-            for trial in coordinator_executed
-        ),
-        coordinator_baseline_success_count=sum(
-            _b10_coordinator_completed(trial)
-            for trial in coordinator_executed
-            if trial["scenario_kind"] == "baseline"
-        ),
-        coordinator_delay_2_5_success_count=sum(
-            _b10_coordinator_completed(trial)
-            for trial in coordinator_executed
-            if trial["scenario_kind"] == "worker_delay"
-            and trial["worker_delay_ticks"] in {2, 5}
-        ),
-        coordinator_delay_10_safe_count=sum(
-            _b10_coordinator_completed(trial)
-            or _b10_coordinator_typed_safe_terminal(trial)
-            for trial in coordinator_executed
-            if trial["scenario_kind"] == "worker_delay"
-            and trial["worker_delay_ticks"] == 10
-        ),
-        coordinator_never_return_safe_count=sum(
-            _b10_coordinator_never_return_safe(trial)
-            for trial in coordinator_executed
-            if trial["scenario_kind"] == "worker_never_return"
+        **_summarize_b10_coordinator_trials(
+            coordinator_trials,
+            preregistered_count=len(coordinator_trials),
         ),
         solve_time_ns=dict(
             samples=len(solve_times),

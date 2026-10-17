@@ -121,6 +121,9 @@ def _matches(value: object, annotation: object) -> bool:
         if len(args) == 2 and args[1] is Ellipsis:
             return all(_matches(item, args[0]) for item in value)
         return len(value) == len(args) and all(_matches(item, kind) for item, kind in zip(value, args))
+    if origin is frozenset:
+        return (type(value) is frozenset and len(args) == 1
+                and all(_matches(item, args[0]) for item in value))
     if annotation is float:
         return type(value) in (int, float)
     return type(value) is annotation

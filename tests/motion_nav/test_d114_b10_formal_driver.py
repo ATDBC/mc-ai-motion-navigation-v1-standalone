@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 import json
+import math
 import unittest
 from unittest.mock import patch
 
@@ -398,6 +399,8 @@ class D114B10FormalDriverTests(unittest.TestCase):
                     goal_revision=1,
                     task=_task(clock[0] + 30_000_000_000),
                     behavior=BehaviorProfileV0(),
+                    expected_start_position=case.start,
+                    expected_start_yaw_degrees=case.yaw_degrees,
                     manual_source=manual,
                     clock_ns=lambda: clock[0],
                     max_control_frames=max_control_frames,
@@ -415,6 +418,8 @@ class D114B10FormalDriverTests(unittest.TestCase):
                         goal_revision=1,
                         task=_task(clock[0] + 30_000_000_000),
                         behavior=BehaviorProfileV0(),
+                        expected_start_position=case.start,
+                        expected_start_yaw_degrees=case.yaw_degrees,
                         manual_source=manual,
                         clock_ns=lambda: clock[0],
                         max_control_frames=max_control_frames,
@@ -441,6 +446,132 @@ class D114B10FormalDriverTests(unittest.TestCase):
                 "case": case,
             }
         return result, runtime, backend
+
+    def test_same_pose_teleport_waits_for_the_late_arrival_and_two_stable_frames(self):
+        def body(tick, *, on_ground):
+            return SimpleNamespace(
+                movement_tick_id=tick,
+                position=(.5, 64.0, .5),
+                velocity_blocks_per_second=(0.0, 0.0, 0.0),
+                is_on_ground=on_ground,
+                yaw_radians=0.0,
+            )
+
+        frames = iter((
+            body(11, on_ground=True),
+            body(12, on_ground=True),
+            body(13, on_ground=True),
+            body(14, on_ground=False),
+            body(15, on_ground=True),
+            body(16, on_ground=True),
+        ))
+        advanced = []
+
+        def advance():
+            advanced.append(None)
+            return next(frames)
+
+        settled = probe._wait_for_b10_teleport_settlement(
+            advance,
+            starting_movement_tick=10,
+            starting_position=(.5, 64.0, .5),
+            starting_yaw_degrees=0.0,
+            starting_on_ground=True,
+            target_position=(.5, 64.0, .5),
+            yaw_degrees=0.0,
+            position_tolerance=.03,
+        )
+
+        self.assertEqual(settled.movement_tick_id, 16)
+        self.assertEqual(len(advanced), 6)
+
+    def test_same_pose_teleport_without_an_observed_application_is_rejected(self):
+        tick = 10
+
+        def advance():
+            nonlocal tick
+            tick += 1
+            return SimpleNamespace(
+                movement_tick_id=tick,
+                position=(.5, 64.0, .5),
+                velocity_blocks_per_second=(0.0, 0.0, 0.0),
+                is_on_ground=True,
+                yaw_radians=0.0,
+            )
+
+        with self.assertRaisesRegex(RuntimeError, "application was not observed"):
+            probe._wait_for_b10_teleport_settlement(
+                advance,
+                starting_movement_tick=10,
+                starting_position=(.5, 64.0, .5),
+                starting_yaw_degrees=0.0,
+                starting_on_ground=True,
+                target_position=(.5, 64.0, .5),
+                yaw_degrees=0.0,
+                position_tolerance=.03,
+            )
+
+    def test_same_pose_drift_does_not_count_as_teleport_application(self):
+        tick = 10
+
+        def body(*, on_ground):
+            nonlocal tick
+            tick += 1
+            drift = min(tick - 10, 5) * .001
+            return SimpleNamespace(
+                movement_tick_id=tick,
+                position=(.5 + drift, 64.0, .5),
+                velocity_blocks_per_second=(.02, 0.0, 0.0),
+                is_on_ground=on_ground,
+                yaw_radians=math.radians(.2),
+            )
+
+        frames = iter((
+            body(on_ground=True),
+            body(on_ground=True),
+            body(on_ground=True),
+            body(on_ground=True),
+            body(on_ground=False),
+            body(on_ground=True),
+            body(on_ground=True),
+        ))
+        settled = probe._wait_for_b10_teleport_settlement(
+            lambda: next(frames),
+            starting_movement_tick=10,
+            starting_position=(.5, 64.0, .5),
+            starting_yaw_degrees=0.0,
+            starting_on_ground=True,
+            target_position=(.5, 64.0, .5),
+            yaw_degrees=0.0,
+            position_tolerance=.03,
+        )
+
+        self.assertEqual(settled.movement_tick_id, 17)
+
+    def test_unsettled_start_is_rejected_before_driver_start(self):
+        with patch.object(
+            probe,
+            "_b10_body_pose_is_settled",
+            return_value=False,
+        ), patch.object(
+            probe.RuntimeNavigationDriver,
+            "start",
+            autospec=True,
+        ) as start:
+            with self.assertRaisesRegex(RuntimeError, "start.*not settled"):
+                self._run(turns=0, delay=0)
+        start.assert_not_called()
+
+    def test_waiting_frame_means_no_movement_intent(self):
+        movement = SimpleNamespace(intent=SimpleNamespace(movement=MovementV1()))
+        no_movement = SimpleNamespace(intent=SimpleNamespace(movement=None))
+
+        self.assertFalse(probe._b10_frame_has_no_movement_intent((
+            SimpleNamespace(intents=(movement,)),
+        )))
+        self.assertTrue(probe._b10_frame_has_no_movement_intent((
+            SimpleNamespace(intents=(no_movement,)),
+        )))
 
     def test_ten_tick_delivery_never_uses_an_expiring_fixture_or_session_lease(self):
         result, runtime, backend = self._run(turns=0, delay=10)
@@ -505,6 +636,7 @@ class D114B10FormalDriverTests(unittest.TestCase):
     def test_component_runs_the_v3_evidence_and_formal_gates(self):
         from scripts.analyze_d113_delivery_baseline import group_control_prepare
 
+        assembled_trials = []
         for delay in (0, 5, 10, None):
             with self.subTest(delay=delay):
                 result, runtime, backend = self._run(
@@ -541,38 +673,21 @@ class D114B10FormalDriverTests(unittest.TestCase):
                     for captured in evidence["captured"]
                     if captured.sample is not None
                 )
-                delivery_fields = probe._b10_delivery_chain_fields(
-                    samples,
-                    receiver["deliveries"],
-                )
-                formal_fields = probe._b10_formal_trial_fields(
-                    result,
+                target = evidence["case"].goal
+                trial = probe._build_b10_coordinator_trial(
+                    trial_name=evidence["scenario"].name,
+                    scenario=evidence["scenario"],
+                    formal_result=result,
                     samples=samples,
+                    receiver_delivery=receiver["deliveries"],
                     recorded_control_frames=len(rows),
                     start_position=evidence["case"].start,
+                    target_position=target,
+                    final_position=backend.state.position,
+                    landed=backend.state.on_ground,
+                    damage_points=backend.damage_taken,
                 )
-
-                target = evidence["case"].goal
-                trial = {
-                    "scenario_kind": evidence["scenario"].kind,
-                    "samples": samples,
-                    **delivery_fields,
-                    "landed": backend.state.on_ground,
-                    "horizontal_error_blocks": (
-                        (backend.state.position[0] - target[0]) ** 2
-                        + (backend.state.position[2] - target[2]) ** 2
-                    ) ** .5,
-                    "level_error_blocks": abs(
-                        backend.state.position[1] - target[1]
-                    ),
-                    "horizontal_collisions": sum(
-                        int(row["horizontal_collision"])
-                        for row in rows
-                    ),
-                    "damage_points": backend.damage_taken,
-                    "waiting_polls": result.waiting_frame_count,
-                    **formal_fields,
-                }
+                assembled_trials.append(trial)
                 evidence["buffer"].append(
                     "b10-coordinator-trials.jsonl",
                     trial,
@@ -608,6 +723,26 @@ class D114B10FormalDriverTests(unittest.TestCase):
                     or probe._b10_coordinator_typed_safe_terminal(missing)
                 )
 
+        summarized_trials = [
+            *assembled_trials,
+            {
+                "fabric_supported": False,
+                "scenario_kind": "first_input_late1",
+                "unsupported_reason": "fabric_input_late1_injection_unavailable",
+            },
+        ]
+        summary = probe._summarize_b10_coordinator_trials(
+            summarized_trials,
+            preregistered_count=len(summarized_trials),
+        )
+        self.assertEqual(summary["coordinator_executed_count"], 4)
+        self.assertEqual(summary["coordinator_unsupported_count"], 1)
+        self.assertEqual(summary["coordinator_validation_success_count"], 1)
+        self.assertEqual(summary["coordinator_baseline_success_count"], 1)
+        self.assertEqual(summary["coordinator_delay_2_5_success_count"], 1)
+        self.assertEqual(summary["coordinator_delay_10_safe_count"], 1)
+        self.assertEqual(summary["coordinator_never_return_safe_count"], 1)
+
     def test_forged_release_ack_cannot_replace_actual_source_release(self):
         with patch.object(
             probe.RuntimeNavigationDriver,
@@ -642,6 +777,14 @@ class D114B10FormalDriverTests(unittest.TestCase):
                     self.assertEqual(
                         len(result.frames),
                         result.adopted_frame_count,
+                    )
+                    self.assertEqual(
+                        result.waiting_frame_count,
+                        sum(
+                            frame.diagnostics is not None
+                            and not frame.diagnostics.proposed_movement_intents
+                            for frame in result.frames
+                        ),
                     )
                     self.assertTrue(all(
                         frame.movement_tick_after
@@ -725,6 +868,28 @@ class D114B10FormalDriverTests(unittest.TestCase):
                 RuntimeError,
                 "frame limit.*body responsibility",
             ):
+                self._run(
+                    turns=0,
+                    delay=10,
+                    max_control_frames=1,
+                )
+
+    def test_frame_limit_is_rejected_even_when_driver_can_release_immediately(self):
+        def force_release(driver, _reason):
+            source = driver.source
+            if source is not None:
+                driver.runtime.cancel_source(source.source_id)
+                driver.runtime.unregister_ordered_source(source)
+                driver.session.unbind_source(source)
+                driver.source = None
+            return True
+
+        with patch.object(
+            probe.RuntimeNavigationDriver,
+            "release",
+            force_release,
+        ):
+            with self.assertRaisesRegex(RuntimeError, "reached its frame limit"):
                 self._run(
                     turns=0,
                     delay=10,

@@ -1,0 +1,2878 @@
+{
+  "attribution": "legacy_full_cell_fact_gate_rejected_stamp_refresh",
+  "damage": 0.0,
+  "decision": "D116",
+  "dependency_gate": "legacy_full_cell_fact",
+  "diagnostic_scaffolding": "D115's withdrawn local prepare_upcoming_action call is restored only by an in-process method patch",
+  "evidence_provenance": "explicit in-process replay of the legacy full-CellFact gate; the original uncommitted D116-0 file was overwritten",
+  "final_position": [
+    0.5,
+    64.0,
+    3.81
+  ],
+  "formal_chain": [
+    "PlayerRuntimeV1",
+    "RuntimeNavigationDriver",
+    "NavigationSession",
+    "ExecutionSupervisor",
+    "ActionRouteExecutor",
+    "MotionRouteCoordinator",
+    "CalculatorBackend"
+  ],
+  "milestones": {
+    "owner_gap_ticks": [],
+    "single_movement_winner_at_handoff": false,
+    "tick20_ready_match": false,
+    "tick20_supervisor_approved": false,
+    "tick21_second_jump_applied": false,
+    "zero_damage": true
+  },
+  "outcome": "executing",
+  "phase": "D116-0-red-replay",
+  "planned_actions": [
+    "WalkSegment",
+    "JumpGapSegment",
+    "JumpGapSegment"
+  ],
+  "platform": "Windows",
+  "production_behavior_changed": false,
+  "reason": "prepared_action_boundary",
+  "schema": "mc2p.d116-handoff-timeline.v1",
+  "second_jump_started": false,
+  "stop": {
+    "async_monitor": {
+      "detail": "prepared admission had finish and admission but no lifecycle apply event",
+      "movement_tick": 13,
+      "relationship": "pre-existing in the reconstructed RED and not caused by D116-1",
+      "violation": "I19"
+    },
+    "route_tracker": null
+  },
+  "timeline": [
+    {
+      "action_index_after": 0,
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": null,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": null,
+      "current_verified_state": null,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 1,
+      "movement_tick": 1,
+      "observed_position": [
+        0.5,
+        64.0,
+        0.5
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568,
+        0.0
+      ],
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "runtime_effect_tick": 2,
+      "runtime_selected_groups": [
+        "movement"
+      ],
+      "runtime_selected_movement": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_route_reason": "tracking_fixed_route"
+    },
+    {
+      "action_index_after": 0,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 0,
+        "observation_sequence_id": 0,
+        "phase": "tracking"
+      },
+      "applied_movement_at_observation": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [
+        {
+          "monotonic_ns": 100000000,
+          "operation": "begin",
+          "record_type": "event",
+          "revision": 1,
+          "work_kind": "planning"
+        },
+        {
+          "monotonic_ns": 100000000,
+          "operation": "apply",
+          "record_type": "event",
+          "revision": 1,
+          "work_kind": "planning"
+        },
+        {
+          "monotonic_ns": 100000000,
+          "operation": "finish",
+          "record_type": "event",
+          "revision": 1,
+          "work_kind": "planning"
+        },
+        {
+          "accepted_monotonic_ns": 100000000,
+          "deadline_monotonic_ns": 600000000,
+          "disposition": "applied",
+          "facts_valid": true,
+          "identity_matched": true,
+          "record_type": "admission",
+          "revision": 1,
+          "work_kind": "planning"
+        }
+      ],
+      "body_control_activities": [
+        {
+          "action_index": 0,
+          "observation_sequence_id": 0,
+          "phase": "tracking"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": null,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": null,
+      "current_verified_state": null,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 2,
+      "movement_tick": 2,
+      "observed_position": [
+        0.5,
+        64.0,
+        0.598000009074074
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        1.070160099088889
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 0,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 0
+      },
+      "runtime_effect_tick": 3,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement"
+      ],
+      "runtime_selected_movement": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "tracking_fixed_route",
+      "session_route_reason": "tracking_fixed_route",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 0,
+        "observation_sequence_id": 0,
+        "phase": "tracking"
+      }
+    },
+    {
+      "action_index_after": 0,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 0,
+        "observation_sequence_id": 1,
+        "phase": "tracking"
+      },
+      "applied_movement_at_observation": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 0,
+          "observation_sequence_id": 1,
+          "phase": "tracking"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": null,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": null,
+      "current_verified_state": null,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 3,
+      "movement_tick": 3,
+      "observed_position": [
+        0.5,
+        64.0,
+        0.7495080231025926
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        1.6544675131914226
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 0,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 1
+      },
+      "runtime_effect_tick": 4,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement"
+      ],
+      "runtime_selected_movement": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "tracking_fixed_route",
+      "session_route_reason": "tracking_fixed_route",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 0,
+        "observation_sequence_id": 1,
+        "phase": "tracking"
+      }
+    },
+    {
+      "action_index_after": 0,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 0,
+        "observation_sequence_id": 2,
+        "phase": "tracking"
+      },
+      "applied_movement_at_observation": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 0,
+          "observation_sequence_id": 2,
+          "phase": "tracking"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": null,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": null,
+      "current_verified_state": null,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 4,
+      "movement_tick": 4,
+      "observed_position": [
+        0.5,
+        64.0,
+        0.9302314078362378
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        1.973499361291406
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 0,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 2
+      },
+      "runtime_effect_tick": 5,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement"
+      ],
+      "runtime_selected_movement": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "tracking_fixed_route",
+      "session_route_reason": "tracking_fixed_route",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 0,
+        "observation_sequence_id": 2,
+        "phase": "tracking"
+      }
+    },
+    {
+      "action_index_after": 0,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 0,
+        "observation_sequence_id": 3,
+        "phase": "tracking"
+      },
+      "applied_movement_at_observation": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [
+        {
+          "monotonic_ns": 250000000,
+          "operation": "begin",
+          "record_type": "event",
+          "revision": 1,
+          "work_kind": "motion_solve"
+        }
+      ],
+      "body_control_activities": [
+        {
+          "action_index": 0,
+          "observation_sequence_id": 3,
+          "phase": "tracking"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": null,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": null,
+      "current_verified_state": null,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 5,
+      "movement_tick": 5,
+      "observed_position": [
+        0.5,
+        64.0,
+        1.1269063849748822
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        2.147690750353997
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 0,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 3
+      },
+      "runtime_effect_tick": 6,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement"
+      ],
+      "runtime_selected_movement": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "tracking_fixed_route",
+      "session_route_reason": "tracking_conditional_motion_entry",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 0,
+        "observation_sequence_id": 3,
+        "phase": "tracking"
+      }
+    },
+    {
+      "action_index_after": 0,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 0,
+        "observation_sequence_id": 4,
+        "phase": "tracking"
+      },
+      "applied_movement_at_observation": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 0,
+          "observation_sequence_id": 4,
+          "phase": "tracking"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": null,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": null,
+      "current_verified_state": null,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 6,
+      "movement_tick": 6,
+      "observed_position": [
+        0.5,
+        64.0,
+        1.332290931566656
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        2.2427992487821715
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 0,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 4
+      },
+      "runtime_effect_tick": 7,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement"
+      ],
+      "runtime_selected_movement": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "tracking_conditional_motion_entry",
+      "session_route_reason": "tracking_conditional_motion_entry",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 0,
+        "observation_sequence_id": 4,
+        "phase": "tracking"
+      }
+    },
+    {
+      "action_index_after": 1,
+      "action_index_after_advance": 1,
+      "action_index_before_advance": 0,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 0,
+        "observation_sequence_id": 5,
+        "phase": "tracking"
+      },
+      "applied_movement_at_observation": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 0,
+          "observation_sequence_id": 5,
+          "phase": "tracking"
+        }
+      ],
+      "boundary_after_advance": null,
+      "boundary_at_session_proposal": null,
+      "boundary_before_advance": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "controller_state_before": "succeeded",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": null,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": null,
+      "current_verified_state": null,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "executor_advance_enter",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "executor_advance_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_advance_called": true,
+      "executor_cancel_requested": false,
+      "executor_route_reason": "submit_verified_command",
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 7,
+      "movement_tick": 7,
+      "observed_position": [
+        0.5,
+        64.0,
+        1.5424309030798387
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        2.2947284889239548
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 0,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 5
+      },
+      "runtime_effect_tick": 8,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_selected_movement": {
+        "forward": 1,
+        "jump": true,
+        "sneak": false,
+        "sprint": true,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "tracking_conditional_motion_entry",
+      "session_route_reason": "submit_verified_command",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 0,
+        "observation_sequence_id": 5,
+        "phase": "tracking"
+      },
+      "verified_changed_cells": [],
+      "verified_decision_reason": "submit_verified_command",
+      "verified_state_after_decide": "running",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 6,
+        "phase": "strict_preparation"
+      },
+      "applied_movement_at_observation": {
+        "forward": 1,
+        "jump": true,
+        "sneak": false,
+        "sprint": true,
+        "strafe": 0
+      },
+      "async_events": [
+        {
+          "monotonic_ns": 400000000,
+          "operation": "apply",
+          "record_type": "event",
+          "revision": 1,
+          "work_kind": "motion_solve"
+        },
+        {
+          "monotonic_ns": 400000000,
+          "operation": "finish",
+          "record_type": "event",
+          "revision": 1,
+          "work_kind": "motion_solve"
+        },
+        {
+          "accepted_monotonic_ns": 400000000,
+          "deadline_monotonic_ns": 1250000000,
+          "disposition": "applied",
+          "facts_valid": true,
+          "identity_matched": true,
+          "record_type": "admission",
+          "revision": 1,
+          "work_kind": "motion_solve"
+        }
+      ],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 6,
+          "phase": "strict_preparation"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 0,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "running",
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "diagnostic_prepare_requested",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": false,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 8,
+      "movement_tick": 8,
+      "observed_position": [
+        0.5,
+        64.42,
+        1.984567340490584
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        6.664000129699707,
+        4.828129896525338
+      ],
+      "owner_gap": false,
+      "prepared_action_index": 2,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 0,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 6
+      },
+      "runtime_effect_tick": 9,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_selected_movement": {
+        "forward": -1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "submit_verified_command",
+      "session_route_reason": "submit_verified_command",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 6,
+        "phase": "strict_preparation"
+      },
+      "verified_changed_cells": [],
+      "verified_decision_reason": "submit_verified_command",
+      "verified_state_after_decide": "running",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 7,
+        "phase": "strict_execution"
+      },
+      "applied_movement_at_observation": {
+        "forward": -1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [
+        {
+          "monotonic_ns": 450000000,
+          "operation": "begin",
+          "record_type": "event",
+          "revision": 2,
+          "work_kind": "motion_solve"
+        }
+      ],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 7,
+          "phase": "strict_execution"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 1,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "running",
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": false,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 9,
+      "movement_tick": 9,
+      "observed_position": [
+        0.5,
+        64.75320000648499,
+        2.206373835316851
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        4.962720223693849,
+        4.036878205838058
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 1,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 7
+      },
+      "runtime_effect_tick": 10,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_selected_movement": {
+        "forward": -1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "submit_verified_command",
+      "session_route_reason": "submit_verified_command",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 7,
+        "phase": "strict_execution"
+      },
+      "verified_changed_cells": [],
+      "verified_decision_reason": "submit_verified_command",
+      "verified_state_after_decide": "running",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 8,
+        "phase": "strict_execution"
+      },
+      "applied_movement_at_observation": {
+        "forward": -1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [
+        {
+          "monotonic_ns": 500000000,
+          "operation": "finish",
+          "record_type": "event",
+          "revision": 2,
+          "work_kind": "motion_solve"
+        },
+        {
+          "monotonic_ns": 500000000,
+          "operation": "begin",
+          "record_type": "event",
+          "revision": 3,
+          "work_kind": "motion_solve"
+        }
+      ],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 8,
+          "phase": "strict_execution"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 2,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "running",
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": false,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 10,
+      "movement_tick": 10,
+      "observed_position": [
+        0.5,
+        65.00133601766969,
+        2.388617745608754
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        3.29546588335877,
+        3.316839167312633
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 1,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 8
+      },
+      "runtime_effect_tick": 11,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "submit_verified_command",
+      "session_route_reason": "submit_verified_command",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 8,
+        "phase": "strict_execution"
+      },
+      "verified_changed_cells": [],
+      "verified_decision_reason": "submit_verified_command",
+      "verified_state_after_decide": "running",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 9,
+        "phase": "strict_execution"
+      },
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 9,
+          "phase": "strict_execution"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 3,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "running",
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": false,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 11,
+      "movement_tick": 11,
+      "observed_position": [
+        0.5,
+        65.16610931183763,
+        2.5544597039743855
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        1.6615565980300402,
+        3.0183236422544963
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 1,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 9
+      },
+      "runtime_effect_tick": 12,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "submit_verified_command",
+      "session_route_reason": "submit_verified_command",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 9,
+        "phase": "strict_execution"
+      },
+      "verified_changed_cells": [],
+      "verified_decision_reason": "submit_verified_command",
+      "verified_state_after_decide": "running",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 10,
+        "phase": "strict_execution"
+      },
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 10,
+          "phase": "strict_execution"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 4,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "running",
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": false,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 12,
+      "movement_tick": 12,
+      "observed_position": [
+        0.5,
+        65.24918714173913,
+        2.7053758860871104
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        0.06032546724353817,
+        2.746674514451591
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 1,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 10
+      },
+      "runtime_effect_tick": 13,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "submit_verified_command",
+      "session_route_reason": "submit_verified_command",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 10,
+        "phase": "strict_execution"
+      },
+      "verified_changed_cells": [],
+      "verified_decision_reason": "submit_verified_command",
+      "verified_state_after_decide": "running",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 11,
+        "phase": "strict_execution"
+      },
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [
+        {
+          "monotonic_ns": 650000000,
+          "operation": "finish",
+          "record_type": "event",
+          "revision": 3,
+          "work_kind": "motion_solve"
+        },
+        {
+          "accepted_monotonic_ns": 650000000,
+          "deadline_monotonic_ns": 1500000000,
+          "disposition": "applied",
+          "facts_valid": true,
+          "identity_matched": true,
+          "record_type": "admission",
+          "revision": 3,
+          "work_kind": "motion_solve"
+        }
+      ],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 11,
+          "phase": "strict_execution"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 5,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "running",
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": false,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 13,
+      "movement_tick": 13,
+      "observed_position": [
+        0.5,
+        65.2522034151013,
+        2.84270961180969
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.5088810714682936,
+        2.499473808150948
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 1,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 11
+      },
+      "runtime_effect_tick": 14,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "submit_verified_command",
+      "session_route_reason": "submit_verified_command",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 11,
+        "phase": "strict_execution"
+      },
+      "verified_changed_cells": [],
+      "verified_decision_reason": "submit_verified_command",
+      "verified_state_after_decide": "running",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 12,
+        "phase": "strict_execution"
+      },
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 12,
+          "phase": "strict_execution"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 6,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "running",
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": false,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 14,
+      "movement_tick": 14,
+      "observed_position": [
+        0.5,
+        65.17675936152789,
+        2.9676833022172375
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -3.0467035093361283,
+        2.274521165417363
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 1,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 12
+      },
+      "runtime_effect_tick": 15,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "submit_verified_command",
+      "session_route_reason": "submit_verified_command",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 12,
+        "phase": "strict_execution"
+      },
+      "verified_changed_cells": [],
+      "verified_decision_reason": "submit_verified_command",
+      "verified_state_after_decide": "running",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 13,
+        "phase": "strict_execution"
+      },
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 13,
+          "phase": "strict_execution"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 7,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "running",
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": false,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 15,
+      "movement_tick": 15,
+      "observed_position": [
+        0.5,
+        65.02442418606108,
+        3.081409360488106
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -4.5537695277782415,
+        2.0698142605298004
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 1,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 13
+      },
+      "runtime_effect_tick": 16,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "submit_verified_command",
+      "session_route_reason": "submit_verified_command",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 13,
+        "phase": "strict_execution"
+      },
+      "verified_changed_cells": [],
+      "verified_decision_reason": "submit_verified_command",
+      "verified_state_after_decide": "running",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 14,
+        "phase": "strict_execution"
+      },
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 14,
+          "phase": "strict_execution"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 8,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "running",
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": false,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 16,
+      "movement_tick": 16,
+      "observed_position": [
+        0.5,
+        64.79673570967218,
+        3.184900073514596
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -6.030694254596516,
+        1.8835309770821185
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 1,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 14
+      },
+      "runtime_effect_tick": 17,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "submit_verified_command",
+      "session_route_reason": "submit_verified_command",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 14,
+        "phase": "strict_execution"
+      },
+      "verified_changed_cells": [],
+      "verified_decision_reason": "submit_verified_command",
+      "verified_state_after_decide": "running",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 15,
+        "phase": "strict_execution"
+      },
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 15,
+          "phase": "strict_execution"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 9,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "running",
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": false,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 17,
+      "movement_tick": 17,
+      "observed_position": [
+        0.5,
+        64.49520099694234,
+        3.279076622368702
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -7.4780805150485286,
+        1.7140131891447279
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 1,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 15
+      },
+      "runtime_effect_tick": 18,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "submit_verified_command",
+      "session_route_reason": "submit_verified_command",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 15,
+        "phase": "strict_execution"
+      },
+      "verified_changed_cells": [],
+      "verified_decision_reason": "submit_verified_command",
+      "verified_state_after_decide": "running",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 16,
+        "phase": "strict_execution"
+      },
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 16,
+          "phase": "strict_execution"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 10,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "running",
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": false,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 18,
+      "movement_tick": 18,
+      "observed_position": [
+        0.5,
+        64.12129697118992,
+        3.3647772818259383
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -8.896519077898203,
+        1.5597520021217026
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 1,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 16
+      },
+      "runtime_effect_tick": 19,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "submit_verified_command",
+      "session_route_reason": "submit_verified_command",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 16,
+        "phase": "strict_execution"
+      },
+      "verified_changed_cells": [],
+      "verified_decision_reason": "submit_verified_command",
+      "verified_state_after_decide": "running",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 17,
+        "phase": "strict_execution"
+      },
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 17,
+          "phase": "strict_execution"
+        }
+      ],
+      "boundary_at_session_proposal": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "running",
+      "controller_state_after_runtime": "running",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 11,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "running",
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 19,
+      "movement_tick": 19,
+      "observed_position": [
+        0.5,
+        64.0,
+        3.4427648819320233
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        1.4193743219307495
+      ],
+      "owner_gap": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 1,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 17
+      },
+      "runtime_effect_tick": 20,
+      "runtime_failure": null,
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_selected_movement": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "session_reason_after_effect": "submit_verified_command",
+      "session_route_reason": "submit_verified_command",
+      "session_state": "executing",
+      "source_bound": true,
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 17,
+        "phase": "strict_execution"
+      },
+      "verified_changed_cells": [],
+      "verified_decision_reason": "submit_verified_command",
+      "verified_state_after_decide": "running",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "action_index_after_advance": 1,
+      "action_index_before_advance": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 18,
+        "phase": "strict_preparation"
+      },
+      "applied_movement_at_observation": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 18,
+          "phase": "strict_preparation"
+        }
+      ],
+      "body_matches_prepared_entry": true,
+      "boundary_after_advance": 2,
+      "boundary_at_session_proposal": 2,
+      "boundary_before_advance": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "complete",
+      "controller_state_after_runtime": "complete",
+      "controller_state_at_coordinator_enter": "running",
+      "controller_state_before": "complete",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 12,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "running",
+      "dependency_facts_equal": false,
+      "dependency_payloads_equal": true,
+      "dependency_versions_equal": true,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "executor_advance_enter",
+        "executor_advance_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "diagnostic_legacy_full_cell_fact_rejection",
+        "prepared_action_staged",
+        "supervisor_approval",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_advance_called": true,
+      "executor_cancel_requested": false,
+      "executor_route_reason": "prepared_action_boundary",
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 20,
+      "movement_tick": 20,
+      "observed_position": [
+        0.5,
+        64.0,
+        3.611733607102635
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        1.8451384788630785
+      ],
+      "owner_gap": false,
+      "prepared_boundary_reached": true,
+      "prepared_entry_status": "dependency_changed",
+      "prepared_window": [
+        21,
+        22
+      ],
+      "requested_window_allows_next_tick": true,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": {
+        "incumbent": {
+          "action_index": 1,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        },
+        "observation_sequence_id": 18
+      },
+      "runtime_effect_tick": 21,
+      "runtime_failure": null,
+      "runtime_selected_groups": [],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "sample_stamp_only_cells": [
+        [
+          0,
+          63,
+          3
+        ],
+        [
+          0,
+          63,
+          5
+        ],
+        [
+          0,
+          63,
+          6
+        ]
+      ],
+      "session_reason_after_effect": "submit_verified_command",
+      "session_route_reason": "prepared_action_boundary",
+      "session_state": "executing",
+      "source_bound": true,
+      "stamp_only_dependency_differences": 3,
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 18,
+        "phase": "strict_preparation"
+      },
+      "supervisor_reason": "entry",
+      "supervisor_status": "rejected",
+      "verified_changed_cells": [],
+      "verified_decision_reason": "verified_motion_complete",
+      "verified_state_after_decide": "complete",
+      "verified_state_before_decide": "running"
+    },
+    {
+      "action_index_after": 1,
+      "action_index_after_advance": 1,
+      "action_index_before_advance": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": null,
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 20,
+          "phase": "strict_preparation"
+        }
+      ],
+      "body_matches_prepared_entry": false,
+      "boundary_after_advance": 2,
+      "boundary_at_session_proposal": 2,
+      "boundary_before_advance": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "complete",
+      "controller_state_after_runtime": "complete",
+      "controller_state_at_coordinator_enter": "complete",
+      "controller_state_before": "complete",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 13,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "complete",
+      "dependency_facts_equal": false,
+      "dependency_payloads_equal": true,
+      "dependency_versions_equal": true,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "executor_advance_enter",
+        "executor_advance_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "prepared_action_staged",
+        "supervisor_approval",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_advance_called": true,
+      "executor_cancel_requested": false,
+      "executor_route_reason": "prepared_action_boundary",
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 21,
+      "movement_tick": 21,
+      "observed_position": [
+        0.5,
+        64.0,
+        3.703990531045789
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        1.0074456094592408
+      ],
+      "owner_gap": false,
+      "prepared_boundary_reached": true,
+      "prepared_entry_status": "entry_mismatch",
+      "prepared_window": [
+        21,
+        22
+      ],
+      "requested_window_allows_next_tick": true,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": null,
+      "runtime_effect_tick": 22,
+      "runtime_failure": null,
+      "runtime_selected_groups": [],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "sample_stamp_only_cells": [
+        [
+          0,
+          63,
+          3
+        ],
+        [
+          0,
+          63,
+          5
+        ],
+        [
+          0,
+          63,
+          6
+        ]
+      ],
+      "session_reason_after_effect": "prepared_action_boundary",
+      "session_route_reason": "prepared_action_boundary",
+      "session_state": "executing",
+      "source_bound": true,
+      "stamp_only_dependency_differences": 3,
+      "submitted_body_activity": null,
+      "supervisor_reason": "entry",
+      "supervisor_status": "rejected",
+      "verified_changed_cells": [],
+      "verified_decision_reason": "complete",
+      "verified_state_after_decide": "complete",
+      "verified_state_before_decide": "complete"
+    },
+    {
+      "action_index_after": 1,
+      "action_index_after_advance": 1,
+      "action_index_before_advance": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": null,
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 21,
+          "phase": "strict_preparation"
+        }
+      ],
+      "body_matches_prepared_entry": false,
+      "boundary_after_advance": 2,
+      "boundary_at_session_proposal": 2,
+      "boundary_before_advance": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "complete",
+      "controller_state_after_runtime": "complete",
+      "controller_state_at_coordinator_enter": "complete",
+      "controller_state_before": "complete",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 13,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "complete",
+      "dependency_facts_equal": false,
+      "dependency_payloads_equal": false,
+      "dependency_versions_equal": true,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "executor_advance_enter",
+        "executor_advance_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "prepared_action_staged",
+        "supervisor_approval",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_advance_called": true,
+      "executor_cancel_requested": false,
+      "executor_route_reason": "prepared_action_boundary",
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 22,
+      "movement_tick": 22,
+      "observed_position": [
+        0.5,
+        64.0,
+        3.754362811518751
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        0.5500653027647455
+      ],
+      "owner_gap": false,
+      "prepared_boundary_reached": true,
+      "prepared_entry_status": "overdue",
+      "prepared_window": [
+        21,
+        22
+      ],
+      "requested_window_allows_next_tick": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": null,
+      "runtime_effect_tick": 23,
+      "runtime_failure": null,
+      "runtime_selected_groups": [],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "sample_stamp_only_cells": [
+        [
+          0,
+          63,
+          3
+        ],
+        [
+          0,
+          63,
+          5
+        ],
+        [
+          0,
+          63,
+          6
+        ]
+      ],
+      "session_reason_after_effect": "prepared_action_boundary",
+      "session_route_reason": "prepared_action_boundary",
+      "session_state": "executing",
+      "source_bound": true,
+      "stamp_only_dependency_differences": 3,
+      "submitted_body_activity": null,
+      "supervisor_reason": "timing",
+      "supervisor_status": "rejected",
+      "verified_changed_cells": [],
+      "verified_decision_reason": "complete",
+      "verified_state_after_decide": "complete",
+      "verified_state_before_decide": "complete"
+    },
+    {
+      "action_index_after": 1,
+      "action_index_after_advance": 1,
+      "action_index_before_advance": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": null,
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 22,
+          "phase": "strict_preparation"
+        }
+      ],
+      "body_matches_prepared_entry": false,
+      "boundary_after_advance": 2,
+      "boundary_at_session_proposal": 2,
+      "boundary_before_advance": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "complete",
+      "controller_state_after_runtime": "complete",
+      "controller_state_at_coordinator_enter": "complete",
+      "controller_state_before": "complete",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 13,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "complete",
+      "dependency_facts_equal": false,
+      "dependency_payloads_equal": false,
+      "dependency_versions_equal": true,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "executor_advance_enter",
+        "executor_advance_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "prepared_action_staged",
+        "supervisor_approval",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_advance_called": true,
+      "executor_cancel_requested": false,
+      "executor_route_reason": "prepared_action_boundary",
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 23,
+      "movement_tick": 23,
+      "observed_position": [
+        0.5,
+        64.0,
+        3.7818660766569883
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        0.3003356553095511
+      ],
+      "owner_gap": false,
+      "prepared_boundary_reached": true,
+      "prepared_entry_status": "overdue",
+      "prepared_window": [
+        21,
+        22
+      ],
+      "requested_window_allows_next_tick": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": null,
+      "runtime_effect_tick": 24,
+      "runtime_failure": null,
+      "runtime_selected_groups": [],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "sample_stamp_only_cells": [
+        [
+          0,
+          63,
+          3
+        ],
+        [
+          0,
+          63,
+          5
+        ],
+        [
+          0,
+          63,
+          6
+        ]
+      ],
+      "session_reason_after_effect": "prepared_action_boundary",
+      "session_route_reason": "prepared_action_boundary",
+      "session_state": "executing",
+      "source_bound": true,
+      "stamp_only_dependency_differences": 3,
+      "submitted_body_activity": null,
+      "supervisor_reason": "timing",
+      "supervisor_status": "rejected",
+      "verified_changed_cells": [],
+      "verified_decision_reason": "complete",
+      "verified_state_after_decide": "complete",
+      "verified_state_before_decide": "complete"
+    },
+    {
+      "action_index_after": 1,
+      "action_index_after_advance": 1,
+      "action_index_before_advance": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": null,
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 23,
+          "phase": "strict_preparation"
+        }
+      ],
+      "body_matches_prepared_entry": false,
+      "boundary_after_advance": 2,
+      "boundary_at_session_proposal": 2,
+      "boundary_before_advance": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "complete",
+      "controller_state_after_runtime": "complete",
+      "controller_state_at_coordinator_enter": "complete",
+      "controller_state_before": "complete",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 13,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "complete",
+      "dependency_facts_equal": false,
+      "dependency_payloads_equal": false,
+      "dependency_versions_equal": true,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "executor_advance_enter",
+        "executor_advance_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "prepared_action_staged",
+        "supervisor_approval",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_advance_called": true,
+      "executor_cancel_requested": false,
+      "executor_route_reason": "prepared_action_boundary",
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 24,
+      "movement_tick": 24,
+      "observed_position": [
+        0.5,
+        64.0,
+        3.7968828594224657
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        0.16398326779901493
+      ],
+      "owner_gap": false,
+      "prepared_boundary_reached": true,
+      "prepared_entry_status": "overdue",
+      "prepared_window": [
+        21,
+        22
+      ],
+      "requested_window_allows_next_tick": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": null,
+      "runtime_effect_tick": 25,
+      "runtime_failure": null,
+      "runtime_selected_groups": [],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "sample_stamp_only_cells": [
+        [
+          0,
+          63,
+          3
+        ],
+        [
+          0,
+          63,
+          5
+        ],
+        [
+          0,
+          63,
+          6
+        ]
+      ],
+      "session_reason_after_effect": "prepared_action_boundary",
+      "session_route_reason": "prepared_action_boundary",
+      "session_state": "executing",
+      "source_bound": true,
+      "stamp_only_dependency_differences": 3,
+      "submitted_body_activity": null,
+      "supervisor_reason": "timing",
+      "supervisor_status": "rejected",
+      "verified_changed_cells": [],
+      "verified_decision_reason": "complete",
+      "verified_state_after_decide": "complete",
+      "verified_state_before_decide": "complete"
+    },
+    {
+      "action_index_after": 1,
+      "action_index_after_advance": 1,
+      "action_index_before_advance": 1,
+      "active_and_applied_owner_match": true,
+      "applied_body_activity": null,
+      "applied_movement_at_observation": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "async_events": [],
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 24,
+          "phase": "strict_preparation"
+        }
+      ],
+      "body_matches_prepared_entry": false,
+      "boundary_after_advance": 2,
+      "boundary_at_session_proposal": 2,
+      "boundary_before_advance": null,
+      "changed_cells": [],
+      "controller_ids": [
+        "route_executor"
+      ],
+      "controller_state_after": "complete",
+      "controller_state_after_runtime": "complete",
+      "controller_state_at_coordinator_enter": "complete",
+      "controller_state_before": "complete",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "current_verified_command_index": 13,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_state": "complete",
+      "dependency_facts_equal": false,
+      "dependency_payloads_equal": false,
+      "dependency_versions_equal": true,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "executor_advance_enter",
+        "executor_advance_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "prepared_action_staged",
+        "supervisor_approval",
+        "session_proposal_exit",
+        "runtime_selected"
+      ],
+      "executor_advance_called": true,
+      "executor_cancel_requested": false,
+      "executor_route_reason": "prepared_action_boundary",
+      "executor_stop_cause": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "landing_observed": true,
+      "ledger_is_current": true,
+      "ledger_latest_tick": 25,
+      "movement_tick": 25,
+      "observed_position": [
+        0.5,
+        64.0,
+        3.8050820228124165
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        0.08953486421826215
+      ],
+      "owner_gap": false,
+      "prepared_boundary_reached": true,
+      "prepared_entry_status": "overdue",
+      "prepared_window": [
+        21,
+        22
+      ],
+      "requested_window_allows_next_tick": false,
+      "route_cancel_after_validation": false,
+      "route_cancel_before_validation": false,
+      "route_stop_cause_after_validation": null,
+      "route_validation": null,
+      "runtime_effect_tick": 26,
+      "runtime_failure": null,
+      "runtime_selected_groups": [],
+      "runtime_selected_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "sample_stamp_only_cells": [
+        [
+          0,
+          63,
+          3
+        ],
+        [
+          0,
+          63,
+          5
+        ],
+        [
+          0,
+          63,
+          6
+        ]
+      ],
+      "session_reason_after_effect": "prepared_action_boundary",
+      "session_route_reason": "prepared_action_boundary",
+      "session_state": "executing",
+      "source_bound": true,
+      "stamp_only_dependency_differences": 3,
+      "submitted_body_activity": null,
+      "supervisor_reason": "timing",
+      "supervisor_status": "rejected",
+      "verified_changed_cells": [],
+      "verified_decision_reason": "complete",
+      "verified_state_after_decide": "complete",
+      "verified_state_before_decide": "complete"
+    }
+  ],
+  "violations": [
+    [
+      13,
+      "I19",
+      "result applied without current identity, facts or time"
+    ]
+  ]
+}

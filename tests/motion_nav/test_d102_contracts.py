@@ -10,6 +10,7 @@ from mc2p.contracts.motion_activation import (
     ActivationResult, ActivationStatus, FirstStreamApplication, PreparedActivationAcceptance,
     PreparedActivationDelivery, PreparedActivationTransaction, PreparedStreamDispatch,
     StreamActivationBinding, StreamActivationProposal, StreamApplicationStatus, StreamStartBranch,
+    validate_frozen_value,
 )
 from mc2p.motion_nav.async_work import AsyncComputationScope, AsyncWorkIdentity, AsyncWorkKind
 from mc2p.motion_nav.input_stream import InputStreamTracker
@@ -613,6 +614,22 @@ class FixRound2Tests(unittest.TestCase):
 
 
 class FixRound3Tests(unittest.TestCase):
+    def test_frozen_string_set_matches_declared_entry_contract_type(self):
+        @dataclass(frozen=True, slots=True)
+        class EntryContract:
+            allowed_poses: frozenset[str]
+
+            def __post_init__(self):
+                validate_frozen_value(self)
+
+        contract = EntryContract(frozenset({"standing", "crouching"}))
+        self.assertEqual(contract.allowed_poses, frozenset({"standing", "crouching"}))
+
+        with self.assertRaises(ContractViolation):
+            EntryContract(frozenset({"standing", 1}))
+        with self.assertRaises(ContractViolation):
+            EntryContract({"standing"})
+
     def test_frozen_dataclass_with_list_storage_is_rejected(self):
         @dataclass(frozen=True, slots=True)
         class ListValue(list):

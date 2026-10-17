@@ -116,10 +116,17 @@ class InlineMotionWorker:
         """Receive the harness clock without changing ordinary inline delivery."""
 
     def submit(self, job) -> bool:
+        identity = self._job_identity(job)
         with self._pending_lock:
             self._pending.append(job)
-            self.activity.append(ObservedAsyncActivity(job.work_identity, "submit"))
+            self.activity.append(ObservedAsyncActivity(identity, "submit"))
         return True
+
+    @staticmethod
+    def _job_identity(job):
+        if type(job) is motion_worker.PreparedMotionJob:
+            return job.request.async_identity
+        return job.work_identity
 
     def poll_available(self):
         # Taking the batch and appending another submission are linearized.
@@ -128,7 +135,7 @@ class InlineMotionWorker:
             pending, self._pending = tuple(self._pending), []
         done = tuple(motion_worker._execute_job(job) for job in pending)
         with self._pending_lock:
-            self.activity.extend(ObservedAsyncActivity(job.work_identity, "poll") for job in pending)
+            self.activity.extend(ObservedAsyncActivity(self._job_identity(job), "poll") for job in pending)
         return done
 
     def close(self) -> None:

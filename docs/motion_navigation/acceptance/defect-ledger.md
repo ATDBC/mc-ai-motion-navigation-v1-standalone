@@ -240,7 +240,7 @@ Task5A已停止、未签署，P0未通过；不进入5B。完整18族搜索、ru
 | D109-N3 | P3，已关闭 | 快照测试用 3 个样本判断绝对毫秒门槛；Linux 全量负载下偶发失败，测到的是机器负载而非“无关脏 section 不增加工作” | D109 D6／D6-R 已改为确定性工作量门禁。无关脏 section 为 4／16／32 时，一格范围请求均只提交和物化 1 个 section；漏范围过滤 mutation 会失败。正式 Windows 8／15／30 ms 门槛保持不变并通过；20 项原始样本、命令、HEAD、时间和哈希已进入 D109 evidence，可独立重算 |
 | D109-N4 | P3，已关闭 | feeder 错误回调强引用 worker 形成环，关闭自动 GC 后反复创建关闭会占用文件描述符 | D109 D7 改为弱引用并按 feeder 退出恢复 handler；Windows 50 次无 GC 矩阵通过。三方 D110 Linux D7 连续 10／10，通过完整生命周期及 fd 门禁，补齐 POSIX 最终字节复核 |
 | D110-CLOSE-01 | P1，已关闭 | close 诊断由异步 writer 在后端关闭后读取；Fabric 后端会把诊断清成 `None`，导致时间归因缺行、类型错误或 `NoneType` 错误 | D110 在调用线程、后端关闭前抓取诊断，并让它与同一条 `close_release` trace 记录同生同灭。正式 B10 的 `complete_time_event_attribution` 通过，最后一条诊断有效；trace 接纳与写入 21209／21209，零丢弃、零不确定记录 |
-| D110-SOLVE-01 | P3，性能债未关闭 | B10 原始求解墙钟超过 30 ms；D110 最大 39.2484 ms，唯一超限样本与唯一 gen2 重叠 | D111 raw P95／P99／最大为 31.8873／33.4408／39.9605 ms，扣除 GC 后仍超限。三方复核显示该次平均墙钟 27.4 ms、线程 CPU 26.5 ms，剩余时间主要是计算；用户确认当时还有其他程序在工作，同进程无关工作也整体变慢。D111 保持 FAILED／STOPPED，但不作为稳定求解基线。D113 按完整生产协调帧重算，已录 755 帧 P95／P99／最大为 4.1105／4.4411／4.6834 ms；唯一正式批次在首个 10-tick 等待观察时失败，never-return 未运行，仍不满足关闭条件 |
+| D110-SOLVE-01 | P3，旧门槛已退役 | B10 原始求解墙钟超过 30 ms；D110 最大 39.2484 ms，唯一超限样本与唯一 gen2 重叠 | D110／D111 的 FAILED／STOPPED 历史保持。D112 已把同步探针 `<30 ms` 改为非阻断警戒，并封住控制线程同步求解入口；正式门槛改为控制准备、后台交付和输入实际生效。D114 单次同步探针最大 27.9042 ms 只作参考，不证明性能稳定。D115 按 D112 的门槛归属退役本项，不写成求解器已经修好 |
 | D110-LINUX-01 | P3，已关闭 | settle 重复发送 `SIGTERM`，异常处理器可继续 fork 并留下后代 | settle 改为直接 `SIGKILL` 身份匹配的已登记后代。三方 D110 Linux D5 矩阵 20／20、fork 链 10／10，返回后零存活且只登记 3 个进程；settle 两个单元检查各 10／10。单 CPU PID 文件调度竞态另由 D111-TEST-01 修正 |
 | D110-EOL-01 | P3，测试卫生债 | 冻结字节哈希依赖混合行尾：同一工作区需要同时保留 LF 与 CRLF，统一转换会让与本次行为无关的导出测试失败 | D110 恢复冻结字节后完成源树和公开快照正逆矩阵；没有把行尾改动提交。后续应把语义哈希与平台 checkout 字节分开，不能在诊断批次顺手改写历史证据 |
 
@@ -260,9 +260,22 @@ Task5A已停止、未签署，P0未通过；不进入5B。完整18族搜索、ru
 |---|---|---|---|
 | D112-MEASURE-01 | P2，正式门槛未关闭 | 142 次同步求解属于 B10 探针，正式生产使用 worker；旧 30 ms 门槛把测量装置速度当成产品阻塞条件 | 同步墙钟已改为报告与警戒；候选和命令长度仍阻断。最终 Fabric 控制准备 P95／P99／最大为 4.8791／22.4488／29.9488 ms，P99 超过 15 ms；校准可比，D112 未通过 |
 | D112-INLINE-01 | P2，已关闭 | 两个公开准备函数在缺少 `precomputed` 时仍可在控制线程同步求解，虽然当前正式调用方不会触发 | 现返回 typed `PRECOMPUTED_REQUIRED`，模块不再导入内联求解函数；正逆完整矩阵与 mutation 检查通过 |
-| D112-DELIVERY-01 | P2，打开 | 正式 coordinator 只有 10 次，证据未完整关联 worker submit 到客户端实际应用 | 量尺已实现；最终 Fabric 的 28 个完成动作 identity 链完整、首次 consume 领先 earliest 1 tick、窗口错过 0。5-tick 第一场三次交付都因没有启动余量而安全失败；10-tick 与 never-return 实机矩阵未运行，门槛未关闭 |
+| D112-DELIVERY-01 | P2，已关闭固定矩阵 | 正式 coordinator 最初只有 10 次，证据未完整关联 worker submit 到客户端实际应用 | D114 通过正式驱动完成 baseline 20、2／5／10 tick 各 8、never-return 4 的全部可执行场景。可交付 identity 的 submit、receiver、control-visible、consume 和输入应用链完整；never-return 保留未交付端点。10-tick 与 never-return 均零伤害、有界终结并显式释放来源。该结论只关闭固定矩阵，不宣称统计错过率上界 |
 | D112-DEVICE-01 | P2，部分关闭 | D111 运行时有其他程序；空闲速度不能成为设备准入条件，也不能用受干扰运行签署性能回归 | 校准只判断同一次正式运行前后的性能证据是否可比；最终 Fabric P50／P95 漂移 +0.09%／−0.14%，结果可比较。组件矩阵通过，但 Fabric 5-tick 失败 |
 | D112-HARNESS-01 | P1，已关闭 | 第一次 Fabric 读取不存在的 `delivery` 字段，coordinator 记录为 0 | 修正为 `deliveries` 并补检查；原始尝试保留为 `INVALID_HARNESS_RUN` |
 | D112-HARNESS-02 | P2，部分关闭 | 第二次尝试完成 28 个可执行场景后，在约第 2000 个 Runtime step 出现脱敏 `IllegalStateException`，Python 等待观察超时。调查另发现外层 600 秒未传入客户端，但修正后最终运行仍复现后续客户端异常，因此期限不是已证实根因 | 期限现显式传入客户端，120—3600 秒两侧校验，111 项检查通过。剩余客户端异常另行调查；它发生在 D112 5-tick 阻断结果之后，不改变本阶段失败 |
 
 Linux 复核来源：`bee34bd:reviews/2026-10-15-d110-review.md` 的 E40、E53—E56 与完整矩阵。以上关闭只针对已复核的生命周期机制或测试问题，不改变 D109／D110／D111 的历史性能失败。D111 的实现和唯一 B10 结果见[验收](d111-b10-gc-attribution-and-buffer.md)与 `evidence/motion_navigation/d111-b10-gc-attribution-v1/`。
+
+### D113—D116 正式驱动、夹具与连续两跳（2026-10-17）
+
+| 编号 | 严重度 | 当前事实 | 当前处理 |
+|---|---|---|---|
+| D113-HARNESS-LEASE-01 | P1，已关闭 | B10 夹具等待 worker 时绕过正式驱动，反复复用即将过期的旧移动意图，10-tick 场景最终得到 Runtime `deadline_exceeded` | D114 让组件和 Fabric 每帧共用正式 `RuntimeNavigationDriver` prepare／control／adopt。1211 个 Fabric 控制帧中，获胜意图全部是本帧新提议；旧 manual／Session 意图获胜为 0。删掉正式撤销的变异会让组件 10-tick／never-return 失败，因此同类缺陷能在 Fabric 前发现 |
+| D114-TELEPORT-01 | P1，组件已修，实机待复核 | 连续两场起点和朝向相同时，旧 `teleport()` 会把命令前的稳定观察当成传送完成；真实到达的 `on_ground=false` 帧随后落进场景 | D115 要求先观察传送因果迹象，再等待最少 3 tick 和连续 2 帧稳定；同位姿只接受 Fabric 已稳定出现的 `on_ground=false` 到达帧，毫米级自然漂移不能冒充生效。`driver.start()` 前再核对起点。71 项 D114／probe 检查通过；本轮没有 Fabric，下一次正式能力批次必须复核 |
+| D115-DELIVERY-01 | P2，组件已关闭 | 路线内交付估计只增不减，一次慢动作会让后续每个严格动作多等待 | 新的动作主体（subject）用完整 SOLVE 重建估计；同一主体的 SOLVE retry 和 REVALIDATE 只上调；无效、过期和重复结果不改变。D113 模块 15／15，含 180 个 D／D+1 抖动场景；未新增字段、状态或重试 |
+| D115-HANDOFF-01 | P1，语义依赖误拒已关闭；连续链仍打开 | D115 代表链的第二跳在 tick20 被拒，tick21 滑出入口，tick22 过期。D116-0 的同 tick 归因表明，执行器先发布边界，Session 后申请批准；D115 写的顺序根因不成立。第一次拒绝实际为 `DEPENDENCY_CHANGED`：相同方块的观察时间戳刷新，完整 `CellFact` 不再相等，但依赖内容和正式版本均未改变 | D116-1 已统一到 `WorldModel.dependency_changes()`：tick20 为 `READY_MATCH` 并获批，tick21 第二跳输入实际应用，单一 movement winner、owner 无空档、零伤害。随后由 D116-TRACKER-01 阻塞；D116-ASYNC-01 在重建 RED 中也存在，不是本修复引入。D116-0 最初的未提交时间线曾被覆盖；当前 RED 是显式旧门槛重放，不能冒充原字节。证据索引见 `d116-handoff-timeline-v1/index.json` |
+| D116-TRACKER-01 | P1，打开 | prepared 激活已经把执行器从 action 1 推进到 action 2，但 `ActiveRouteTracker` 仍绑定上一动作；tick21 复核返回 `STOP / route_identity_changed`，并以 `dependency_changed` 取消刚激活的控制器 | 下一阶段先定义动作索引与路线追踪身份的同一交接边界。不得用放宽 route identity、跳过复核或扩大入口来绕过。D116 本轮已止损，未改生产顺序，未运行 Fabric |
+| D116-ASYNC-01 | P1，既有缺口，打开 | prepared 结果已有 `finish` 且 admission 为 `APPLIED`，但异步生命周期没有对应 `apply` 事件；监视器唯一报告 I19：`result applied without current identity, facts or time`。显式旧门槛 RED 和现行结果都会出现，因此不是 D116-1 引入 | 让 prepared admission 与通用异步生命周期使用同一个 apply 入口，并保留 identity、facts、time 门槛。绝对 movement tick 受进程内 worker 调度影响，回归应检查事件关系和唯一性，不写死 tick |
+| D115-FIXTURE-01 | P2，组件已关闭 | `tests.sim.runner.InlineMotionWorker` 原先按普通作业读取 `job.work_identity`，不认识 `PreparedMotionJob.request.async_identity` | 测试 worker 现在按作业种类读取正式身份；prepared job 经同一 worker 路径登记。`test_inline_worker_records_prepared_job_formal_identity` 通过；没有修改生产身份来迎合夹具 |
+| D115-VALIDATION-01 | P2，组件已关闭 | prepared proof 带后继 Walk 时，冻结值校验器原先不支持入口中的 `frozenset[str]`，返回 worker failure | 公共冻结值校验器已原生支持 `frozenset[str]`，并保留元素类型、可变对象和隐藏存储负例。`test_frozen_string_set_matches_declared_entry_contract_type` 通过；代表路线仍保留后继 Walk |

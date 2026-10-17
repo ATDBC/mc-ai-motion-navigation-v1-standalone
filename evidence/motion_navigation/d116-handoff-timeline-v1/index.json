@@ -1,0 +1,17 @@
+{
+  "decision": "D116",
+  "files": [
+    {
+      "path": "d116-0-red-timeline.json",
+      "role": "reconstructed_red",
+      "sha256": "D2B8E05D2293BA8E1DBD5BF293925F614A9A69EA1A3608114A95D095E34FDB69"
+    },
+    {
+      "path": "d116-1-semantic-result-timeline.json",
+      "role": "current_semantic_result",
+      "sha256": "295A62DE067B0D4B26F0447C0D9999DFA71219BE1C4FE343C27D9A7BC6290093"
+    }
+  ],
+  "note": "The original uncommitted D116-0 timeline was overwritten before review. The RED file is an explicit in-process replay of the legacy full-CellFact gate and is not claimed as original bytes.",
+  "schema": "mc2p.d116-handoff-evidence-index.v1"
+}

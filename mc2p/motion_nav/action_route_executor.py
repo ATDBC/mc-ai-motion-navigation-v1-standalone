@@ -62,6 +62,7 @@ from mc2p.motion_nav.safe_ground_control import (
     verified_ground_route_candidate,
 )
 from mc2p.motion_nav.world_model import BlockPos, WorldQueryCache
+from mc2p.motion_nav.world_snapshot import DependencyStatus
 from mc2p.motion_nav.geometry import QueryStatus
 
 @dataclass(frozen=True, slots=True)
@@ -360,14 +361,14 @@ class ActionRouteExecutor:
                 status = PreparedQueryStatus.ENTRY_MISMATCH
             elif not hot.requested_window.allows_start(anchor.movement_tick_id + 1):
                 status = PreparedQueryStatus.TIMING_MISMATCH
-            elif any(frame.world.cell(position) != fact for position, fact in hot.dependency_facts):
-                status = PreparedQueryStatus.DEPENDENCY_CHANGED
             else:
                 source = frame.world._owner
-                versions = (None if source is None else source.dependency_versions(
-                    tuple(position for position, _ in hot.dependency_versions)))
-                status = (PreparedQueryStatus.DEPENDENCY_CHANGED if versions is not None
-                          and versions != hot.dependency_versions else PreparedQueryStatus.READY_MATCH)
+                changes = (None if source is None
+                           else source.dependency_changes(hot.dependency_versions))
+                status = (PreparedQueryStatus.READY_MATCH
+                          if changes is not None
+                          and changes.status is DependencyStatus.UNCHANGED
+                          else PreparedQueryStatus.DEPENDENCY_CHANGED)
         ledger = self._last_prepared_ledger
         records = () if ledger is None else ledger.snapshot()
         window = None if hot is None else hot.requested_window

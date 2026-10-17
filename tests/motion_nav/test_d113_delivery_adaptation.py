@@ -118,10 +118,86 @@ class DeliveryEstimateTests(unittest.TestCase):
         self.sample(delay=5)
         self.assertEqual(self.owner._delivery_ticks, 4)
 
-    def test_later_complete_solve_cannot_shrink_estimate_either(self):
+    def test_later_complete_solve_for_the_same_action_cannot_shrink_estimate(self):
         self.owner._solve_basis_job.operation = MotionJobOperation.SOLVE
         self.sample(delay=2)
         self.assertEqual(self.owner._delivery_ticks, 4)
+        self.assertEqual(self.owner._delivery_identity, self.identity)
+
+    def test_solve_rebuild_then_same_action_revalidation_only_raises(self):
+        self.owner._delivery_identity = replace(
+            self.identity, subject_id="previous-connection",
+        )
+        self.owner._solve_basis_job.operation = MotionJobOperation.SOLVE
+        self.sample(delay=2)
+        self.assertEqual(self.owner._delivery_ticks, 2)
+
+        second = replace(self.identity, revision=2)
+        lifecycle = AsyncWorkLifecycle()
+        lifecycle.begin(second, AsyncWorkWindow(10, 100, 200))
+        self.owner._work = lifecycle
+        self.owner._pending_connection = "connection-2"
+        self.owner._candidate_revision = 2
+        self.owner._solve_basis_job = SimpleNamespace(
+            operation=MotionJobOperation.REVALIDATE,
+            anchor=self.anchor,
+        )
+        result = replace(
+            self.result,
+            connection_id="connection-2",
+            candidate_revision=2,
+            work_identity=second,
+        )
+        self.sample(result, delay=4)
+        self.assertEqual(self.owner._delivery_ticks, 4)
+
+    def test_duplicate_solve_result_cannot_rebuild_the_estimate_twice(self):
+        self.owner._delivery_identity = replace(
+            self.identity, subject_id="previous-connection",
+        )
+        self.owner._solve_basis_job.operation = MotionJobOperation.SOLVE
+        self.sample(delay=2)
+        self.assertEqual(self.owner._delivery_ticks, 2)
+        self.sample(delay=5)
+        self.assertEqual(self.owner._delivery_ticks, 2)
+
+    def test_same_subject_solve_retry_only_raises_the_estimate(self):
+        self.owner._solve_basis_job.operation = MotionJobOperation.SOLVE
+        self.sample(delay=4)
+        self.assertEqual(self.owner._delivery_ticks, 4)
+
+        retry_identity = replace(self.identity, revision=2)
+        lifecycle = AsyncWorkLifecycle()
+        lifecycle.begin(retry_identity, AsyncWorkWindow(10, 100, 200))
+        self.owner._work = lifecycle
+        self.owner._pending_connection = "connection-2"
+        self.owner._candidate_revision = 2
+        result = replace(
+            self.result, connection_id="connection-2", candidate_revision=2,
+            work_identity=retry_identity,
+        )
+        self.sample(result, delay=2)
+        self.assertEqual(self.owner._delivery_ticks, 4)
+
+    def test_new_subject_solve_rebuilds_the_estimate(self):
+        self.owner._solve_basis_job.operation = MotionJobOperation.SOLVE
+        self.sample(delay=4)
+        self.assertEqual(self.owner._delivery_ticks, 4)
+
+        next_identity = replace(
+            self.identity, subject_id="next-connection", revision=2,
+        )
+        lifecycle = AsyncWorkLifecycle()
+        lifecycle.begin(next_identity, AsyncWorkWindow(10, 100, 200))
+        self.owner._work = lifecycle
+        self.owner._pending_connection = "next-connection"
+        self.owner._candidate_revision = 2
+        result = replace(
+            self.result, connection_id="next-connection", candidate_revision=2,
+            work_identity=next_identity,
+        )
+        self.sample(result, delay=2)
+        self.assertEqual(self.owner._delivery_ticks, 2)
 
     def test_invalid_or_expired_delivery_cannot_change_estimate(self):
         for invalid in ("identity", "scope", "connection", "revision", "expired", "missing"):

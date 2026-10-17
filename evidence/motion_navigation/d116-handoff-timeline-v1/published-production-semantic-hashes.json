@@ -1,0 +1,11 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D116 frozen-value fixture and semantic prepared dependency repair",
+  "normalization": "CRLF_TO_LF",
+  "status": "sealed",
+  "files": {
+    "mc2p/contracts/motion_activation.py": "602eca115f834fb5ec7760de19e5185ce142a45302c87bce97b99e2845d35992",
+    "mc2p/motion_nav/action_route_executor.py": "b853c30744a5bcc6b03cde75e268514913d401d328fecd3b117b4d2b46887586"
+  },
+  "source_commit": "30f42cf641a8081283b917a91d14a21f738f38c6"
+}

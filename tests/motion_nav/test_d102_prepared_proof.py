@@ -21,7 +21,7 @@ from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.async_work import AsyncComputationScope, AsyncWorkIdentity, AsyncWorkKind
 from mc2p.motion_nav.motion_risk import conservative_plain_fall_damage_points
 from mc2p.motion_nav.motion_solver import MotionCommandTick
-from mc2p.motion_nav.motion_worker import MotionJobOperation, MotionSolverWorker
+from mc2p.motion_nav.motion_worker import MotionJobOperation, MotionSolverWorker, PreparedMotionJob
 from mc2p.motion_nav.online_motion import CandidateExecutionWindow
 from mc2p.motion_nav.physics_1_21 import step
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
@@ -32,6 +32,8 @@ from mc2p.motion_nav.prepared_motion import (
 )
 from mc2p.motion_nav.world_model import Aabb, BlockGeometry, UNKNOWN_CELL
 from mc2p.motion_nav.world_snapshot import SealedSnapshot, canonical_snapshot_bytes
+from tests.sim.async_monitor import ObservedAsyncActivity
+from tests.sim.runner import InlineMotionWorker
 
 
 def input_digest(inputs):
@@ -106,6 +108,37 @@ class ProofTests(unittest.TestCase):
     def prepare(self, request=None, snapshot=None):
         return self.preparer().prepare_fixed_motion(request or self.request,
                                                     snapshot or self.snapshot)
+
+    def test_inline_worker_records_prepared_job_formal_identity(self):
+        worker = InlineMotionWorker()
+        job = PreparedMotionJob(self.request, self.snapshot)
+        self.assertTrue(worker.submit(job))
+        self.assertEqual(
+            worker.activity,
+            [ObservedAsyncActivity(self.request.async_identity, "submit")],
+        )
+
+        result, = worker.poll_available()
+        self.assertEqual(result.job_token, self.request.job_token)
+        self.assertEqual(
+            worker.activity,
+            [
+                ObservedAsyncActivity(self.request.async_identity, "submit"),
+                ObservedAsyncActivity(self.request.async_identity, "poll"),
+            ],
+        )
+
+        changed_identity = replace(
+            self.request.async_identity,
+            revision=self.request.async_identity.revision + 1,
+        )
+        changed_request = replace(
+            self.request,
+            job_token="job-inline-identity-change",
+            async_identity=changed_identity,
+        )
+        self.assertTrue(worker.submit(PreparedMotionJob(changed_request, self.snapshot)))
+        self.assertEqual(worker.activity[-1], ObservedAsyncActivity(changed_identity, "submit"))
 
     def test_same_fixed_inputs_match_frozen_scanner(self):
         result = self.prepare()

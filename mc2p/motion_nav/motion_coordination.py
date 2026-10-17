@@ -836,11 +836,18 @@ class MotionRouteCoordinator:
                 or result.candidate_revision != self._candidate_revision
                 or self._delivery_identity == result.work_identity):
             return
-        # Delivery time is independent of solve success. A slower revalidation
-        # raises preparation time, while a faster one cannot shorten the time
-        # already observed for a full solve. Sample before any entry wait.
-        self._delivery_ticks = max(self._delivery_ticks, min(5, max(
-            1, anchor.movement_tick_id - job.anchor.movement_tick_id)))
+        # Delivery time is independent of solve success.  The first full solve
+        # for a new action subject establishes its estimate. Retries and
+        # revalidation for that subject may only make it more conservative.
+        # Sample before any entry wait.
+        observed_ticks = min(5, max(
+            1, anchor.movement_tick_id - job.anchor.movement_tick_id))
+        if (job.operation is MotionJobOperation.SOLVE
+                and self._delivery_identity is not None
+                and self._delivery_identity.subject_id != result.work_identity.subject_id):
+            self._delivery_ticks = observed_ticks
+        else:
+            self._delivery_ticks = max(self._delivery_ticks, observed_ticks)
         self._delivery_identity = result.work_identity
 
     def _accept_result(

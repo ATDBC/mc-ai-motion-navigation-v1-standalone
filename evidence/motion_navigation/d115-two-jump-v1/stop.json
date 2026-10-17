@@ -1,0 +1,71 @@
+{
+  "schema": "mc2p.d115-two-jump-stop.v1",
+  "decision": "D115",
+  "status": "FAILED_STOPPED",
+  "platform": "Windows",
+  "scope": {
+    "production_protocol_changed": false,
+    "matrix_run": false,
+    "fabric_run": false
+  },
+  "representative": {
+    "chain": "PlayerRuntimeV1 -> RuntimeNavigationDriver -> NavigationSession -> planner/admission/executor/coordinator -> CalculatorBackend",
+    "scene_columns": [[63], [63], [], [63], [], [63], [63], [63]],
+    "lane_width": 3,
+    "start": [0.5, 64.0, 0.5],
+    "goal": [0.5, 64.0, 5.5],
+    "planned_actions": ["WalkSegment", "JumpGapSegment", "JumpGapSegment"],
+    "outcome": "executing",
+    "reason": "prepared_action_boundary",
+    "final_position": [0.5, 64.0, 3.81],
+    "damage": 0.0,
+    "second_jump_started": false
+  },
+  "key_ticks": [
+    {
+      "movement_tick": 8,
+      "event": "first_jump_applied"
+    },
+    {
+      "movement_tick": 12,
+      "event": "second_jump_proof_registered",
+      "requested_start_window": [21, 22],
+      "proof_deadline_tick": 21
+    },
+    {
+      "movement_tick": 19,
+      "event": "first_jump_landed",
+      "position": [0.5, 64.0, 3.4427648819320233]
+    },
+    {
+      "movement_tick": 20,
+      "event": "actual_state_matched_prepared_entry_before_action_boundary_was_published",
+      "position": [0.5, 64.0, 3.611733607102635],
+      "forward_velocity_blocks_per_tick": 0.09225692394315392
+    },
+    {
+      "movement_tick": 21,
+      "event": "boundary_became_visible_one_control_pass_too_late",
+      "query_status": "entry_mismatch",
+      "position": [0.5, 64.0, 3.703990531045789],
+      "forward_velocity_blocks_per_tick": 0.050372280472962036
+    },
+    {
+      "movement_tick": 22,
+      "event": "prepared_proof_expired",
+      "query_status": "overdue"
+    }
+  ],
+  "root_cause": "Session asks the supervisor to approve the prepared handoff before the current executor pass publishes boundary_reached. The executor publishes the boundary later in the same control pass. On the next pass the body has moved beyond the exact prepared entry, so the proof cannot be activated.",
+  "stop_reason": "Repair requires changing Session, ExecutionSupervisor, or ActionRouteExecutor handoff ordering, or adding a same-frame second phase. D115 authorized only a local MotionRouteCoordinator change and prohibited public protocol changes.",
+  "existing_fixture_gaps": [
+    {
+      "id": "D115-FIXTURE-01",
+      "detail": "InlineMotionWorker reads job.work_identity, but PreparedMotionJob exposes request.async_identity. The temporary diagnostic repair was not retained."
+    },
+    {
+      "id": "D115-FIXTURE-02",
+      "detail": "A prepared second jump with a following Walk carries frozenset[str] in its continuation entry window. The frozen-value validator rejects that parameterized frozenset contract. The representative goal was placed on the second landing surface to isolate the handoff-order defect."
+    }
+  ]
+}

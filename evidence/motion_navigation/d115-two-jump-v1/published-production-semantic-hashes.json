@@ -1,0 +1,11 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D115 completed harness and delivery-estimate slices",
+  "normalization": "CRLF_TO_LF",
+  "status": "sealed",
+  "files": {
+    "mc2p/motion_nav/motion_coordination.py": "48a164295568c2a1097a497b6ca422e0724147edaa29b8655139253a7594e50c",
+    "scripts/b10_gap_solver_runtime.py": "9890c8e4895294bcb0a6ffea6797aecfa408b57b97991a18332ffc968b7e26e3"
+  },
+  "source_commit": "3efc2fc3"
+}
