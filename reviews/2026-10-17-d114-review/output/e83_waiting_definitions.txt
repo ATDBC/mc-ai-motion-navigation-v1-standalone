@@ -1,0 +1,5 @@
+delay | 控制帧 | waiting_frame_count（组件口径） | submit_input=false 帧（Fabric 口径）
+0 | 39 | 0 | 0
+5 | 47 | 2 | 2
+10 | 38 | 18 | 18
+None | 48 | 37 | 37

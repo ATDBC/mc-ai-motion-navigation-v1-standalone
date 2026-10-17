@@ -1,0 +1,17 @@
+delay | 帧数上限 | 实际帧数 | 终态 | 原因 | bounded | typed_safe | completed | never_return_safe
+10 | 160 | 38 | failed | motion_unsolvable:motion_retry_exhausted:execution_window_expired | True | True | False | -
+10 | 36 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -
+10 | 30 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -
+10 | 24 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -
+10 | 18 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -
+10 | 12 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -
+10 | 6 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -
+10 | 3 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -
+None | 160 | 48 | failed | motion_unsolvable:motion_solver_request_expired | True | True | False | True
+None | 36 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -
+None | 30 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -
+None | 24 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -
+None | 18 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -
+None | 12 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -
+None | 6 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -
+None | 3 | - | 抛出 RuntimeError | B10 formal driver frame limit left body responsibility unresolved | - | - | - | -

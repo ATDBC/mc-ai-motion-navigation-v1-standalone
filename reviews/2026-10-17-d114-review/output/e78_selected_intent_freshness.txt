@@ -1,0 +1,8 @@
+类别 | 场景 | 控制帧 | submit_input=false 帧 | 无移动获胜帧 | 记录 waiting_polls 合计
+baseline:0 | 20 | 382 | 22 | 0 | 22
+worker_delay:10 | 8 | 256 | 171 | 163 | 171
+worker_delay:2 | 8 | 176 | 16 | 8 | 16
+worker_delay:5 | 8 | 224 | 40 | 32 | 40
+worker_never_return:0 | 4 | 173 | 165 | 161 | 165
+
+问题帧：0

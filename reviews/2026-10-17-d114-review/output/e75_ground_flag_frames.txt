@@ -1,0 +1,16 @@
+trial | 帧数 | 未着地帧(序号:状态:位置) | 最大位移 | 记录 left_start_support | 修正范围外帧数
+coordinator-worker-delay-10-0-0 | 32 | - | 0.0000 | False | 1
+coordinator-worker-delay-10-0-1 | 32 | 0:planning/planning_submitted:[-2.5, 0.0, -6.5]:submit=False | 0.0000 | True | 1
+coordinator-worker-delay-10-1-0 | 32 | - | 0.0000 | False | 1
+coordinator-worker-delay-10-1-1 | 32 | 0:planning/planning_submitted:[-2.5, 0.0, -6.5]:submit=False | 0.0000 | True | 1
+coordinator-worker-delay-10-2-0 | 32 | - | 0.0000 | False | 1
+coordinator-worker-delay-10-2-1 | 32 | 0:planning/planning_submitted:[-2.5, 0.0, -6.5]:submit=False | 0.0000 | True | 1
+coordinator-worker-delay-10-3-0 | 32 | - | 0.0000 | False | 1
+coordinator-worker-delay-10-3-1 | 32 | - | 0.0000 | False | 1
+
+类别 | 已执行 | 含未着地帧 | 无已验证命令
+baseline:0 | 20 | 20 | 0
+worker_delay:10 | 8 | 3 | 8
+worker_delay:2 | 8 | 8 | 0
+worker_delay:5 | 8 | 8 | 0
+worker_never_return:0 | 4 | 0 | 4

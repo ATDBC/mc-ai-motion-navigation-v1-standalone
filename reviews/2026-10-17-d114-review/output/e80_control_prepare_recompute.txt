@@ -1,0 +1,9 @@
+E80：用项目脚本 scripts/analyze_d113_delivery_baseline.py 只读重算 D114 唯一 Fabric 批次（解压后的公开原始文件）
+source_hashes_unchanged: True ；performance_signable: True ；production_thresholds_met: True
+mapping_issues: []
+production_control_prepare: n=1211 P50=1.1479 P95=2.96 P99=5.4988 最大=5.8878
+synchronous_probe: n=142 P50=22.68 P95=25.7821 P99=26.2237 最大=27.9042
+other_fixture: n=5133 P50=1.5939 P95=2.0168 P99=13.3316 最大=51.7258
+all_trace_diagnostic: n=None P50=1.3849 P95=3.046 P99=23.1434 最大=51.7258
+identity_delivery: {'identity_count': 84, 'incomplete_count': 8, 'invalid_order_count': 0, 'visibility_endpoint_unavailable_count': 8}
+actual_delivery_ticks: {'maximum': 10, 'minimum': 1, 'p50': 5, 'p95': 10, 'p99': 10, 'samples': 76}

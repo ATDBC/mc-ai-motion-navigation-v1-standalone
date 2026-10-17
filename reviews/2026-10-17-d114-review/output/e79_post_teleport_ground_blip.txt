@@ -1,0 +1,17 @@
+场景数 48
+相对第 0 帧结果观察的偏移 → 场景数: {-2: 45, 0: 3, 2: 19, 3: 19, 4: 20}
+  baseline: {-2: 20, 2: 19, 3: 19, 4: 20}
+  worker_delay: {-2: 21, 0: 3}
+  worker_never_return: {-2: 4}
+偏移 ≤0 的瞬态中，位置相对前一 tick 有变化（即传送到达）的次数: 37
+
+上一场已在本场起点且朝向相同 | 偏移 ≤0 的瞬态位置 | 场景数
+False | (-2,) | 44
+True | (-2,) | 1
+True | (0,) | 3
+
+本场 | 上一场 | 瞬态偏移 | 记录 left_start_support
+coordinator-worker-delay-10-0-1 | coordinator-worker-delay-10-0-0 | (0,) | True
+coordinator-worker-delay-10-1-1 | coordinator-worker-delay-10-1-0 | (0,) | True
+coordinator-worker-delay-10-2-1 | coordinator-worker-delay-10-2-0 | (0,) | True
+coordinator-worker-delay-10-3-1 | coordinator-worker-delay-10-3-0 | (-2,) | False

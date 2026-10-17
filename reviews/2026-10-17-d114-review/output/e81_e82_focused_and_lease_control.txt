@@ -1,0 +1,22 @@
+== E82：37ea00b + 上一轮 e69_no_lease_revoke_control.diff（去掉生产驱动在无移动帧撤销旧租约的那一行）
+-- tests.motion_nav.test_d114_b10_formal_driver
+ERROR: test_component_runs_the_v3_evidence_and_formal_gates (delay=10)
+ERROR: test_component_runs_the_v3_evidence_and_formal_gates (delay=None)
+FAIL: test_four_directions_share_the_formal_driver_for_delivery_and_timeout (turns=0, delay=10)
+FAIL: test_four_directions_share_the_formal_driver_for_delivery_and_timeout (turns=0, delay=None)
+FAIL: test_four_directions_share_the_formal_driver_for_delivery_and_timeout (turns=1, delay=10)
+FAIL: test_four_directions_share_the_formal_driver_for_delivery_and_timeout (turns=1, delay=None)
+FAIL: test_four_directions_share_the_formal_driver_for_delivery_and_timeout (turns=2, delay=10)
+FAIL: test_four_directions_share_the_formal_driver_for_delivery_and_timeout (turns=2, delay=None)
+FAIL: test_four_directions_share_the_formal_driver_for_delivery_and_timeout (turns=3, delay=10)
+FAIL: test_four_directions_share_the_formal_driver_for_delivery_and_timeout (turns=3, delay=None)
+FAIL: test_ten_tick_delivery_never_uses_an_expiring_fixture_or_session_lease
+Ran 15 tests in 13.980s
+FAILED (failures=9, errors=2)
+RuntimeError: B10 formal driver step failed: ExecutionReportV0(report_id='report-26', task_id='task-1', episode_id='episode-sim', runtime_step=26, status=<ExecutionStatusV0.TIMED_OUT: 'timed_out'>, phase='runtime_failure', progress=0.0, selected_intent_ids=('ordered/8fdfcb05070f4dbcaee157eb2c3ce4ce/
+RuntimeError: B10 formal driver step failed: ExecutionReportV0(report_id='report-32', task_id='task-1', episode_id='episode-sim', runtime_step=32, status=<ExecutionStatusV0.TIMED_OUT: 'timed_out'>, phase='runtime_failure', progress=0.0, selected_intent_ids=('ordered/255661e68f5049a890e91124025029c1/
+AssertionError: <RuntimeStateV1.FAILED: 'failed'> is not <RuntimeStateV1.READY: 'ready'>
+
+== 对照：37ea00b 原样，同一组 13 个直接与相邻模块
+Ran 248 tests in 177.428s
+OK (skipped=1)

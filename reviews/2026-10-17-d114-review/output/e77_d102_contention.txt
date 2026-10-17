@@ -1,0 +1,6 @@
+== 37ea00b，同核另有忙循环
+检出 37ea00b
+  test_parent_request_building_stays_on_existing_receiver：40 次 → {'OK': 40}；最长连续通过 40；单次用时 7.6–9.0 s
+  test_parent_builder_failure_is_typed_and_keeps_receiver_and_body_uses：40 次 → {'OK': 40}；最长连续通过 40；单次用时 10.1–11.4 s
+  test_retired_selection_loses_authority_and_keeps_incumbent_uses：40 次 → {'OK': 40}；最长连续通过 40；单次用时 10.1–11.3 s
+  test_old_permission_cannot_prepare_new_generation：40 次 → {'OK': 40}；最长连续通过 40；单次用时 14.9–16.6 s
