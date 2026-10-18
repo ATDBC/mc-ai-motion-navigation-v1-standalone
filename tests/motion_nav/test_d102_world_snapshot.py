@@ -76,6 +76,46 @@ class SnapshotTests(unittest.TestCase):
         self.assertIs(result.status, SnapshotLeaseStatus.READY)
         return version, result.lease
 
+    def test_try_borrow_distinguishes_lock_busy_capacity_and_ready(self):
+        from mc2p.motion_nav.prepared_motion import SnapshotBorrowStatus
+        entered, release = threading.Event(), threading.Event()
+        def hold():
+            with self.world._snapshot_version_lock:
+                entered.set()
+                release.wait(5)
+        thread = threading.Thread(target=hold)
+        thread.start()
+        try:
+            self.assertTrue(entered.wait(2))
+            result = self.world.try_borrow_snapshot_version(self.bounds, ruleset=JAVA_1_21_RULESET)
+            self.assertIs(result.status, SnapshotBorrowStatus.BUSY)
+            self.assertIsNone(result.version)
+            self.assertIsNone(self.world.borrow_snapshot_version(self.bounds, ruleset=JAVA_1_21_RULESET))
+            huge = PhysicsWorldBounds(0, 16384, 0, 0, 0, 0)
+            self.assertIs(self.world.try_borrow_snapshot_version(huge, ruleset=JAVA_1_21_RULESET).status,
+                          SnapshotBorrowStatus.CAPACITY)
+        finally:
+            release.set()
+            thread.join(5)
+        ready = self.world.try_borrow_snapshot_version(self.bounds, ruleset=JAVA_1_21_RULESET)
+        self.assertIs(ready.status, SnapshotBorrowStatus.READY)
+        self.assertIsNotNone(ready.version)
+        self.assertIsNotNone(self.world.borrow_snapshot_version(self.bounds, ruleset=JAVA_1_21_RULESET))
+
+    def test_typed_publication_preserves_bool_api_and_classifies_revision_conflict(self):
+        from mc2p.motion_nav.prepared_motion import SnapshotPublishStatus
+        from mc2p.motion_nav.world_snapshot import seal_snapshot_version
+        version = self.world.borrow_snapshot_version(self.bounds, ruleset=JAVA_1_21_RULESET)
+        sealed = seal_snapshot_version(version, JAVA_1_21_RULESET)
+        self.assertIs(self.world.try_publish_sealed_snapshot(version, sealed), SnapshotPublishStatus.READY)
+        self.assertTrue(self.world.publish_sealed_snapshot(version, sealed))
+        conflict = replace(sealed.identity, digest="f" * 64)
+        conflicting = pickle.loads(pickle.dumps(sealed))
+        object.__setattr__(conflicting, "identity", conflict)
+        self.world._published_snapshots[sealed.identity.local_revision] = conflicting
+        self.assertIs(self.world.try_publish_sealed_snapshot(version, sealed), SnapshotPublishStatus.INVALID)
+        self.assertFalse(self.world.publish_sealed_snapshot(version, sealed))
+
     def test_old_lease_survives_new_observation(self):
         _, old_lease = self.published()
         old_fact = old_lease.cell(self.position)

@@ -17,7 +17,8 @@ if TYPE_CHECKING:
     from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds
     from mc2p.motion_nav.physics_types import PhysicsRuleset
     from mc2p.motion_nav.prepared_motion import (
-        DependencyVersions, SnapshotLease, SnapshotLeaseResult, WorldSnapshotVersion,
+        DependencyVersions, SnapshotBorrowResult, SnapshotLease, SnapshotLeaseResult,
+        SnapshotPublishStatus, WorldSnapshotVersion,
     )
     from mc2p.motion_nav.world_snapshot import DependencyCheck, SealedSnapshot
 
@@ -1050,15 +1051,24 @@ class WorldKnowledge:
 
     def borrow_snapshot_version(self, bounds: PhysicsWorldBounds, *,
                                 ruleset: PhysicsRuleset) -> WorldSnapshotVersion | None:
+        """Preserve the original optional-version API for existing callers."""
+        return self.try_borrow_snapshot_version(bounds, ruleset=ruleset).version
+
+    def try_borrow_snapshot_version(self, bounds: PhysicsWorldBounds, *,
+                                    ruleset: PhysicsRuleset) -> SnapshotBorrowResult:
         from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds
         from mc2p.motion_nav.physics_types import PhysicsRuleset
-        from mc2p.motion_nav.prepared_motion import WorldSnapshotVersion
+        from mc2p.motion_nav.prepared_motion import (
+            SnapshotBorrowResult, SnapshotBorrowStatus, WorldSnapshotVersion,
+        )
         if type(bounds) is not PhysicsWorldBounds or type(ruleset) is not PhysicsRuleset:
             raise ContractViolation("snapshot borrowing requires bounds and ruleset")
         size = ((bounds.max_x - bounds.min_x + 1) * (bounds.max_y - bounds.min_y + 1)
                 * (bounds.max_z - bounds.min_z + 1))
-        if size > self._max_snapshot_cells or not self._snapshot_version_lock.acquire(False):
-            return None
+        if size > self._max_snapshot_cells:
+            return SnapshotBorrowResult(SnapshotBorrowStatus.CAPACITY)
+        if not self._snapshot_version_lock.acquire(False):
+            return SnapshotBorrowResult(SnapshotBorrowStatus.BUSY)
         try:
             requested_sections = {
                 (x, y, z)
@@ -1084,12 +1094,18 @@ class WorldKnowledge:
                              bounds.max_x + 1, bounds.max_y + 1, bounds.max_z + 1), ruleset)
             source = SnapshotSourceProvenance(uuid.uuid4().hex, metadata, references)
             self._snapshot_sources[source.token] = source
-            return WorldSnapshotVersion(*metadata, references, source)
+            return SnapshotBorrowResult(SnapshotBorrowStatus.READY,
+                                       WorldSnapshotVersion(*metadata, references, source))
         finally:
             self._snapshot_version_lock.release()
 
     def publish_sealed_snapshot(self, version: WorldSnapshotVersion, sealed: SealedSnapshot) -> bool:
-        from mc2p.motion_nav.prepared_motion import WorldSnapshotVersion
+        from mc2p.motion_nav.prepared_motion import SnapshotPublishStatus
+        return self.try_publish_sealed_snapshot(version, sealed) is SnapshotPublishStatus.READY
+
+    def try_publish_sealed_snapshot(self, version: WorldSnapshotVersion,
+                                    sealed: SealedSnapshot) -> SnapshotPublishStatus:
+        from mc2p.motion_nav.prepared_motion import SnapshotPublishStatus, WorldSnapshotVersion
         from mc2p.contracts.motion_activation import validate_frozen_value
         from mc2p.motion_nav.world_snapshot import (
             SealedSnapshot, snapshot_version_content, validate_sealed_snapshot,
@@ -1098,10 +1114,10 @@ class WorldKnowledge:
             raise ContractViolation("publication requires a borrowed version and sealed snapshot")
         try:
             if type(sealed.canonical_bytes) is not bytes:
-                return False
+                return SnapshotPublishStatus.INVALID
             size = len(sealed.canonical_bytes)
             if size > self._max_snapshot_bytes:
-                return False
+                return SnapshotPublishStatus.CAPACITY
             validate_frozen_value(version)
             source = version.source_provenance
             metadata = (version.world_session_id, version.geometry_revision, version.evidence_revision,
@@ -1113,7 +1129,7 @@ class WorldKnowledge:
                         or any(candidate is not original for candidate, original in zip(
                             version.section_references, source.section_references))
                         or version.world_session_id != self.session.value):
-                    return False
+                    return SnapshotPublishStatus.INVALID
             # Pickle bypasses dataclass construction. Repeat the full immutable
             # graph, canonical-byte and digest checks at this admission boundary.
             validate_sealed_snapshot(sealed)
@@ -1123,9 +1139,9 @@ class WorldKnowledge:
                                identity.bounds, identity.ruleset)
             if (sealed_metadata != source.metadata
                     or (sealed.facts, sealed.dependency_versions) != snapshot_version_content(version)):
-                return False
+                return SnapshotPublishStatus.INVALID
         except (ContractViolation, AttributeError, TypeError, ValueError):
-            return False
+            return SnapshotPublishStatus.INVALID
         # The expensive content comparison above uses only immutable references.
         # Locks below protect bounded metadata and reference publication only.
         with self._snapshot_version_lock:
@@ -1136,14 +1152,16 @@ class WorldKnowledge:
                 and region.min_z <= z < region.max_z for x, y, z in changes)
             with self._snapshot_publication_lock:
                 if identity.local_revision in self._published_snapshots:
-                    return self._published_snapshots[identity.local_revision].identity == identity
+                    return (SnapshotPublishStatus.READY
+                            if self._published_snapshots[identity.local_revision].identity == identity
+                            else SnapshotPublishStatus.INVALID)
                 # Only unleased storage may be reclaimed. Never revoke another lease.
                 reclaimable = [revision for revision in self._published_snapshots
                                if self._snapshot_reference_counts.get(revision, 0) == 0]
                 while (len(self._published_snapshots) >= self._max_snapshot_versions
                        or self._published_snapshot_bytes + size > self._max_snapshot_bytes):
                     if not reclaimable:
-                        return False
+                        return SnapshotPublishStatus.CAPACITY
                     old = reclaimable.pop(0)
                     removed = self._published_snapshots.pop(old)
                     self._ready_snapshot_revisions.discard(old)
@@ -1152,7 +1170,7 @@ class WorldKnowledge:
                 if current:
                     self._ready_snapshot_revisions.add(identity.local_revision)
                 self._published_snapshot_bytes += size
-                return True
+                return SnapshotPublishStatus.READY
 
     def acquire_published_snapshot(self, bounds: PhysicsWorldBounds, *,
                                    ruleset: PhysicsRuleset) -> SnapshotLeaseResult:

@@ -35,6 +35,7 @@ from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.motion_candidate import (
     AdmittedMotionCandidate, VerifiedMotionExecutor,
     VerifiedMotionExecutorState, verified_candidate_can_start,
+    verified_start_state_matches,
 )
 from mc2p.motion_nav.motion_risk import (
     TaskDamageBudget,
@@ -84,6 +85,26 @@ class ActionRouteDecision:
     ground_handoff_disposition: GroundHandoffDisposition = GroundHandoffDisposition.NOT_REQUESTED
     route_progress_evidence: RouteProgressEvidence | None = None
     failure_cause: StopCause | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ActionCompletionPlan:
+    """Single-use local commit plan for one exact executor action."""
+
+    executor_token: object
+    executor_epoch: int
+    route: ActionRoute
+    action_index: int
+    next_action_index: int
+    controller: object
+    pending_action_boundary_index: int | None
+    frame: NavigationFrame
+    observation_sequence_id: int
+    damage_before: float
+    damage_after: float
+    committed_damage_before: frozenset[int]
+    committed_damage_after: frozenset[int]
+    verified_motion_identity: tuple[tuple[int, int], ...]
 
 
 def decision_input_window(decision: ActionRouteDecision) -> MovementTickWindowV1 | None:
@@ -227,6 +248,9 @@ class ActionRouteExecutor:
         self._last_prepared_anchor: StateAnchor | None = None
         self._last_prepared_ledger: InputApplicationLedger | None = None
         self._prepared_delivery_controller: VerifiedMotionExecutor | None = None
+        self._completion_token = object()
+        self._completion_epoch = 0
+        self._pending_completion_candidate_cleanup: set[int] = set()
 
     @property
     def prepared_controller(self) -> VerifiedMotionExecutor | None:
@@ -249,23 +273,142 @@ class ActionRouteExecutor:
     def abort_prepared_activation(self) -> None:
         self._prepared_delivery_controller = None
 
-    def commit_prepared_activation(self, delivered):
+    def can_commit_prepared_activation(
+            self, delivered, completion_plan: ActionCompletionPlan) -> bool:
+        controller = self._prepared_delivery_controller
+        return (
+            controller is not None
+            and delivered is controller.activation_delivery
+            and not self._cancel_requested
+            and self.route is not None
+            and self._pending_action_boundary_index == self.action_index + 1
+            and controller.prepared_handle.action_index == self.action_index + 1
+            and controller.prepared_handle.route_id == self.route.route_id
+            and controller.state is VerifiedMotionExecutorState.IDLE
+            and controller.stream_tracker is not None
+            and self.can_commit_action_completion(completion_plan)
+        )
+
+    def commit_prepared_activation(
+            self, delivered, completion_plan: ActionCompletionPlan):
         """Called within the registry's short commit; no queries, sequences or send."""
         from mc2p.contracts.motion_activation import ActivationResult, ActivationStatus, ActivationRejectReason
         controller = self._prepared_delivery_controller
-        if (controller is None or delivered is not controller.activation_delivery
-                or self._cancel_requested or self.route is None
-                or self._pending_action_boundary_index != self.action_index + 1
-                or controller.prepared_handle.action_index != self.action_index + 1
-                or controller.prepared_handle.route_id != self.route.route_id):
+        if not self.can_commit_prepared_activation(delivered, completion_plan):
             return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.HANDOFF)
+        return self._commit_prepared_activation_prechecked(
+            delivered, completion_plan,
+        )
+
+    def _commit_prepared_activation_prechecked(
+            self, delivered, completion_plan: ActionCompletionPlan):
+        """Commit local fields after RouteControl checked both participants."""
+        from mc2p.contracts.motion_activation import ActivationResult, ActivationStatus
+        controller = self._prepared_delivery_controller
+        assert controller is not None
         controller.commit_activation(delivered)
-        self.action_index += 1
+        self._commit_action_completion_prechecked(completion_plan)
         self._controller = controller
-        self._pending_action_boundary_index = None
         self._prepared_delivery_controller = None
         self.state = ActionRouteState.RUNNING
         return ActivationResult._from_native_references(ActivationStatus.ACTIVATED)
+
+    def prepare_action_completion(
+            self, frame: NavigationFrame, *, observation_sequence_id: int,
+            expected_next_action_index: int | None = None,
+    ) -> ActionCompletionPlan:
+        """Describe completion without changing damage, candidates or indices."""
+        if (type(frame) is not NavigationFrame
+                or type(observation_sequence_id) is not int
+                or observation_sequence_id < 0):
+            raise ContractViolation("action completion requires an observation")
+        if frame.body.sequence_id != observation_sequence_id:
+            raise ContractViolation("action completion frame is stale")
+        route = self.route
+        if (route is None or not 0 <= self.action_index < len(route.actions)):
+            raise ContractViolation("action completion requires an active action")
+        next_index = self.action_index + 1
+        if (expected_next_action_index is not None
+                and expected_next_action_index != next_index):
+            raise ContractViolation("action completion successor changed")
+        completed = route.actions[self.action_index]
+        damage_after = self._completed_movement_damage_points
+        committed_after = set(self._committed_damage_actions)
+        spec = action_spec(completed)
+        if (spec.tracks_damage
+                and self.action_index not in committed_after
+                and spec.damage_committed(completed, frame, force=True)):
+            damage_after += spec.expected_damage_points(completed)
+            committed_after.add(self.action_index)
+        return ActionCompletionPlan(
+            self._completion_token,
+            self._completion_epoch,
+            route,
+            self.action_index,
+            next_index,
+            self._controller,
+            self._pending_action_boundary_index,
+            frame,
+            observation_sequence_id,
+            self._completed_movement_damage_points,
+            damage_after,
+            frozenset(self._committed_damage_actions),
+            frozenset(committed_after),
+            tuple(sorted(
+                (index, id(candidate))
+                for index, candidate in self._verified_motion.items()
+            )),
+        )
+
+    def can_commit_action_completion(self, plan: ActionCompletionPlan) -> bool:
+        return (
+            type(plan) is ActionCompletionPlan
+            and plan.executor_token is self._completion_token
+            and plan.executor_epoch == self._completion_epoch
+            and self.route is plan.route
+            and self.action_index == plan.action_index
+            and self._controller is plan.controller
+            and self._pending_action_boundary_index
+                == plan.pending_action_boundary_index
+            and plan.frame.body.sequence_id == plan.observation_sequence_id
+            and plan.frame.session == self._session
+            and self._completed_movement_damage_points == plan.damage_before
+            and frozenset(self._committed_damage_actions)
+                == plan.committed_damage_before
+            and tuple(sorted(
+                (index, id(candidate))
+                for index, candidate in self._verified_motion.items()
+            )) == plan.verified_motion_identity
+        )
+
+    def commit_action_completion(self, plan: ActionCompletionPlan) -> bool:
+        """Apply the local part of one prepared completion exactly once."""
+        if not self.can_commit_action_completion(plan):
+            return False
+        self._commit_action_completion_prechecked(plan)
+        return True
+
+    def _commit_action_completion_prechecked(
+            self, plan: ActionCompletionPlan) -> None:
+        """Mutate only local fields after the caller checked every owner."""
+        self._completed_movement_damage_points = plan.damage_after
+        self._committed_damage_actions = set(plan.committed_damage_after)
+        self._pending_action_boundary_index = None
+        self.action_index = plan.next_action_index
+        self._pending_completion_candidate_cleanup.add(plan.action_index)
+        self._completion_epoch += 1
+
+    def finalize_action_completion(self, plan: ActionCompletionPlan) -> int:
+        """Release registry candidates after an enclosing registry lock exits."""
+        if (type(plan) is not ActionCompletionPlan
+                or plan.executor_token is not self._completion_token
+                or plan.action_index
+                    not in self._pending_completion_candidate_cleanup):
+            return 0
+        self._pending_completion_candidate_cleanup.remove(plan.action_index)
+        return self.discard_prepared_candidates(
+            action_index=plan.action_index,
+        )
 
     def bind_prepared_result_inbox(self, inbox: PreparedProofUsePort, *, owner_id: str) -> None:
         """Borrow the existing use registry; do not store a second handle map."""
@@ -292,6 +435,30 @@ class ActionRouteExecutor:
             raise ContractViolation("preparation is limited to the current action and its successor")
         self._prepared_action_indices = self._prepared_action_indices | {action_index}
         self._prepared_ledger_id = ledger_identity
+
+    def revoke_unactivated_prepared_successor(
+            self, action_index: int, *, expected_generation_id: str) -> bool:
+        """Remove one speculative successor without touching body ownership."""
+        require_nonnegative_int(action_index, "revoked prepared action index")
+        require_identifier(expected_generation_id, "revoked prepared generation")
+        if (self.route is None or action_index != self.action_index + 1
+                or self.prepared_controller is not None
+                or self._prepared_delivery_controller is not None):
+            return False
+        stream = (None if self._prepared_generation_for is None
+                  else self._prepared_generation_for(action_index))
+        if (stream is None
+                or stream.generation_id != expected_generation_id):
+            return False
+        self._prepared_action_indices = frozenset(
+            index for index in self._prepared_action_indices
+            if index != action_index
+        )
+        if self._pending_action_boundary_index == action_index:
+            self._pending_action_boundary_index = None
+        if not self._prepared_action_indices:
+            self._prepared_ledger_id = None
+        return True
 
     @property
     def preparation_ledger(self) -> InputApplicationLedger | None:
@@ -357,7 +524,9 @@ class ActionRouteExecutor:
                     or frame.body.yaw_radians != anchor.physics_state.yaw_radians
                     or frame.body.pose != anchor.physics_state.pose
                     or frame.body.is_on_ground != anchor.physics_state.on_ground
-                    or not any(branch.trajectory[0] == anchor.physics_state for branch in hot.branches)):
+                    or not any(verified_start_state_matches(
+                        branch.trajectory[0], anchor.physics_state,
+                    ) for branch in hot.branches)):
                 status = PreparedQueryStatus.ENTRY_MISMATCH
             elif not hot.requested_window.allows_start(anchor.movement_tick_id + 1):
                 status = PreparedQueryStatus.TIMING_MISMATCH
@@ -423,6 +592,10 @@ class ActionRouteExecutor:
         for handle in inbox.registered_handles:  # At most eight registry records.
             if (handle.owner_id != self._prepared_body_owner_id or handle.route_id != self.route.route_id
                     or (action_index is not None and handle.action_index != action_index)):
+                continue
+            release_candidate = getattr(inbox, "release_candidate", None)
+            if callable(release_candidate):
+                released += bool(release_candidate(handle))
                 continue
             consumer = ProofConsumerIdentity.from_handle(handle, ProofUse.CANDIDATE)
             result = inbox.release_usage(handle, use=ProofUse.CANDIDATE,
@@ -743,6 +916,8 @@ class ActionRouteExecutor:
         })
         self._completed_movement_damage_points = 0.0
         self._committed_damage_actions.clear()
+        self._completion_epoch += 1
+        self._pending_completion_candidate_cleanup.clear()
         self._input_scope_floor = None
         self.clear_pending_action_boundary()
         for candidate in verified_motion:
@@ -1204,9 +1379,14 @@ class ActionRouteExecutor:
                         self._controller.confirm_observed_exit_after_input_loss(
                             state_anchor,
                         )
-                        or self._landed_on_current_action_destination(
-                            action, frame,
-                            self._verified_motion[self.action_index].proof.continuation,
+                        or (
+                            self.action_index in self._verified_motion
+                            and self._landed_on_current_action_destination(
+                                action, frame,
+                                self._verified_motion[
+                                    self.action_index
+                                ].proof.continuation,
+                            )
                         )
                     )):
                 return self._advance(
@@ -1445,10 +1625,14 @@ class ActionRouteExecutor:
             return self._result(started, MovementV1(), 1, "prepared_action_boundary",
                                 submit_input=False)
         completed = self.route.actions[self.action_index]
-        self._commit_action_damage_if_started(completed, frame, force=True)
-        self.discard_prepared_candidates(action_index=self.action_index)
-        self.clear_pending_action_boundary()
-        self.action_index += 1
+        completion = self.prepare_action_completion(
+            frame,
+            observation_sequence_id=frame.body.sequence_id,
+            expected_next_action_index=next_index,
+        )
+        if not self.commit_action_completion(completion):
+            raise ContractViolation("ordinary action completion changed after preflight")
+        self.finalize_action_completion(completion)
         if self.action_index >= len(self.route.actions):
             self.action_index = len(self.route.actions) - 1
             self._actions_finished = True

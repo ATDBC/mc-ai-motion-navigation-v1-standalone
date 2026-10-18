@@ -11,13 +11,17 @@ from mc2p.motion_nav.body_control import (
 from mc2p.motion_nav.goal_observation import ObservedGoalStatus
 from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
+from mc2p.motion_nav.motion_candidate import VerifiedMotionExecutorState
 from mc2p.motion_nav.motion_risk import RiskActionRecord, RiskActionState
 from mc2p.motion_nav.navigation_lifecycle import NavigationSessionState
 from mc2p.motion_nav.retry_ledger import (
     ProgressEvidence, ProgressKind, RecoveryBudgetKind, RecoveryLimitStatus,
     WaitVerdict,
 )
-from tests.sim.async_monitor import AsyncInvariantMonitor, VerificationAssessment, VerificationGap, VerificationStatus
+from tests.sim.async_monitor import (
+    AsyncInvariantMonitor, PreparedHandoffActivity, VerificationAssessment,
+    VerificationGap, VerificationStatus,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,6 +92,9 @@ class TickEvidence:
     body_control_activities: tuple[BodyControlActivity, ...] = ()
     recovery_wait_status: WaitVerdict | None = None
     session_state: NavigationSessionState = NavigationSessionState.EXECUTING
+    prepared_successor_required: bool = False
+    pending_action_boundary_index: int | None = None
+    prepared_controller_state: VerifiedMotionExecutorState | None = None
 
 
 class InvariantMonitor:
@@ -120,6 +127,9 @@ class InvariantMonitor:
         self.async_monitor = AsyncInvariantMonitor()
         self._async_records_missing = False
 
+    _PREPARED_BOUNDARY_LIMIT_TICKS = 20
+    _PREPARED_RECOVERY_LIMIT_TICKS = 20
+
     def _record(self, tick: int, code: str, detail: str) -> None:
         if not any(item[1] == code for item in self.violations):
             self.violations.append((tick, code, detail))
@@ -145,6 +155,16 @@ class InvariantMonitor:
             self.coverage_gaps.add("I18-I22: actual asynchronous records unavailable")
         else:
             self.async_monitor.check(e.async_work_diagnostics, e.active_motion_mailboxes)
+            self.async_monitor.check_prepared_liveness(
+                PreparedHandoffActivity(
+                    movement_tick=e.tick,
+                    prepared_successor_required=e.prepared_successor_required,
+                    pending_action_boundary_index=e.pending_action_boundary_index,
+                    controller_state=e.prepared_controller_state,
+                ),
+                boundary_limit_ticks=self._PREPARED_BOUNDARY_LIMIT_TICKS,
+                recovery_limit_ticks=self._PREPARED_RECOVERY_LIMIT_TICKS,
+            )
             for code, detail in self.async_monitor.violations:
                 self._record(e.tick, code, detail)
         if (e.goal_state.allowed_modes != frozenset({MovementMode.WALK})

@@ -1,0 +1,18 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D117 prepared successor handoff closure",
+  "normalization": "CRLF_TO_LF",
+  "status": "current",
+  "files": {
+    "mc2p/motion_nav/action_route_executor.py": "b33b1bed4536ab8b9354cfb58025ff9729a1e80cedbef2017b2988f0f2148ba5",
+    "mc2p/motion_nav/execution_supervisor.py": "65bb4f1890c173396da6bdf7a07324c604f33a4ec4bc0b493edf3471101d1237",
+    "mc2p/motion_nav/motion_candidate.py": "1a3a11bca5afe1b12817573ad444f64066415eadbbbf54a2c105bf283f176285",
+    "mc2p/motion_nav/motion_coordination.py": "01d81e1ba7b25bcdeb985d8ad95c3f88b6b5c9e6b360014468bf9ea0d97a6eae",
+    "mc2p/motion_nav/motion_worker.py": "29263769b68f5bf1f03a9dfbfe1cc6593096da1953c1eb0bcb4366fa2f03279f",
+    "mc2p/motion_nav/prepared_motion.py": "6bbdea0304808c22490af858793bc9cbba3f7633a08d3bfaff152273779401f5",
+    "mc2p/motion_nav/route_admission.py": "ab9026e51304f2efe225ae76b290ebfb5e5c84ae8ab6071636ce0ec69fba9c8e",
+    "mc2p/motion_nav/route_body_controller.py": "6cdfad7c5bd52431b2af66a0c7d40094931aa383bb8ed572d20c84dee647f212",
+    "mc2p/motion_nav/world_model.py": "aaf029184d27462ce9154ea1a78f8dd98e09c697c253002224dfceb7ce9da1ce"
+  },
+  "source_commit": "410a7bc9f0485920e830b78e1b0f7f758c425863"
+}

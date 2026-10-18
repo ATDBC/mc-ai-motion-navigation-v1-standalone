@@ -399,11 +399,11 @@ class ReceiverTests(unittest.TestCase):
         inbox = MotionResultInbox(world=old)
         self.addCleanup(inbox.close)
         bounds = PhysicsWorldBounds(0, 0, 0, 0, 0, 0)
-        threads, original = [], old.publish_sealed_snapshot
+        threads, original = [], old.try_publish_sealed_snapshot
         def publication(*args):
             threads.append(threading.get_ident())
             return original(*args)
-        with patch.object(old, "publish_sealed_snapshot", side_effect=publication):
+        with patch.object(old, "try_publish_sealed_snapshot", side_effect=publication):
             self.assertIs(inbox.prepare_snapshot(bounds, ruleset=self.request.ruleset,
                 identity=self.request.async_identity).status, SnapshotLeaseStatus.NOT_READY)
             self.assertTrue(inbox.wait_for_receiver(timeout=10))
@@ -760,6 +760,245 @@ class ReceiverTests(unittest.TestCase):
                                                   expected_lease=lease))
             self.assertFalse(world.release_snapshot(lease.lease_token, expected_snapshot=lease.snapshot,
                                                    expected_lease=lease))
+
+
+class SnapshotRetryTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        ReceiverTests.setUpClass()
+        cls.request = ReceiverTests.request
+
+    def case(self):
+        from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds
+        from mc2p.motion_nav.world_model import WorldKnowledge, WorldSessionId
+        world = WorldKnowledge(WorldSessionId(self.request.world_session_id))
+        worker = QueuedWorker()
+        inbox = MotionResultInbox(worker=worker, world=world)
+        self.addCleanup(inbox.close)
+        return world, worker, inbox, PhysicsWorldBounds(0, 0, 0, 0, 0, 0)
+
+    def register(self, inbox, bounds, kind):
+        from mc2p.motion_nav.prepared_motion import PreparedActionPreparation
+        r = self.request
+        if kind == "snapshot":
+            return inbox.prepare_snapshot(bounds, ruleset=r.ruleset, identity=r.async_identity)
+        if kind == "selection":
+            from tests.motion_nav.test_b10_gap_solver import fixture
+            from mc2p.motion_nav.motion_solver import GapSolveRequest, LandingRegion
+            anchor, _, target, _ = fixture()
+            request = GapSolveRequest(direction=(0, 1), landing=LandingRegion(*target),
+                                      execution_window=r.requested_window)
+            return inbox.register_action_selection(r.async_identity, anchor, request, bounds)
+        fields = PreparedActionPreparation(r.job_token, r.async_identity, r.stream,
+            r.route_revision, r.action_revision, r.goal_revision, r.commands, r.exit_state,
+            r.ledger_id, r.entry_state, r.inherited_dependencies, r.ruleset, r.damage_budget,
+            r.damage_remaining_points, r.scan_budget, r.boundary_applications)
+        return inbox.register_action_preparation(fields, bounds)
+
+    def test_sealing_exception_is_internal_error_for_every_consumer(self):
+        for kind in ("snapshot", "selection", "preparation"):
+            with self.subTest(kind=kind):
+                world, worker, inbox, bounds = self.case()
+                with patch("mc2p.motion_nav.motion_worker.seal_snapshot_version", side_effect=RuntimeError("seal failed")):
+                    self.register(inbox, bounds, kind)
+                    self.assertTrue(inbox.wait_for_receiver(timeout=5))
+                identity = self.request.async_identity
+                if kind == "snapshot":
+                    result = inbox.prepare_snapshot(bounds, ruleset=self.request.ruleset, identity=identity)
+                    self.assertEqual(result.status.value, "internal_error")
+                elif kind == "selection":
+                    self.assertEqual(inbox.take(identity)[0].solve_result.status.value, "internal_error")
+                else:
+                    self.assertEqual(inbox.prepared_compute_result(identity).status.value, "internal_error")
+                self.assertEqual(worker.jobs, [])
+                self.assertEqual(inbox.registered_handles, ())
+                inbox.retire(identity)
+                self.assertNotIn(identity, inbox.active_identities)
+
+    def test_busy_one_three_five_cycles_retries_without_new_identity(self):
+        import mc2p.motion_nav.prepared_motion as contracts
+        for count in (1, 3, 5):
+            with self.subTest(count=count):
+                world, worker, inbox, bounds = self.case()
+                original = world.try_borrow_snapshot_version
+                calls = []
+                def borrow(*args, **kwargs):
+                    calls.append(threading.get_ident())
+                    if len(calls) <= count:
+                        return contracts.SnapshotBorrowResult(contracts.SnapshotBorrowStatus.BUSY)
+                    return original(*args, **kwargs)
+                with patch.object(world, "try_borrow_snapshot_version", side_effect=borrow):
+                    self.register(inbox, bounds, "preparation")
+                    self.assertTrue(worker.submitted.wait(2), "BUSY must retry on a later receiver cycle")
+                self.assertEqual(len(calls), count + 1)
+                self.assertEqual(set(calls), {inbox.receiver_thread_id})
+                self.assertEqual(inbox.active_identities, (self.request.async_identity,))
+                self.assertIsNone(inbox.prepared_compute_result(self.request.async_identity))
+                self.assertEqual(len(worker.jobs), 1)
+
+
+    def test_publication_rejection_distinguishes_capacity_from_invalid_source_and_digest(self):
+        from mc2p.motion_nav.world_snapshot import seal_snapshot_version
+        for fault in ("bytes", "versions", "source", "metadata", "section", "digest"):
+            for kind in ("snapshot", "selection", "preparation"):
+                with self.subTest(fault=fault, kind=kind):
+                    world, worker, inbox, bounds = self.case()
+                    if fault == "bytes":
+                        world._max_snapshot_bytes = 1
+                    elif fault == "versions":
+                        for _ in range(world._max_snapshot_versions):
+                            version = world.borrow_snapshot_version(bounds, ruleset=self.request.ruleset)
+                            sealed = seal_snapshot_version(version, self.request.ruleset)
+                            self.assertTrue(world.publish_sealed_snapshot(version, sealed))
+                            self.assertIs(world.acquire_published_snapshot(bounds,
+                                ruleset=self.request.ruleset).status, SnapshotLeaseStatus.READY)
+                    existing_leases = tuple(world._snapshot_leases)
+                    def seal(version, ruleset):
+                        sealed = seal_snapshot_version(version, ruleset)
+                        if fault == "source":
+                            world._snapshot_sources.pop(version.source_provenance.token)
+                        elif fault == "metadata":
+                            object.__setattr__(version, "evidence_revision", version.evidence_revision + 1)
+                        elif fault == "section":
+                            # Native immutable references are part of the issued source identity.
+                            object.__setattr__(version, "section_references", (None,))
+                        elif fault == "digest":
+                            sealed = unchecked_replace(sealed,
+                                identity=replace(sealed.identity, digest="f" * 64))
+                        return sealed
+                    with patch("mc2p.motion_nav.motion_worker.seal_snapshot_version", side_effect=seal):
+                        self.register(inbox, bounds, kind)
+                        self.assertTrue(inbox.wait_for_receiver(timeout=5))
+                    capacity = fault in {"bytes", "versions"}
+                    identity = self.request.async_identity
+                    if kind == "snapshot":
+                        result = inbox.prepare_snapshot(bounds, ruleset=self.request.ruleset, identity=identity)
+                        self.assertEqual(result.status.value, "capacity" if capacity else "internal_error")
+                    elif kind == "selection":
+                        result = inbox.take(identity)[0].solve_result
+                        self.assertIs(result.status, SolveStatus.UNSUPPORTED if capacity else SolveStatus.INTERNAL_ERROR)
+                    else:
+                        result = inbox.prepared_compute_result(identity)
+                        self.assertEqual(result.status.value, "unsupported" if capacity else "internal_error")
+                    self.assertEqual(worker.jobs, [])
+                    self.assertEqual(inbox.registered_handles, ())
+                    self.assertEqual(tuple(world._snapshot_leases), existing_leases)
+                    inbox.retire(identity)
+                    for token in existing_leases:
+                        self.assertTrue(world.release_snapshot(token))
+
+    def test_capacity_is_permanent_for_every_consumer(self):
+        from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds
+        for kind in ("snapshot", "selection", "preparation"):
+            with self.subTest(kind=kind):
+                world, worker, inbox, _ = self.case()
+                bounds = PhysicsWorldBounds(0, 16384, 0, 0, 0, 0)
+                with patch.object(world, "try_borrow_snapshot_version", wraps=world.try_borrow_snapshot_version) as borrow:
+                    self.register(inbox, bounds, kind)
+                    self.assertTrue(inbox.wait_for_receiver(timeout=5))
+                    self.assertEqual(borrow.call_count, 1)
+                identity = self.request.async_identity
+                if kind == "snapshot":
+                    self.assertIs(inbox.prepare_snapshot(bounds, ruleset=self.request.ruleset,
+                        identity=identity).status, SnapshotLeaseStatus.CAPACITY)
+                elif kind == "selection":
+                    result = inbox.take(identity)[0].solve_result
+                    self.assertIs(result.status, SolveStatus.UNSUPPORTED)
+                    self.assertEqual(result.reasons, ("prepared_selection_snapshot_capacity",))
+                else:
+                    self.assertIs(inbox.prepared_compute_result(identity).status, PreparedComputeStatus.UNSUPPORTED)
+                    self.assertIs(inbox.prepared_admission(identity).status, PreparedAdmissionStatus.REJECTED)
+                self.assertEqual(worker.jobs, [])
+                inbox.retire(identity)
+                self.assertNotIn(identity, inbox.active_identities)
+
+    def test_lease_lock_busy_retries_sealing_without_leaking_a_lease(self):
+        from mc2p.motion_nav.prepared_motion import SnapshotLeaseResult
+        world, worker, inbox, bounds = self.case()
+        original = world.acquire_published_snapshot
+        acquired = []
+        def acquire(*args, **kwargs):
+            acquired.append(1)
+            if len(acquired) == 1:
+                return SnapshotLeaseResult(SnapshotLeaseStatus.NOT_READY)
+            return original(*args, **kwargs)
+        with patch.object(world, "acquire_published_snapshot", side_effect=acquire):
+            self.register(inbox, bounds, "preparation")
+            self.assertTrue(worker.submitted.wait(2))
+        self.assertEqual(len(acquired), 2)
+        self.assertEqual(len(world._snapshot_leases), 1)
+        self.assertIsNone(inbox.prepared_compute_result(self.request.async_identity))
+        inbox.close()
+        self.assertEqual(len(world._snapshot_leases), 0)
+        self.assertEqual(inbox.retained_bytes, 0)
+
+    def test_continuous_busy_can_be_retired_by_the_original_owner_window(self):
+        from mc2p.motion_nav.async_work import AsyncWorkLifecycle, AsyncWorkWindow, WorkCheck
+        from mc2p.motion_nav.prepared_motion import SnapshotBorrowResult, SnapshotBorrowStatus
+        world, worker, inbox, bounds = self.case()
+        identity = self.request.async_identity
+        lifecycle = AsyncWorkLifecycle()
+        window = AsyncWorkWindow(1, 1, 100)
+        lifecycle.begin(identity, window)
+        with patch.object(world, "try_borrow_snapshot_version",
+                          return_value=SnapshotBorrowResult(SnapshotBorrowStatus.BUSY)):
+            self.register(inbox, bounds, "preparation")
+            self.assertTrue(inbox.wait_for_receiver(timeout=5))
+            self.assertIsNone(inbox.prepared_compute_result(identity))
+            self.assertIsNone(inbox.prepared_admission(identity))
+            self.assertIs(lifecycle.window, window)
+            self.assertIs(lifecycle.check(identity, 100, current_scope=identity.scope), WorkCheck.EXPIRED)
+            inbox.retire(identity)
+            lifecycle.finish(identity, "expired", 100)
+        self.assertTrue(inbox.wait_for_receiver(timeout=5))
+        self.assertNotIn(identity, inbox.active_identities)
+        self.assertEqual(worker.jobs, [])
+        self.assertEqual(inbox.retained_bytes, 0)
+
+    def test_retirement_during_borrow_cannot_resurrect_ready_or_busy(self):
+        from mc2p.motion_nav.prepared_motion import SnapshotBorrowResult, SnapshotBorrowStatus
+        for busy in (False, True):
+            with self.subTest(busy=busy):
+                world, worker, inbox, bounds = self.case()
+                original = world.try_borrow_snapshot_version
+                def borrow(*args, **kwargs):
+                    inbox.retire(self.request.async_identity)
+                    return (SnapshotBorrowResult(SnapshotBorrowStatus.BUSY) if busy
+                            else original(*args, **kwargs))
+                with patch.object(world, "try_borrow_snapshot_version", side_effect=borrow):
+                    self.register(inbox, bounds, "preparation")
+                    self.assertTrue(inbox.wait_for_receiver(timeout=5))
+                self.assertNotIn(self.request.async_identity, inbox.active_identities)
+                self.assertEqual(worker.jobs, [])
+                self.assertEqual(len(world._snapshot_leases), 0)
+                self.assertEqual(inbox.retained_bytes, 0)
+
+    def test_close_during_borrow_does_not_publish_or_keep_a_lease(self):
+        from mc2p.motion_nav.prepared_motion import SnapshotBorrowResult, SnapshotBorrowStatus
+        for busy in (False, True):
+            with self.subTest(busy=busy):
+                world, worker, inbox, bounds = self.case()
+                entered, release = threading.Event(), threading.Event()
+                original = world.try_borrow_snapshot_version
+                def borrow(*args, **kwargs):
+                    entered.set()
+                    if not release.wait(5):
+                        raise AssertionError("close race was not released")
+                    return (SnapshotBorrowResult(SnapshotBorrowStatus.BUSY) if busy
+                            else original(*args, **kwargs))
+                with patch.object(world, "try_borrow_snapshot_version", side_effect=borrow):
+                    self.register(inbox, bounds, "preparation")
+                    try:
+                        self.assertTrue(entered.wait(2))
+                        inbox.close(timeout_seconds=0)
+                    finally:
+                        release.set()
+                    report = inbox.close(timeout_seconds=5)
+                self.assertFalse(report.timed_out)
+                self.assertEqual(report.unfinished_computations, 0)
+                self.assertEqual(worker.jobs, [])
+                self.assertEqual(len(world._snapshot_leases), 0)
+                self.assertEqual(inbox.retained_bytes, 0)
 
 
 if __name__ == "__main__":

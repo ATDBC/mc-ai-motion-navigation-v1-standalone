@@ -65,7 +65,7 @@ from mc2p.motion_nav.segment_entry import MotionContinuationRequirement, Segment
 from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.fixed_route import GroundHandoffDisposition
 from mc2p.motion_nav.prepared_motion import (
-    PreparedActionPreparation, PreparedComputeStatus, PreparedScanBudget,
+    PreparedActionPreparation, PreparedAdmissionStatus, PreparedComputeStatus, PreparedScanBudget,
     PreparedSubmitResult, PreparedSubmitStatus, StreamGeneration,
 )
 
@@ -612,7 +612,6 @@ class MotionRouteCoordinator:
             self._pending_connection, self._pending_action_index = connection, index
             self._pending_submitted_tick = anchor.movement_tick_id
             self._selection_request, self._selection_anchor, self._selection_ledger_id = request, predicted, ledger_identity
-            self.executor.require_prepared_action(index, ledger_identity=ledger_identity)
         return result
 
     def _accept_upcoming_selection(self, result: GapMotionSolveResult, *, current_scope: AsyncComputationScope):
@@ -734,14 +733,22 @@ class MotionRouteCoordinator:
                 max(bounds.max_z, max(pos[2] for pos in positions)))
         submitted = self.result_inbox.register_action_preparation(fields, bounds)
         self._prepared_fields, self._prepared_submission = fields, submitted
-        self.executor.require_prepared_action(action_index, ledger_identity=ledger_identity)
         if submitted.status is PreparedSubmitStatus.ACCEPTED:
+            self.executor.require_prepared_action(
+                action_index,
+                ledger_identity=ledger_identity,
+            )
             now = self._clock()
             window = AsyncWorkWindow(real_anchor.movement_tick_id, now, now + _MOTION_SOLVE_LIMIT_NS)
             self._work.begin(identity, window)
             self._remember_work_window(identity, window)
             self._pending_connection, self._pending_action_index = stream.request_id, action_index
             self._pending_submitted_tick = real_anchor.movement_tick_id
+        elif action_index == self.executor.action_index + 1:
+            self._abandon_prepared_successor(
+                fields,
+                f"prepared_submission_{submitted.status.value}",
+            )
         return submitted
 
     def start(self, frame: NavigationFrame) -> None:
@@ -1031,20 +1038,17 @@ class MotionRouteCoordinator:
             else:
                 self.executor.cancel()
             return False
-        accepted_ns = self._clock()
-        if not self._work.try_apply(result.work_identity, accepted_ns, current_scope=current_scope):
+        if not self._apply_admitted_work(
+                result.work_identity,
+                current_scope=current_scope,
+                install=lambda: self.executor.install_verified_motion(
+                    prepared.candidate,
+                ),
+                retirement_cause="motion_proof_installed"):
             self._expire_delivered_result(result)
             return False
-        self.executor.install_verified_motion(prepared.candidate)
         # Candidate installation precedes computation retirement. D102 use
         # records live in result_inbox, independently of this job lifecycle.
-        self._record_admission(
-            AsyncAdmissionDisposition.APPLIED,
-            identity_matched=True,
-            facts_valid=True,
-            accepted_ns=accepted_ns,
-        )
-        self._retire_work("motion_proof_installed")
         self.last_failure_attempt_id = None
         self.last_failure_reason = ""
         return True
@@ -1190,8 +1194,6 @@ class MotionRouteCoordinator:
         self._submit_action(self.executor.action_index, anchor, world)
 
     def _work_expired(self, anchor: StateAnchor) -> bool:
-        if (self._prepared_fields is not None and self._work_identity == self._prepared_fields.async_identity):
-            return anchor.movement_tick_id > self._prepared_fields.stream.requested_window.earliest_start_tick
         window = self._work_window
         if window is None:
             return (
@@ -1200,13 +1202,79 @@ class MotionRouteCoordinator:
                 and anchor.movement_tick_id
                     > self._pending_submitted_tick + _MOTION_SOLVE_LIMIT_TICKS
             )
-        return (
-            (
-                window.expired(self._clock())
-                or anchor.movement_tick_id
-                    > window.started_movement_tick + _MOTION_SOLVE_LIMIT_TICKS
-            )
+        expired = (
+            window.expired(self._clock())
+            or anchor.movement_tick_id
+                > window.started_movement_tick + _MOTION_SOLVE_LIMIT_TICKS
         )
+        if (self._prepared_fields is not None
+                and self._work_identity
+                    == self._prepared_fields.async_identity):
+            expired = (
+                expired
+                or self._prepared_requirement_expired(
+                    self._prepared_fields,
+                    anchor,
+                )
+            )
+        return expired
+
+    def _prepared_requirement_expired(
+            self, fields: PreparedActionPreparation,
+            anchor: StateAnchor) -> bool:
+        """Bound an installed candidate after its worker lifecycle retires."""
+        if (type(fields) is not PreparedActionPreparation
+                or type(anchor) is not StateAnchor):
+            raise ContractViolation(
+                "prepared requirement expiry needs exact typed state"
+            )
+        window = self._known_work_windows.get(fields.async_identity)
+        return (
+            anchor.movement_tick_id
+                > fields.stream.requested_window.earliest_start_tick
+            or window is not None
+                and (
+                    window.expired(self._clock())
+                    or anchor.movement_tick_id
+                        > window.started_movement_tick
+                            + _MOTION_SOLVE_LIMIT_TICKS
+                )
+        )
+
+    def _abandon_prepared_successor(
+            self, fields: PreparedActionPreparation, cause: str) -> bool:
+        """Retire one exact unactivated successor and return to normal SOLVE."""
+        if (type(fields) is not PreparedActionPreparation
+                or not isinstance(cause, str) or not cause
+                or self._prepared_fields is not fields):
+            return False
+        active_identity = self._work_identity
+        if (active_identity is not None
+                and active_identity != fields.async_identity):
+            return False
+        action_index = fields.stream.action_index
+        stream = self._prepared_streams.get(action_index)
+        if (stream is not fields.stream
+                or not self.executor.revoke_unactivated_prepared_successor(
+                    action_index,
+                    expected_generation_id=fields.stream.generation_id,
+                )):
+            return False
+        self._retire_work(cause)
+        self.executor.discard_prepared_candidates(
+            action_index=action_index,
+        )
+        if self._prepared_streams.get(action_index) is fields.stream:
+            del self._prepared_streams[action_index]
+        if (self._selected_preparation is not None
+                and self._selected_preparation[0] == action_index):
+            self._selected_preparation = None
+        self._prepared_signature = None
+        self._prepared_fields = None
+        self._prepared_submission = None
+        self.last_failure_attempt_id = None
+        self.last_failure_reason = ""
+        return True
 
     def _retire_work(self, _cause: str) -> None:
         self.executor.prepare_ground_handoff(None)
@@ -1250,6 +1318,25 @@ class MotionRouteCoordinator:
         if len(self._admission_records) >= 64:
             del self._admission_records[0]
         self._admission_records.append(record)
+
+    def _apply_admitted_work(
+            self, identity: AsyncWorkIdentity, *,
+            current_scope: AsyncComputationScope, install,
+            retirement_cause: str) -> bool:
+        """Apply one current result through the lifecycle before installation."""
+        accepted_ns = self._clock()
+        if not self._work.try_apply(
+                identity, accepted_ns, current_scope=current_scope):
+            return False
+        install()
+        self._record_admission(
+            AsyncAdmissionDisposition.APPLIED,
+            identity_matched=True,
+            facts_valid=True,
+            accepted_ns=accepted_ns,
+        )
+        self._retire_work(retirement_cause)
+        return True
 
     def _remember_work_window(
         self,
@@ -1404,27 +1491,89 @@ class MotionRouteCoordinator:
         if current_scope != self.computation_scope:
             # Invalidation removes calculation eligibility only. cancel()
             # keeps the executor responsible for in-flight inputs and landing.
-            self._retire_work("motion_scope_invalidated")
+            fields = self._prepared_fields
+            abandoned = (
+                fields is not None
+                and self._abandon_prepared_successor(
+                    fields,
+                    "motion_scope_invalidated",
+                )
+            )
+            if not abandoned:
+                self._retire_work("motion_scope_invalidated")
             self.last_failure_reason = "motion_scope_invalidated"
-            if not future_work:
+            if (not future_work
+                    and not self.executor.current_verified_action_started()):
                 self.executor.cancel()
             worker_available = False
         elif not self.worker.is_alive():
             worker_available = False
-            self._retire_work("motion_solver_worker_died")
+            fields = self._prepared_fields
+            abandoned = (
+                fields is not None
+                and self._abandon_prepared_successor(
+                    fields,
+                    "motion_solver_worker_died",
+                )
+            )
+            if not abandoned:
+                self._retire_work("motion_solver_worker_died")
             self.last_failure_reason = "motion_solver_worker_died"
-            if not future_work:
+            if (not future_work
+                    and not self.executor.current_verified_action_started()):
                 self.executor.cancel()
         elif self._prepared_fields is not None and self._work_identity == self._prepared_fields.async_identity:
             fields = self._prepared_fields
             query = self.result_inbox.query_prepared(fields.async_identity, movement_tick=anchor.movement_tick_id)
             if query.handle is not None:
-                self.executor.install_prepared_motion(query.handle)
-                self._record_admission(AsyncAdmissionDisposition.APPLIED, identity_matched=True, facts_valid=True)
-                self._retire_work("prepared_motion_installed")
-                installed = True
-            elif self._work_expired(anchor) or self.result_inbox.prepared_compute_result(fields.async_identity) is not None:
-                self._retire_work("prepared_motion_unavailable")
+                installed = self._apply_admitted_work(
+                    fields.async_identity,
+                    current_scope=current_scope,
+                    install=lambda: self.executor.install_prepared_motion(
+                        query.handle,
+                    ),
+                    retirement_cause="prepared_motion_installed",
+                )
+                if not installed:
+                    self._abandon_prepared_successor(
+                        fields,
+                        "prepared_motion_apply_rejected",
+                    )
+            else:
+                admission = self.result_inbox.prepared_admission(
+                    fields.async_identity,
+                )
+                computation = self.result_inbox.prepared_compute_result(
+                    fields.async_identity,
+                )
+                unavailable = (
+                    self._work_expired(anchor)
+                    or admission is not None
+                        and admission.status in {
+                            PreparedAdmissionStatus.REJECTED,
+                            PreparedAdmissionStatus.STALE,
+                            PreparedAdmissionStatus.CANCELLED,
+                        }
+                    or computation is not None
+                        and computation.status
+                            is not PreparedComputeStatus.PREPARED
+                )
+                if unavailable:
+                    self._abandon_prepared_successor(
+                        fields,
+                        "prepared_motion_unavailable",
+                    )
+        elif (self._prepared_fields is not None
+                and self._work_identity is None
+                and self.executor.prepared_successor_required
+                and self._prepared_requirement_expired(
+                    self._prepared_fields,
+                    anchor,
+                )):
+            self._abandon_prepared_successor(
+                self._prepared_fields,
+                "installed_prepared_motion_expired",
+            )
         elif self._work_expired(anchor):
             expired_connection = self._pending_connection
             expired_action_index = (

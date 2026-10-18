@@ -9,6 +9,7 @@ is available.
 from __future__ import annotations
 
 import argparse
+from contextlib import nullcontext
 from dataclasses import replace
 import json
 from pathlib import Path
@@ -20,7 +21,10 @@ from mc2p.motion_nav.execution_supervisor import ExecutionSupervisor
 from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
 from mc2p.motion_nav.motion_candidate import VerifiedMotionExecutor
 from mc2p.motion_nav.navigation_session import NavigationSession
-from mc2p.motion_nav.prepared_motion import PreparedQueryStatus
+from mc2p.motion_nav.prepared_motion import (
+    PreparedQueryStatus, SnapshotBorrowResult, SnapshotBorrowStatus,
+)
+from mc2p.motion_nav.world_model import WorldKnowledge
 from tests.sim.backend import Scene
 from tests.sim.runner import InlineMotionWorker, Scenario, run
 
@@ -57,7 +61,7 @@ def _activity_summary(activity) -> dict[str, object] | None:
     }
 
 
-def _representative() -> Scenario:
+def _representative(*, max_ticks: int = 25) -> Scenario:
     solids = {
         (x, 63, z): "minecraft:grass_block"
         for x in range(-1, 2)
@@ -69,14 +73,68 @@ def _representative() -> Scenario:
         Scene(solids, ((-2, 2), (60, 70), (-2, 9))),
         (.5, 64.0, .5),
         (.5, 64.0, 5.5),
-        max_ticks=25,
+        max_ticks=max_ticks,
     )
+
+
+def _async_identity_parts(identity) -> tuple[object, ...]:
+    """Retain every identity field while accepting the runner's dict view."""
+    if isinstance(identity, dict):
+        scope = identity["scope"]
+        return (
+            scope["world_session_id"], scope["task_id"], scope["generation"],
+            identity["owner_instance_id"], identity["work_kind"],
+            identity["subject_id"], identity["revision"],
+        )
+    return (
+        identity.scope.world_session_id, identity.scope.task_id,
+        identity.scope.generation, identity.owner_instance_id,
+        identity.work_kind.value, identity.subject_id, identity.revision,
+    )
+
+
+def _prepared_lifecycle_summary(async_records, prepared_identity_token):
+    records = [
+        (tick, event) for tick, event in async_records
+        if event.get("identity_token") == prepared_identity_token
+    ]
+    admission = next((item for item in records
+        if item[1].get("record_type") == "admission"
+        and item[1].get("disposition") == "applied"), None)
+    events = [item for item in records
+              if item[1].get("record_type") == "event"]
+    apply_event = next((item for item in events
+                        if item[1].get("operation") == "apply"), None)
+    finish_event = next((item for item in events
+                         if item[1].get("operation") == "finish"), None)
+    return {
+        "identity_token": prepared_identity_token,
+        "operations": [event["operation"] for _tick, event in events],
+        "admission_tick": None if admission is None else admission[0],
+        "admission_accepted_monotonic_ns": (
+            None if admission is None else admission[1]["accepted_monotonic_ns"]
+        ),
+        "apply_tick": None if apply_event is None else apply_event[0],
+        "apply_monotonic_ns": (
+            None if apply_event is None else apply_event[1]["monotonic_ns"]
+        ),
+        "finish_tick": None if finish_event is None else finish_event[0],
+    }
 
 
 class _Timeline:
     def __init__(self) -> None:
         self.rows: dict[int, dict[str, object]] = {}
         self.planned_actions: list[str] = []
+        self.prepared_identity: tuple[object, ...] | None = None
+        self._identity_tokens: dict[tuple[object, ...], str] = {}
+
+    def identity_token(self, identity: tuple[object, ...]) -> str:
+        token = self._identity_tokens.get(identity)
+        if token is None:
+            token = f"async-work-{len(self._identity_tokens) + 1}"
+            self._identity_tokens[identity] = token
+        return token
 
     def row(self, tick: int) -> dict[str, object]:
         row = self.rows.setdefault(tick, {"movement_tick": tick, "event_order": []})
@@ -88,15 +146,34 @@ class _Timeline:
         row.update(values)
 
 
-def run_representative_timeline(*, dependency_gate: str = "semantic") -> dict[str, object]:
+def run_representative_timeline(*, dependency_gate: str = "semantic",
+                                max_ticks: int = 25,
+                                snapshot_borrow_mode: str = "normal",
+                                force_prepared_entry_mismatch: bool = False) -> dict[str, object]:
     """Run the formal chain with a current or explicitly replayed dependency gate."""
     if dependency_gate not in {"semantic", "legacy_full_cell_fact"}:
         raise ValueError("dependency_gate must be semantic or legacy_full_cell_fact")
+    busy_cycles = {
+        "normal": 0,
+        "busy_1": 1,
+        "busy_3": 3,
+        "busy_5": 5,
+        "always_busy": None,
+        "prepared_always_busy": -1,
+    }
+    if snapshot_borrow_mode not in busy_cycles:
+        raise ValueError(
+            "snapshot_borrow_mode must be normal, busy_1, busy_3, busy_5, "
+            "always_busy or prepared_always_busy"
+        )
+    if type(force_prepared_entry_mismatch) is not bool:
+        raise ValueError("force_prepared_entry_mismatch must be boolean")
     timeline = _Timeline()
     original_decide = MotionRouteCoordinator.decide
     original_advance = ActionRouteExecutor._advance
     original_stage = ActionRouteExecutor.stage_prepared_action
     original_approve = ExecutionSupervisor.approve_action_handoff
+    original_commit_activation = ExecutionSupervisor.commit_activation
     original_validate_routes = ExecutionSupervisor._validate_routes
     original_proposal = NavigationSession._proposal
     original_prepared_decision = VerifiedMotionExecutor.prepared_decision
@@ -129,6 +206,10 @@ def run_representative_timeline(*, dependency_gate: str = "semantic") -> dict[st
             ),
         )
         decision = original_decide(self, frame, anchor, ledger, world, **kwargs)
+        if self._prepared_fields is not None:
+            timeline.prepared_identity = _async_identity_parts(
+                self._prepared_fields.async_identity,
+            )
         next_index = self.executor.action_index + 1
         if (
             self.executor.current_verified_action_started()
@@ -216,6 +297,17 @@ def run_representative_timeline(*, dependency_gate: str = "semantic") -> dict[st
                 frame.body.movement_tick_id,
                 "diagnostic_legacy_full_cell_fact_rejection",
             )
+        if (force_prepared_entry_mismatch
+                and proposal.boundary_reached
+                and proposal.entry_result is PreparedQueryStatus.READY_MATCH):
+            proposal = replace(
+                proposal,
+                entry_result=PreparedQueryStatus.ENTRY_MISMATCH,
+            )
+            timeline.event(
+                frame.body.movement_tick_id,
+                "diagnostic_forced_prepared_entry_mismatch",
+            )
         current_versions = (
             None
             if hot is None or frame.world._owner is None
@@ -285,6 +377,25 @@ def run_representative_timeline(*, dependency_gate: str = "semantic") -> dict[st
             ),
         )
         return approval
+
+    def commit_activation(self, transaction, accepted, delivered):
+        proposal = None if self._prepared_approval is None else self._prepared_approval.proposal
+        tick = None if proposal is None else proposal.entry_state.movement_tick_id
+        result = original_commit_activation(
+            self, transaction, accepted, delivered,
+        )
+        control = self.route
+        if tick is not None and control is not None:
+            timeline.event(
+                tick,
+                "prepared_route_commit",
+                action_index_after_prepared_commit=control.executor.action_index,
+                tracker_action_index_after_prepared_commit=(
+                    None if control.tracker is None
+                    else control.tracker.identity.action_index
+                ),
+            )
+        return result
 
     def validate_routes(self, frame):
         control = self.route
@@ -475,11 +586,28 @@ def run_representative_timeline(*, dependency_gate: str = "semantic") -> dict[st
         )
         return ()
 
+    snapshot_borrow_attempts = 0
+    original_borrow = WorldKnowledge.try_borrow_snapshot_version
+    def controlled_borrow(world, *args, **kwargs):
+        nonlocal snapshot_borrow_attempts
+        snapshot_borrow_attempts += 1
+        limit = busy_cycles[snapshot_borrow_mode]
+        if (limit is None
+                or limit == -1 and snapshot_borrow_attempts > 1
+                or limit >= 0 and snapshot_borrow_attempts <= limit):
+            return SnapshotBorrowResult(SnapshotBorrowStatus.BUSY)
+        return original_borrow(world, *args, **kwargs)
+
+    snapshot_patch = (
+        patch.object(WorldKnowledge, "try_borrow_snapshot_version", controlled_borrow)
+        if snapshot_borrow_mode != "normal" else nullcontext()
+    )
     with (
         patch.object(MotionRouteCoordinator, "decide", coordinator_decide),
         patch.object(ActionRouteExecutor, "_advance", executor_advance),
         patch.object(ActionRouteExecutor, "stage_prepared_action", stage_prepared),
         patch.object(ExecutionSupervisor, "approve_action_handoff", approve),
+        patch.object(ExecutionSupervisor, "commit_activation", commit_activation),
         patch.object(ExecutionSupervisor, "_validate_routes", validate_routes),
         patch.object(NavigationSession, "_proposal", session_proposal),
         patch.object(VerifiedMotionExecutor, "prepared_decision", prepared_decision),
@@ -487,9 +615,10 @@ def run_representative_timeline(*, dependency_gate: str = "semantic") -> dict[st
         patch.object(VerifiedMotionExecutor, "record_application", record_application),
         patch.object(VerifiedMotionExecutor, "record_missing_application", record_missing_application),
         patch.object(ActionRouteExecutor, "current_verified_motion_can_start", current_entry_check),
+        snapshot_patch,
     ):
         result = run(
-            _representative(),
+            _representative(max_ticks=max_ticks),
             motion_factory=InlineMotionWorker,
             control_step=control_step,
         )
@@ -546,9 +675,12 @@ def run_representative_timeline(*, dependency_gate: str = "semantic") -> dict[st
             normalized_async = []
             for event in trace["async_events"]:
                 identity = event["identity"]
+                identity_parts = _async_identity_parts(identity)
                 item = {
                     "work_kind": identity["work_kind"],
                     "revision": identity["revision"],
+                    "identity_token": timeline.identity_token(identity_parts),
+                    "prepared_identity": identity_parts == timeline.prepared_identity,
                 }
                 if "operation" in event:
                     item.update(
@@ -567,11 +699,19 @@ def run_representative_timeline(*, dependency_gate: str = "semantic") -> dict[st
                     )
                 normalized_async.append(item)
             row["async_events"] = normalized_async
-    tick20 = timeline.rows[20]
-    tick21 = timeline.rows[21]
+    ordered_rows = [timeline.rows[tick] for tick in sorted(timeline.rows)]
+    boundary_row = next((row for row in ordered_rows
+        if row.get("session_route_reason") == "prepared_action_boundary"
+        and row.get("prepared_boundary_reached")), None)
+    application_row = next((row for row in ordered_rows
+        if row.get("prepared_application_status") == "applied"
+        and row.get("applied_movement_at_observation", {}).get("jump")), None)
+    boundary_tick = (None if boundary_row is None
+                     else boundary_row["movement_tick"])
+    application_tick = (None if application_row is None
+                        else application_row["movement_tick"])
     second_jump_started = bool(
-        tick21.get("applied_movement_at_observation", {}).get("jump")
-        and tick21.get("prepared_application_status") == "applied"
+        application_row is not None
     )
     owner_gap_ticks = [
         tick for tick, row in timeline.rows.items() if row.get("owner_gap")
@@ -583,6 +723,18 @@ def run_representative_timeline(*, dependency_gate: str = "semantic") -> dict[st
             if code == "I19"
         ),
         None,
+    )
+    async_records = [
+        (row["movement_tick"], event)
+        for row in ordered_rows
+        for event in row.get("async_events", ())
+    ]
+    prepared_identity_token = (
+        None if timeline.prepared_identity is None
+        else timeline.identity_token(timeline.prepared_identity)
+    )
+    prepared_lifecycle = _prepared_lifecycle_summary(
+        async_records, prepared_identity_token,
     )
     return {
         "schema": "mc2p.d116-handoff-timeline.v1",
@@ -621,30 +773,40 @@ def run_representative_timeline(*, dependency_gate: str = "semantic") -> dict[st
         "damage": result.damage,
         "violations": result.violations,
         "second_jump_started": second_jump_started,
+        "prepared_apply_lifecycle": prepared_lifecycle,
         "attribution": (
             "legacy_full_cell_fact_gate_rejected_stamp_refresh"
             if dependency_gate == "legacy_full_cell_fact"
-            else "semantic_dependency_handoff_passed_then_route_tracker_identity_"
-                 "and_async_apply_invariants_blocked"
+            else "semantic_dependency_async_apply_route_tracker_and_numeric_state_"
+                 "passed"
         ),
         "milestones": {
-            "tick20_ready_match": tick20.get("prepared_entry_status") == "ready_match",
-            "tick20_supervisor_approved": tick20.get("supervisor_status") == "approved",
-            "tick21_second_jump_applied": bool(
-                tick21.get("applied_movement_at_observation", {}).get("jump")
+            "handoff_boundary_tick": boundary_tick,
+            "second_jump_application_tick": application_tick,
+            "boundary_ready_match": (
+                boundary_row is not None
+                and boundary_row.get("prepared_entry_status") == "ready_match"
             ),
+            "supervisor_approved": (
+                boundary_row is not None
+                and boundary_row.get("supervisor_status") == "approved"
+            ),
+            "second_jump_applied": second_jump_started,
             "single_movement_winner_at_handoff": (
-                tick20.get("runtime_selected_groups", []).count("movement") == 1
+                boundary_row is not None
+                and boundary_row.get("runtime_selected_groups", []).count("movement") == 1
             ),
             "owner_gap_ticks": owner_gap_ticks,
             "zero_damage": result.damage == 0.0,
         },
         "stop": {
             "route_tracker": None if dependency_gate == "legacy_full_cell_fact" else {
-                "movement_tick": 21,
-                "reason": tick21.get("incumbent_validation_reason"),
-                "disposition": tick21.get("incumbent_validation"),
-                "effect": "dependency_changed_cancelled_new_prepared_controller",
+                "movement_tick": application_tick,
+                "reason": (None if application_row is None else
+                           application_row.get("incumbent_validation_reason")),
+                "disposition": (None if application_row is None else
+                                application_row.get("incumbent_validation")),
+                "effect": "route_tracker_and_numeric_state_passed",
             },
             "async_monitor": {
                 "movement_tick": async_violation_tick,
@@ -655,7 +817,7 @@ def run_representative_timeline(*, dependency_gate: str = "semantic") -> dict[st
                 ),
             },
         },
-        "timeline": [timeline.rows[tick] for tick in sorted(timeline.rows)],
+        "timeline": ordered_rows,
     }
 
 

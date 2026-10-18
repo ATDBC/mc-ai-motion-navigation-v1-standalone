@@ -417,6 +417,14 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 while len(command_activities) > 128:
                     command_activities.pop(next(iter(command_activities)))
             applied_activity = command_activities.get(applied_request)
+            route_control = session._supervisor.route
+            route_executor = (
+                None if route_control is None else route_control.executor
+            )
+            prepared_controller = (
+                None if route_executor is None
+                else route_executor.prepared_controller
+            )
             evidence = TickEvidence(
                 backend.movement_tick, clock[0], backend.state.position, backend.state.on_ground,
                 diagnostics.controller_ids,
@@ -483,6 +491,18 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 body_control_activities=diagnostics.body_control_activities,
                 recovery_wait_status=diagnostics.recovery_wait_status,
                 session_state=report.state,
+                prepared_successor_required=(
+                    False if route_executor is None
+                    else route_executor.prepared_successor_required
+                ),
+                pending_action_boundary_index=(
+                    None if route_executor is None
+                    else route_executor.pending_action_boundary_index
+                ),
+                prepared_controller_state=(
+                    None if prepared_controller is None
+                    else prepared_controller.state
+                ),
             )
             monitor.check(evidence)
             row = {

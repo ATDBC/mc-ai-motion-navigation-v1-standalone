@@ -267,10 +267,36 @@ class SnapshotLease:
         return self.snapshot.cell(position)
 
 
+class SnapshotBorrowStatus(StrEnum):
+    READY = "ready"
+    BUSY = "busy"
+    CAPACITY = "capacity"
+
+
+@dataclass(frozen=True, slots=True)
+class SnapshotBorrowResult:
+    status: SnapshotBorrowStatus
+    version: WorldSnapshotVersion | None = None
+
+    def __post_init__(self) -> None:
+        if (type(self.status) is not SnapshotBorrowStatus
+                or self.version is not None and type(self.version) is not WorldSnapshotVersion):
+            raise ContractViolation("snapshot borrow requires a typed status and version")
+        if (self.status is SnapshotBorrowStatus.READY) != (self.version is not None):
+            raise ContractViolation("only a ready snapshot borrow carries a version")
+
+
+class SnapshotPublishStatus(StrEnum):
+    READY = "ready"
+    CAPACITY = "capacity"
+    INVALID = "invalid"
+
+
 class SnapshotLeaseStatus(StrEnum):
     READY = "ready"
     NOT_READY = "not_ready"
     CAPACITY = "capacity"
+    INTERNAL_ERROR = "internal_error"
 
 
 @dataclass(frozen=True, slots=True)
@@ -790,6 +816,7 @@ class PreparedComputeStatus(StrEnum):
     BLOCKED = "blocked"
     BUDGET_EXHAUSTED = "budget_exhausted"
     WORKER_FAILED = "worker_failed"
+    INTERNAL_ERROR = "internal_error"
 
 
 @dataclass(frozen=True, slots=True)

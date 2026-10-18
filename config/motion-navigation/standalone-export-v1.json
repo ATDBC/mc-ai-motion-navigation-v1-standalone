@@ -134,7 +134,8 @@
     "evidence/motion_navigation/d113-control-visible-v1/**/*",
     "evidence/motion_navigation/d114-formal-driver-v1/**/*",
     "evidence/motion_navigation/d115-two-jump-v1/**/*",
-    "evidence/motion_navigation/d116-handoff-timeline-v1/**/*"
+    "evidence/motion_navigation/d116-handoff-timeline-v1/**/*",
+    "evidence/motion_navigation/d117-prepared-handoff-v1/**/*"
   ],
   "exclude_globs": [
     "tests/motion_nav/test_d102_evidence_contract.py"
@@ -660,6 +661,12 @@
     "evidence/motion_navigation/d116-handoff-timeline-v1/index.json",
     "evidence/motion_navigation/d116-handoff-timeline-v1/d116-0-red-timeline.json",
     "evidence/motion_navigation/d116-handoff-timeline-v1/d116-1-semantic-result-timeline.json",
-    "evidence/motion_navigation/d116-handoff-timeline-v1/published-production-semantic-hashes.json"
+    "evidence/motion_navigation/d116-handoff-timeline-v1/published-production-semantic-hashes.json",
+    "docs/motion_navigation/decisions/0117-close-prepared-successor-handoff.md",
+    "docs/motion_navigation/stages/d117-prepared-successor-handoff-closure-plan.md",
+    "docs/motion_navigation/acceptance/d117-prepared-successor-handoff-closure.md",
+    "scripts/d116_handoff_timeline.py",
+    "tests/motion_nav/test_d117_prepared_liveness_monitor.py",
+    "evidence/motion_navigation/d117-prepared-handoff-v1/published-production-semantic-hashes.json"
   ]
 }

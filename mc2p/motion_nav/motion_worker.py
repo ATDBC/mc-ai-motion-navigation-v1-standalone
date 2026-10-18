@@ -45,7 +45,7 @@ from mc2p.motion_nav.prepared_motion import (
     MotionCloseReport, ProofActionExitEvidence, ProofConsumerIdentity, ProofReleaseEvidence,
     ProofSupervisorReleaseEvidence, ProofUse,
     ReferenceRejectReason, ReferenceResult, ReferenceStatus,
-    PreparedActionPreparation,
+    PreparedActionPreparation, SnapshotBorrowStatus, SnapshotPublishStatus,
 )
 from mc2p.motion_nav.prepared_motion_proof import (
     MAXIMUM_MESSAGE_BYTES, PreparedMessageBudgetExceeded, PreparedWireMessage,
@@ -1328,14 +1328,34 @@ class MotionResultInbox:
         port = record.world_port  # Keep the port from submission across session replacement.
         result = SnapshotLeaseResult(SnapshotLeaseStatus.NOT_READY)
         try:
-            version = port.borrow_snapshot_version(record.bounds, ruleset=record.ruleset)
-            if version is not None:
+            borrowed = port.try_borrow_snapshot_version(record.bounds, ruleset=record.ruleset)
+            if borrowed.status is SnapshotBorrowStatus.CAPACITY:
+                result = SnapshotLeaseResult(SnapshotLeaseStatus.CAPACITY)
+            elif borrowed.status is SnapshotBorrowStatus.READY:
+                version = borrowed.version
                 sealed = seal_snapshot_version(version, record.ruleset)
-                if port.publish_sealed_snapshot(version, sealed):
+                published = port.try_publish_sealed_snapshot(version, sealed)
+                if published is SnapshotPublishStatus.READY:
                     result = port.acquire_published_snapshot(record.bounds, ruleset=record.ruleset)
+                else:
+                    result = SnapshotLeaseResult(
+                        SnapshotLeaseStatus.CAPACITY if published is SnapshotPublishStatus.CAPACITY
+                        else SnapshotLeaseStatus.INTERNAL_ERROR)
         except Exception:
-            pass
+            result = SnapshotLeaseResult(SnapshotLeaseStatus.INTERNAL_ERROR)
         with self._lock:
+            if result.status is SnapshotLeaseStatus.NOT_READY:
+                # A busy borrow or lease acquisition has not ended this work.
+                # The sole receiver's next cycle retries the same record; the
+                # control owner keeps the original identity and deadline.
+                record.processing = False
+                if record.retired or self._closed:
+                    record.snapshot_pending = False
+                    record.retired = True
+                    self._finish_locked(record)
+                else:
+                    record.snapshot_result = result
+                return
             record.snapshot_pending = False
             if result.lease is not None:
                 if record.retired or self._closed or not self._retain_lease_locked(result.lease, port):
@@ -1346,18 +1366,29 @@ class MotionResultInbox:
             record.snapshot_result = result
             record.processing = (result.status is SnapshotLeaseStatus.READY and not record.retired
                                   and (record.action_preparation is not None or record.action_selection is not None))
-            if record.retired:
+            if record.retired or self._closed:
+                record.retired = True
+                record.processing = False
                 self._finish_locked(record)
                 return
+            if (result.status is not SnapshotLeaseStatus.READY
+                    and record.action_preparation is None and record.action_selection is None):
+                self._finish_locked(record)
         preparation = record.action_preparation
         selection = record.action_selection
         if selection is not None:
             anchor, request = selection
             if result.status is not SnapshotLeaseStatus.READY:
                 with self._lock:
+                    if record.retired or self._closed:
+                        record.processing = False
+                        self._finish_locked(record)
+                        return
                     self._results[record.identity] = GapMotionSolveResult(record.identity.subject_id,
-                        record.identity.revision, SolveResult(SolveStatus.NEEDS_WORLD,
-                            reasons=("prepared_selection_snapshot_unavailable",)), 0, record.identity)
+                        record.identity.revision, SolveResult(
+                            SolveStatus.INTERNAL_ERROR if result.status is SnapshotLeaseStatus.INTERNAL_ERROR
+                            else SolveStatus.UNSUPPORTED,
+                            reasons=("prepared_selection_snapshot_" + result.status.value,)), 0, record.identity)
                     self._finish_locked(record)
                 return
             try:
@@ -1386,7 +1417,9 @@ class MotionResultInbox:
             if result.status is not SnapshotLeaseStatus.READY:
                 with self._lock:
                     if not record.retired:
-                        record.computation = PreparedComputeResult(PreparedComputeStatus.MISSING_INFORMATION,
+                        record.computation = PreparedComputeResult(
+                            PreparedComputeStatus.INTERNAL_ERROR
+                            if result.status is SnapshotLeaseStatus.INTERNAL_ERROR else PreparedComputeStatus.UNSUPPORTED,
                             preparation.job_token, PreparedComputeCounts())
                         record.admission = PreparedAdmissionResult(PreparedAdmissionStatus.REJECTED,
                             reason=PreparedRejectReason.WORLD_SNAPSHOT)

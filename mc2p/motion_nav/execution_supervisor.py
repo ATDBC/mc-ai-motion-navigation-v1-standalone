@@ -144,6 +144,7 @@ class ExecutionSupervisor:
         self._async_history = deque(maxlen=64)
         self._prepared_approval: PreparedHandoffApproval | None = None
         self._prepared_approval_control: RouteControl | None = None
+        self._prepared_approval_frame: NavigationFrame | None = None
 
     def prepared_approval_is_current(self, approval: PreparedHandoffApproval,
                                      *, control: RouteControl | None = None) -> bool:
@@ -199,7 +200,9 @@ class ExecutionSupervisor:
         if reason is not None:
             return PreparedHandoffApproval(PreparedHandoffStatus.REJECTED, proposal, reason=reason)
         approval = PreparedHandoffApproval(PreparedHandoffStatus.APPROVED, proposal, "approval-" + uuid4().hex)
-        self._prepared_approval, self._prepared_approval_control = approval, control
+        self._prepared_approval = approval
+        self._prepared_approval_control = control
+        self._prepared_approval_frame = frame
         # No predicate-binding API: the actual issuer lends its own identity
         # only after it has stored this exact permission for this body owner.
         control.executor._prepared_handoff_supervisor = self
@@ -291,10 +294,35 @@ class ExecutionSupervisor:
             control.activation_registry.abort_activation(accepted)
             control.executor.abort_prepared_activation()
             return ActivationResult._from_native_references(ActivationStatus.STALE_GENERATION, ActivationRejectReason.GENERATION)
-        result = control.activation_registry.commit_activation(accepted, delivered, action_commit=control)
+        frame = self._prepared_approval_frame
+        if (type(frame) is not NavigationFrame
+                or frame.body.sequence_id
+                    != self._prepared_approval.proposal.observation_sequence_id):
+            control.activation_registry.abort_activation(accepted)
+            control.executor.abort_prepared_activation()
+            return ActivationResult._from_native_references(
+                ActivationStatus.ACTIVATION_MISMATCH,
+                ActivationRejectReason.HANDOFF,
+            )
+        commit = control.prepare_prepared_activation_commit(
+            delivered,
+            frame=frame,
+            observation_sequence_id=(
+                self._prepared_approval.proposal.observation_sequence_id
+            ),
+        )
+        if type(commit) is ActivationResult:
+            control.activation_registry.abort_activation(accepted)
+            control.executor.abort_prepared_activation()
+            return commit
+        result = control.activation_registry.commit_activation(
+            accepted, delivered, action_commit=commit,
+        )
         if result.status is not ActivationStatus.ACTIVATED:
             control.activation_registry.abort_activation(accepted)
             control.executor.abort_prepared_activation()
+        else:
+            commit.finalize()
         return result
 
     @property

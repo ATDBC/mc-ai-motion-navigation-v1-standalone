@@ -191,7 +191,7 @@ class _ControlMeter:
                 category = "search"
             elif name in ("canonical_motion_digest", "canonical_bundle_bytes", "canonical_motion_bytes"):
                 category = "proof_hash"
-            elif name in ("seal_snapshot_version", "canonical_snapshot_bytes", "borrow_snapshot_version", "snapshot") and module in ("mc2p.motion_nav.world_model", "mc2p.motion_nav.world_snapshot", "mc2p.motion_nav.physics_adapter"):
+            elif name in ("seal_snapshot_version", "canonical_snapshot_bytes", "borrow_snapshot_version", "try_borrow_snapshot_version", "snapshot") and module in ("mc2p.motion_nav.world_model", "mc2p.motion_nav.world_snapshot", "mc2p.motion_nav.physics_adapter"):
                 category = "snapshot"
             elif name in ("revalidate_air_transition", "verified_ground_rollout", "_release_recovery_evidence", "rollout", "rollout_with_trace", "_rollout_air_template") or (name == "step" and module == "mc2p.motion_nav.physics_1_21"):
                 category = "physics_replay"

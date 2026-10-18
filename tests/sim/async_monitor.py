@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from mc2p.motion_nav.async_work import AsyncAdmissionDisposition, AsyncWorkKind, AsyncComputationScope
+from mc2p.motion_nav.motion_candidate import VerifiedMotionExecutorState
 from mc2p.motion_nav.world_model import CellKnowledge
 
 
@@ -23,6 +24,26 @@ class VerificationGap:
 class ObservedAsyncActivity:
     identity: object
     operation: str
+
+
+@dataclass(frozen=True)
+class PreparedHandoffActivity:
+    """Typed control-tick facts used by the prepared handoff liveness gate."""
+
+    movement_tick: int
+    prepared_successor_required: bool
+    pending_action_boundary_index: int | None
+    controller_state: VerifiedMotionExecutorState | None
+
+    def __post_init__(self):
+        if (type(self.movement_tick) is not int or self.movement_tick < 0
+                or type(self.prepared_successor_required) is not bool
+                or (self.pending_action_boundary_index is not None
+                    and (type(self.pending_action_boundary_index) is not int
+                         or self.pending_action_boundary_index < 0))
+                or (self.controller_state is not None
+                    and type(self.controller_state) is not VerifiedMotionExecutorState)):
+            raise ValueError("prepared handoff activity must use typed control facts")
 
 
 @dataclass(frozen=True)
@@ -65,6 +86,61 @@ class AsyncInvariantMonitor:
         self._seen = set()
         self.last_events = []
         self.by_kind = Counter()
+        self._prepared_boundary_since = None
+        self._prepared_recovery_since = None
+        self._prepared_liveness_last_tick = None
+        self._prepared_boundary_reported = False
+        self._prepared_recovery_reported = False
+
+    def check_prepared_liveness(
+            self, activity: PreparedHandoffActivity, *,
+            boundary_limit_ticks: int, recovery_limit_ticks: int) -> None:
+        """Bound prepared waits from typed state, never from diagnostic reasons."""
+        if (type(activity) is not PreparedHandoffActivity
+                or type(boundary_limit_ticks) is not int or boundary_limit_ticks < 0
+                or type(recovery_limit_ticks) is not int or recovery_limit_ticks < 0):
+            raise ValueError("prepared liveness requires typed activity")
+        if (self._prepared_liveness_last_tick is not None
+                and activity.movement_tick < self._prepared_liveness_last_tick):
+            raise ValueError("prepared liveness ticks cannot rewind")
+        self._prepared_liveness_last_tick = activity.movement_tick
+
+        boundary_waiting = (
+            activity.prepared_successor_required
+            and activity.pending_action_boundary_index is not None
+        )
+        if boundary_waiting:
+            if self._prepared_boundary_since is None:
+                self._prepared_boundary_since = activity.movement_tick
+            elif (not self._prepared_boundary_reported
+                    and activity.movement_tick - self._prepared_boundary_since
+                        > boundary_limit_ticks):
+                self.violations.append((
+                    "I23",
+                    f"prepared action boundary wait exceeded {boundary_limit_ticks} control ticks",
+                ))
+                self._prepared_boundary_reported = True
+        else:
+            self._prepared_boundary_since = None
+            self._prepared_boundary_reported = False
+
+        recovering = (
+            activity.controller_state is VerifiedMotionExecutorState.RECOVERING
+        )
+        if recovering:
+            if self._prepared_recovery_since is None:
+                self._prepared_recovery_since = activity.movement_tick
+            elif (not self._prepared_recovery_reported
+                    and activity.movement_tick - self._prepared_recovery_since
+                        > recovery_limit_ticks):
+                self.violations.append((
+                    "I23",
+                    f"prepared recovery exceeded {recovery_limit_ticks} control ticks",
+                ))
+                self._prepared_recovery_reported = True
+        else:
+            self._prepared_recovery_since = None
+            self._prepared_recovery_reported = False
 
     def check(self, owners, mailboxes=()):
         self.last_events = []

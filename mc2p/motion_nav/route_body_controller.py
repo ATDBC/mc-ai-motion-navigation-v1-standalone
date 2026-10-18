@@ -7,7 +7,8 @@ import math
 from mc2p.contracts.action_v1 import LookV1, MovementV1
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.action_route_executor import (
-    ActionRouteDecision, ActionRouteExecutor, ActionRouteState,
+    ActionCompletionPlan, ActionRouteDecision, ActionRouteExecutor,
+    ActionRouteState,
 )
 from mc2p.motion_nav.body_control import (
     BodyControlDecision, BodyControlActivity, BodyControlPhase,
@@ -20,11 +21,14 @@ from mc2p.motion_nav.online_motion import (
     InputApplicationLedger, InputResponsibilityDisposition,
     StateAnchor, assess_input_responsibility,
 )
-from mc2p.motion_nav.route_admission import ActiveRoute
-from mc2p.motion_nav.route_admission import ActiveRouteTracker
+from mc2p.motion_nav.route_admission import (
+    ActiveRoute, ActiveRouteProgressPlan, ActiveRouteTracker,
+)
 from mc2p.motion_nav.route_validation import (
     ActiveRouteValidation,
+    ActiveRouteValidationDisposition,
     ActiveRouteValidationIdentity,
+    RouteProgressEvidence,
 )
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_model import BlockPos
@@ -55,6 +59,40 @@ class RouteAdvance:
     decision: ActionRouteDecision
     conditioned_ordinary_walk: bool
     progress_validation: ActiveRouteValidation | None = None
+
+
+@dataclass(slots=True)
+class _PreparedRouteCommit:
+    """Local commit object passed through the registry without re-entering it."""
+
+    control: RouteControl
+    delivered: object
+    executor_plan: ActionCompletionPlan
+    tracker_plan: ActiveRouteProgressPlan
+    finalized: bool = False
+
+    def commit_prepared_activation(self, delivered):
+        if delivered is not self.delivered:
+            from mc2p.contracts.motion_activation import (
+                ActivationRejectReason, ActivationResult, ActivationStatus,
+            )
+            return ActivationResult._from_native_references(
+                ActivationStatus.ACTIVATION_MISMATCH,
+                ActivationRejectReason.TRANSACTION,
+            )
+        return self.control.commit_prepared_activation(
+            delivered,
+            executor_plan=self.executor_plan,
+            tracker_plan=self.tracker_plan,
+        )
+
+    def finalize(self) -> int:
+        if self.finalized:
+            return 0
+        self.finalized = True
+        return self.control.executor.finalize_action_completion(
+            self.executor_plan,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -155,14 +193,71 @@ class RouteControl:
         registry = self.executor._prepared_result_inbox
         return registry if isinstance(registry, PreparedActivationRegistryPort) else None
 
-    def commit_prepared_activation(self, delivered):
+    def prepare_prepared_activation_commit(
+            self, delivered, *, frame: NavigationFrame,
+            observation_sequence_id: int,
+            evidence: RouteProgressEvidence | None = None):
+        """Prepare tracker first; a rejected tracker leaves executor untouched."""
+        from mc2p.contracts.motion_activation import (
+            ActivationRejectReason, ActivationResult, ActivationStatus,
+        )
         supervisor = self.executor._prepared_handoff_supervisor
         if (supervisor is None or supervisor.route is not self
                 or self.executor._prepared_body_owner_id != self.owner_id
                 or self.executor._prepared_route_revision != self.route.route_revision):
-            from mc2p.contracts.motion_activation import ActivationResult, ActivationStatus, ActivationRejectReason
             return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.OWNER)
-        return self.executor.commit_prepared_activation(delivered)
+        assert self.tracker is not None
+        next_index = self.executor.action_index + 1
+        tracker_plan = self.tracker.prepare_progress(
+            next_index,
+            evidence,
+            observation_sequence_id=observation_sequence_id,
+        )
+        if tracker_plan.failure_reason is not None:
+            return ActivationResult._from_native_references(
+                ActivationStatus.ACTIVATION_MISMATCH,
+                ActivationRejectReason.HANDOFF,
+            )
+        executor_plan = self.executor.prepare_action_completion(
+            frame,
+            observation_sequence_id=observation_sequence_id,
+            expected_next_action_index=next_index,
+        )
+        if (not self.tracker.can_commit_progress(tracker_plan)
+                or not self.executor.can_commit_prepared_activation(
+                    delivered, executor_plan,
+                )):
+            return ActivationResult._from_native_references(
+                ActivationStatus.ACTIVATION_MISMATCH,
+                ActivationRejectReason.HANDOFF,
+            )
+        return _PreparedRouteCommit(
+            self, delivered, executor_plan, tracker_plan,
+        )
+
+    def commit_prepared_activation(
+            self, delivered, *, executor_plan: ActionCompletionPlan,
+            tracker_plan: ActiveRouteProgressPlan):
+        from mc2p.contracts.motion_activation import (
+            ActivationRejectReason, ActivationResult, ActivationStatus,
+        )
+        assert self.tracker is not None
+        if (not self.tracker.can_commit_progress(tracker_plan)
+                or not self.executor.can_commit_prepared_activation(
+                    delivered, executor_plan,
+                )):
+            return ActivationResult._from_native_references(
+                ActivationStatus.ACTIVATION_MISMATCH,
+                ActivationRejectReason.HANDOFF,
+            )
+        # Both owners are local to this control call.  After these checks there
+        # are no callbacks, registry calls or queries between their mutations.
+        progress = self.tracker._commit_progress_prechecked(tracker_plan)
+        assert progress.disposition is ActiveRouteValidationDisposition.CONTINUE
+        result = self.executor._commit_prepared_activation_prechecked(
+            delivered, executor_plan,
+        )
+        return result
 
     def advance(
         self, frame: NavigationFrame,

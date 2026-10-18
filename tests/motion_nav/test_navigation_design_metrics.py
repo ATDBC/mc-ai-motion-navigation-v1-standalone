@@ -24,7 +24,9 @@ class NavigationDesignMetricsTests(unittest.TestCase):
             'PreparedSubmitStatus',
             'ProofUse',
             'ReferenceStatus',
+            'SnapshotBorrowStatus',
             'SnapshotLeaseStatus',
+            'SnapshotPublishStatus',
             'StreamApplicationReason',
             'StreamApplicationStatus',
             'StreamStartBranch',
@@ -33,6 +35,43 @@ class NavigationDesignMetricsTests(unittest.TestCase):
         self.assertTrue(expected.issubset(NON_IMPLEMENTATION_ENUMS))
         self.assertTrue(all(TYPED_LIFECYCLE_CLASSIFICATIONS[name]
                             for name in expected))
+
+    def test_snapshot_lifecycle_roles_do_not_hide_unknown_enum_sources(self):
+        report = self.report({'statuses.py': """
+from enum import StrEnum
+class SnapshotBorrowStatus(StrEnum):
+    BUSY = "busy"
+class SnapshotPublishStatus(StrEnum):
+    CAPACITY = "capacity"
+class SnapshotLeaseStatus(StrEnum):
+    NOT_READY = "not_ready"
+class PreparedComputeStatus(StrEnum):
+    WORKER_FAILED = "worker_failed"
+class SnapshotDispatchStatus(StrEnum):
+    FLY = "fly"
+""", 'motion_coordination.py': """
+from .statuses import SnapshotBorrowStatus as Borrow
+from .statuses import SnapshotPublishStatus, SnapshotLeaseStatus
+from .statuses import PreparedComputeStatus, SnapshotDispatchStatus
+
+def select(status):
+    if status is Borrow.BUSY: wait()
+    if status is SnapshotPublishStatus.CAPACITY: wait()
+    if status is SnapshotLeaseStatus.NOT_READY: wait()
+    if status is PreparedComputeStatus.WORKER_FAILED: wait()
+    computed = getattr(PreparedComputeStatus, "WORKER_FAILED")
+    if status is computed: wait()
+    if status is SnapshotDispatchStatus.FLY: create()
+    mixed = [SnapshotLeaseStatus.NOT_READY, SnapshotDispatchStatus.FLY][0]
+    if status is mixed: create()
+"""})
+        self.assertEqual(report['direct_action_dispatch'], [])
+        self.assertEqual(len(report['proxy_implementation_dispatch']), 2)
+        self.assertEqual({row['classification'] for row in report['unclassified']},
+                         {'SnapshotDispatchStatus', 'UNKNOWN_ENUM_DERIVED'})
+        self.assertEqual(len(report['unclassified']), 2)
+        self.assertEqual([row['safe_only'] for row in report['derived_checks']],
+                         [True, False])
 
     def test_handoff_disposition_is_internal_lifecycle(self):
         self.assertIn('HandoffDisposition', NON_IMPLEMENTATION_ENUMS)

@@ -141,7 +141,7 @@ class StandaloneExportTests(unittest.TestCase):
             self.assertEqual(hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest(),
                              expected, (commit, name))
 
-    def test_d115_current_semantics_cover_changed_production_and_exported_bytes(self):
+    def test_d115_historical_semantics_remain_bound_to_the_published_commit(self):
         relative = "evidence/motion_navigation/d115-two-jump-v1/published-production-semantic-hashes.json"
         self.assertIn(relative, {path.as_posix() for path in self.manifest.required_paths})
         report = json.loads((self.root / relative).read_text("utf-8"))
@@ -151,11 +151,22 @@ class StandaloneExportTests(unittest.TestCase):
             "mc2p/motion_nav/motion_coordination.py",
             "scripts/b10_gap_solver_runtime.py",
         })
+        self.assertEqual(report["source_commit"], "3efc2fc3")
+        if not (ROOT / ".git").exists():
+            return
+        commit = report["source_commit"]
+        if subprocess.run(["git", "cat-file", "-e", f"{commit}^{{commit}}"],
+                          cwd=ROOT, capture_output=True).returncode != 0:
+            return
         for name, expected in report["files"].items():
-            raw = (self.root / name).read_bytes().replace(b"\r\n", b"\n")
-            self.assertEqual(hashlib.sha256(raw).hexdigest(), expected, name)
+            raw = subprocess.check_output(["git", "show", f"{commit}:{name}"], cwd=ROOT)
+            self.assertEqual(
+                hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest(),
+                expected,
+                (commit, name),
+            )
 
-    def test_d116_current_semantics_cover_dependency_repair_bytes(self):
+    def test_d116_historical_semantics_remain_bound_to_the_published_commit(self):
         relative = "evidence/motion_navigation/d116-handoff-timeline-v1/published-production-semantic-hashes.json"
         self.assertIn(relative, {path.as_posix() for path in self.manifest.required_paths})
         report = json.loads((self.root / relative).read_text("utf-8"))
@@ -164,6 +175,62 @@ class StandaloneExportTests(unittest.TestCase):
         self.assertEqual(set(report["files"]), {
             "mc2p/contracts/motion_activation.py",
             "mc2p/motion_nav/action_route_executor.py",
+        })
+        self.assertEqual(
+            report["source_commit"],
+            "30f42cf641a8081283b917a91d14a21f738f38c6",
+        )
+        if not (ROOT / ".git").exists():
+            return
+        commit = report["source_commit"]
+        if subprocess.run(["git", "cat-file", "-e", f"{commit}^{{commit}}"],
+                          cwd=ROOT, capture_output=True).returncode != 0:
+            return
+        for name, expected in report["files"].items():
+            raw = subprocess.check_output(["git", "show", f"{commit}:{name}"], cwd=ROOT)
+            self.assertEqual(
+                hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest(),
+                expected,
+                (commit, name),
+            )
+
+    def test_d117_current_semantics_cover_prepared_handoff_bytes(self):
+        relative = (
+            "evidence/motion_navigation/d117-prepared-handoff-v1/"
+            "published-production-semantic-hashes.json"
+        )
+        required = {path.as_posix() for path in self.manifest.required_paths}
+        self.assertIn(relative, required)
+        for path in (
+            "docs/motion_navigation/decisions/0117-close-prepared-successor-handoff.md",
+            "docs/motion_navigation/stages/d117-prepared-successor-handoff-closure-plan.md",
+            "docs/motion_navigation/acceptance/d117-prepared-successor-handoff-closure.md",
+            "scripts/d116_handoff_timeline.py",
+            "tests/motion_nav/test_d117_prepared_liveness_monitor.py",
+        ):
+            self.assertIn(path, required)
+            self.assertEqual(
+                (self.root / path).read_bytes(),
+                (ROOT / path).read_bytes(),
+            )
+        report = json.loads((self.root / relative).read_text("utf-8"))
+        self.assertEqual(report["schema"], "mc2p.public-production-semantic-hashes.v1")
+        self.assertEqual(report["normalization"], "CRLF_TO_LF")
+        self.assertEqual(report["status"], "current")
+        self.assertEqual(
+            report["source_commit"],
+            "410a7bc9f0485920e830b78e1b0f7f758c425863",
+        )
+        self.assertEqual(set(report["files"]), {
+            "mc2p/motion_nav/action_route_executor.py",
+            "mc2p/motion_nav/execution_supervisor.py",
+            "mc2p/motion_nav/motion_candidate.py",
+            "mc2p/motion_nav/motion_coordination.py",
+            "mc2p/motion_nav/motion_worker.py",
+            "mc2p/motion_nav/prepared_motion.py",
+            "mc2p/motion_nav/route_admission.py",
+            "mc2p/motion_nav/route_body_controller.py",
+            "mc2p/motion_nav/world_model.py",
         })
         for name, expected in report["files"].items():
             raw = (self.root / name).read_bytes().replace(b"\r\n", b"\n")
@@ -358,10 +425,14 @@ class StandaloneExportTests(unittest.TestCase):
             self.root / "evidence/motion_navigation/d116-handoff-timeline-v1/"
             "published-production-semantic-hashes.json"
         ).read_text("utf-8"))["files"]
+        d117 = json.loads((
+            self.root / "evidence/motion_navigation/d117-prepared-handoff-v1/"
+            "published-production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
         current_semantics = {**canonical, **r1, **r2, **r3, **handoff,
                              **late_handoff, **post_loss, **tp0, **published,
                              **d105, **d107, **d108, **d109, **d112, **d113,
-                             **d114, **d115, **d116}
+                             **d114, **d115, **d116, **d117}
         tp0_root = self.root / "evidence/motion_navigation/trajectory-proto-tp0-v1"
         frozen = json.loads((tp0_root / "frozen-control-manifest.json").read_text("utf-8"))
         audit = json.loads((tp0_root / "fabric/audit-summary.json").read_text("utf-8"))

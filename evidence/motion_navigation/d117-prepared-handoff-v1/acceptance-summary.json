@@ -1,0 +1,68 @@
+{
+  "schema_version": "mc2p.d117-prepared-handoff-acceptance.v1",
+  "date": "2026-10-18",
+  "platform": "windows",
+  "scope": "component-only",
+  "results": {
+    "representative_idle": {
+      "passed": 30,
+      "total": 30,
+      "completion_ticks": [36]
+    },
+    "representative_same_core_load": {
+      "passed": 30,
+      "total": 30,
+      "completion_ticks": [36]
+    },
+    "r5_direct_and_adjacent": {
+      "passed": 271,
+      "total": 271
+    },
+    "source_forward": {
+      "modules_passed": 195,
+      "modules_total": 195,
+      "tests_run": 2473,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0
+    },
+    "source_reverse": {
+      "modules_passed": 195,
+      "modules_total": 195,
+      "tests_run": 2473,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0
+    },
+    "public_snapshot_forward": {
+      "modules_passed": 194,
+      "modules_total": 194,
+      "tests_run": 2449,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0
+    },
+    "public_snapshot_reverse": {
+      "modules_passed": 194,
+      "modules_total": 194,
+      "tests_run": 2449,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0
+    },
+    "busy_fallback_test_repeat": {
+      "passed": 20,
+      "total": 20
+    }
+  },
+  "boundaries": {
+    "fabric_run": false,
+    "automatic_prepared_production_enabled": false,
+    "product_capability_claimed": false,
+    "historical_d115_d116_failures_rewritten": false
+  }
+}

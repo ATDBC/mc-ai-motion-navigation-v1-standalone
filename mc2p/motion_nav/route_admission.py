@@ -2684,6 +2684,21 @@ class RouteAdmitter:
                                AdmissionReason.CANDIDATE_ADMITTED, active)
 
 
+@dataclass(frozen=True, slots=True)
+class ActiveRouteProgressPlan:
+    """One local, single-use progress update for an exact tracker state."""
+
+    tracker_token: object
+    tracker_epoch: int
+    tracker_identity: ActiveRouteValidationIdentity
+    action_index: int
+    observation_sequence_id: int
+    evidence: RouteProgressEvidence | None
+    failure_reason: ActiveRouteValidationReason | None
+    retired_owner_ids: tuple[str, ...]
+    progress_update: tuple[int, float] | None
+
+
 class ActiveRouteTracker:
     """Own runtime proof progress and legacy corridor facts for one route."""
 
@@ -2715,6 +2730,8 @@ class ActiveRouteTracker:
         self._current_action_index = 0
         self._last_progress: dict[int, float] = {}
         self._progress_failure: ActiveRouteValidationReason | None = None
+        self._progress_token = object()
+        self._progress_epoch = 0
         if self._plan is None:
             self._active_owner_dependencies: dict[str, set[BlockPos]] = {}
             self._fallback_dependencies = set(route.connection_dependencies) | set(
@@ -2777,44 +2794,39 @@ class ActiveRouteTracker:
             queries_used,
         )
 
-    def _fail_progress(
-        self, reason: ActiveRouteValidationReason,
-    ) -> ActiveRouteValidation:
-        self._progress_failure = reason
-        return self._validation(ActiveRouteValidationDisposition.STOP, reason)
-
-    def record_progress(
+    def prepare_progress(
         self,
         action_index: int,
         evidence: RouteProgressEvidence | None,
         *,
         observation_sequence_id: int,
-    ) -> ActiveRouteValidation:
-        """Retire proof owners only from this frame's typed controller fact."""
+    ) -> ActiveRouteProgressPlan:
+        """Check one progress update without changing proof ownership."""
         if (type(action_index) is not int or action_index < 0
                 or type(observation_sequence_id) is not int
                 or observation_sequence_id < 0):
             raise ContractViolation("route progress update requires typed indices")
+        failure = self._progress_failure
         if self._progress_failure is not None:
-            return self._validation(
-                ActiveRouteValidationDisposition.STOP,
-                self._progress_failure,
+            return ActiveRouteProgressPlan(
+                self._progress_token, self._progress_epoch, self.identity,
+                action_index, observation_sequence_id, evidence, failure, (), None,
             )
         action_count = len(self.route.action_route.actions)
         if (action_index >= action_count
                 or action_index > self._current_action_index + 1):
-            return self._fail_progress(
-                ActiveRouteValidationReason.PROGRESS_ACTION_INDEX_INVALID,
-            )
-        if action_index < self._current_action_index:
-            return self._fail_progress(
-                ActiveRouteValidationReason.PROGRESS_REWOUND,
+            failure = ActiveRouteValidationReason.PROGRESS_ACTION_INDEX_INVALID
+        elif action_index < self._current_action_index:
+            failure = ActiveRouteValidationReason.PROGRESS_REWOUND
+        if failure is not None:
+            return ActiveRouteProgressPlan(
+                self._progress_token, self._progress_epoch, self.identity,
+                action_index, observation_sequence_id, evidence, failure, (), None,
             )
         if self._plan is None:
-            self._current_action_index = action_index
-            return self._validation(
-                ActiveRouteValidationDisposition.CONTINUE,
-                ActiveRouteValidationReason.PROGRESS_RECORDED,
+            return ActiveRouteProgressPlan(
+                self._progress_token, self._progress_epoch, self.identity,
+                action_index, observation_sequence_id, evidence, None, (), None,
             )
         action_plans = {
             plan.action_index: plan for plan in self._plan.action_plans
@@ -2834,58 +2846,114 @@ class ActiveRouteTracker:
         )
         if evidence is None:
             if current_fixed_routes:
-                return self._fail_progress(
-                    ActiveRouteValidationReason.PROGRESS_EVIDENCE_MISSING,
-                )
+                failure = ActiveRouteValidationReason.PROGRESS_EVIDENCE_MISSING
         else:
             if type(evidence) is not RouteProgressEvidence:
                 raise ContractViolation("route progress evidence must be typed")
             if evidence.observation_sequence_id != observation_sequence_id:
-                return self._fail_progress(
-                    ActiveRouteValidationReason.PROGRESS_EVIDENCE_STALE,
-                )
+                failure = ActiveRouteValidationReason.PROGRESS_EVIDENCE_STALE
             expected_routes = fixed_routes_by_action.get(
                 evidence.action_index, set()
             )
-            if (expected_routes != {evidence.fixed_route_id}
+            if (failure is None
+                    and (expected_routes != {evidence.fixed_route_id}
                     or evidence.action_index not in {
                         self._current_action_index, action_index,
                     }
                     or (leaving_current_action and current_fixed_routes
                         and evidence.action_index
-                            != self._current_action_index)):
-                return self._fail_progress(
-                    ActiveRouteValidationReason.PROGRESS_IDENTITY_MISMATCH,
-                )
+                            != self._current_action_index))):
+                failure = ActiveRouteValidationReason.PROGRESS_IDENTITY_MISMATCH
             prior = self._last_progress.get(evidence.action_index, 0.0)
-            if evidence.progress_blocks + 1.0e-9 < prior:
-                return self._fail_progress(
-                    ActiveRouteValidationReason.PROGRESS_REWOUND,
-                )
-            self._last_progress[evidence.action_index] = float(
-                evidence.progress_blocks
+            if (failure is None
+                    and evidence.progress_blocks + 1.0e-9 < prior):
+                failure = ActiveRouteValidationReason.PROGRESS_REWOUND
+        if failure is not None:
+            return ActiveRouteProgressPlan(
+                self._progress_token, self._progress_epoch, self.identity,
+                action_index, observation_sequence_id, evidence, failure, (), None,
             )
 
-        for owner in self._plan.owners:
-            if owner.action_index < action_index:
-                self._active_owner_dependencies.pop(owner.owner_id, None)
+        retired_owner_ids = {
+            owner.owner_id for owner in self._plan.owners
+            if owner.action_index < action_index
+        }
+        progress_update = None
         if evidence is not None:
+            progress_update = (
+                evidence.action_index, float(evidence.progress_blocks),
+            )
             action_plan = action_plans.get(evidence.action_index)
             if action_plan is not None:
                 for leg in action_plan.legs:
                     if (evidence.progress_blocks + 1.0e-9
                             >= leg.end_progress_blocks):
-                        self._active_owner_dependencies.pop(leg.owner_ref, None)
+                        retired_owner_ids.add(leg.owner_ref)
             initial = self._plan.initial_connection
             if (evidence.action_index == 0 and initial is not None
                     and evidence.progress_blocks + 1.0e-9
                         >= initial.retire_after_progress_blocks):
-                self._active_owner_dependencies.pop(initial.owner_ref, None)
-        self._current_action_index = action_index
+                retired_owner_ids.add(initial.owner_ref)
+        return ActiveRouteProgressPlan(
+            self._progress_token, self._progress_epoch, self.identity,
+            action_index, observation_sequence_id, evidence, None,
+            tuple(sorted(retired_owner_ids)), progress_update,
+        )
+
+    def can_commit_progress(self, plan: ActiveRouteProgressPlan) -> bool:
+        return (
+            type(plan) is ActiveRouteProgressPlan
+            and plan.tracker_token is self._progress_token
+            and plan.tracker_epoch == self._progress_epoch
+            and plan.tracker_identity == self.identity
+        )
+
+    def commit_progress(
+        self, plan: ActiveRouteProgressPlan,
+    ) -> ActiveRouteValidation:
+        """Apply an exact prepared update once; stale plans never mutate state."""
+        if not self.can_commit_progress(plan):
+            return self._validation(
+                ActiveRouteValidationDisposition.STOP,
+                ActiveRouteValidationReason.ROUTE_IDENTITY_CHANGED,
+            )
+        return self._commit_progress_prechecked(plan)
+
+    def _commit_progress_prechecked(
+            self, plan: ActiveRouteProgressPlan) -> ActiveRouteValidation:
+        """Apply a plan after its synchronous owner checked the exact epoch."""
+        self._progress_epoch += 1
+        if plan.failure_reason is not None:
+            self._progress_failure = plan.failure_reason
+            return self._validation(
+                ActiveRouteValidationDisposition.STOP,
+                plan.failure_reason,
+            )
+        for owner_id in plan.retired_owner_ids:
+            self._active_owner_dependencies.pop(owner_id, None)
+        if plan.progress_update is not None:
+            index, progress = plan.progress_update
+            self._last_progress[index] = progress
+        self._current_action_index = plan.action_index
         return self._validation(
             ActiveRouteValidationDisposition.CONTINUE,
             ActiveRouteValidationReason.PROGRESS_RECORDED,
         )
+
+    def record_progress(
+        self,
+        action_index: int,
+        evidence: RouteProgressEvidence | None,
+        *,
+        observation_sequence_id: int,
+    ) -> ActiveRouteValidation:
+        """Compatibility wrapper for ordinary one-step progress updates."""
+        plan = self.prepare_progress(
+            action_index,
+            evidence,
+            observation_sequence_id=observation_sequence_id,
+        )
+        return self.commit_progress(plan)
 
     def validate(
         self,

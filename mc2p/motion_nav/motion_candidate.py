@@ -150,7 +150,8 @@ def _physics_conditions_match(actual: PhysicsState, expected: PhysicsState) -> b
     return True
 
 
-def _state_matches_verified_start(actual: PhysicsState, expected: PhysicsState) -> bool:
+def verified_start_state_matches(
+        actual: PhysicsState, expected: PhysicsState) -> bool:
     """Only numerical representation error; no new continuous entry envelope.
 
     The aligned ordinary-ground audit measured <6e-9 block position error.
@@ -223,7 +224,9 @@ def verified_candidate_can_start(
     return (
         variant is not None
         and anchor.session == variant.entry_state.session
-        and _state_matches_verified_start(anchor.physics_state, variant.entry_state)
+        and verified_start_state_matches(
+            anchor.physics_state, variant.entry_state,
+        )
     )
 
 
@@ -362,7 +365,8 @@ class MotionCandidateAdmitter:
                 MotionCandidateStatus.NEEDS_REVALIDATION, "state_anchor_advanced",
                 can_recompute=True,
             )
-        if not _state_matches_verified_start(anchor.physics_state, variant.entry_state):
+        if not verified_start_state_matches(
+                anchor.physics_state, variant.entry_state):
             return MotionCandidateAdmission(
                 MotionCandidateStatus.NEEDS_REVALIDATION, "entry_state_changed",
                 can_recompute=True,
@@ -499,6 +503,7 @@ class VerifiedMotionExecutor:
                 None if exact else StreamApplicationReason.DUPLICATE)
             if not exact:
                 self._application_result = result
+                self._recovery_started_at_tick = application.effect_tick
                 self.state = VerifiedMotionExecutorState.RECOVERING
             return result
         result = (self._stream_tracker.record_first_application(application) if command_index == 0 else
@@ -509,6 +514,7 @@ class VerifiedMotionExecutor:
             self._start_tick = application.effect_tick - command_index
             self._pending = None
         else:
+            self._recovery_started_at_tick = application.effect_tick
             self.state = VerifiedMotionExecutorState.RECOVERING
         return result
 
@@ -540,13 +546,35 @@ class VerifiedMotionExecutor:
     def prepared_decision(self, anchor: StateAnchor) -> VerifiedMotionDecision:
         """Compare the registered branch, preserving responsibility on any deviation."""
         handle, tracker = self._prepared_handle, self._stream_tracker
-        if self.state is VerifiedMotionExecutorState.RECOVERING or tracker.start_branch is None:
+        if self.state is VerifiedMotionExecutorState.RECOVERING:
+            if self._recovery_started_at_tick is None:
+                self._recovery_started_at_tick = anchor.movement_tick_id
+            horizontal_speed = math.hypot(
+                anchor.physics_state.velocity_blocks_per_tick[0],
+                anchor.physics_state.velocity_blocks_per_tick[2],
+            )
+            if (anchor.movement_tick_id > self._recovery_started_at_tick
+                    and anchor.physics_state.on_ground
+                    and horizontal_speed
+                        <= _RECOVERY_GROUND_SPEED_TOLERANCE_PER_TICK):
+                self.state = VerifiedMotionExecutorState.INPUT_LOST
+                return VerifiedMotionDecision(
+                    self.state, MovementV1(), None, self._command_index,
+                    None, None, 1, self.state.value,
+                )
+            return VerifiedMotionDecision(self.state, None, None, self._command_index, None, None, 1,
+                                          "BODY_RESPONSIBILITY_UNRESOLVED")
+        if tracker.start_branch is None:
             return VerifiedMotionDecision(self.state, None, None, self._command_index, None, None, 1,
                                           "BODY_RESPONSIBILITY_UNRESOLVED")
         branch, = self.remaining_start_branches
         index = self._command_index
-        if (index >= len(branch.trajectory) or anchor.physics_state != branch.trajectory[index]):
+        if (index >= len(branch.trajectory)
+                or not verified_start_state_matches(
+                    anchor.physics_state, branch.trajectory[index],
+                )):
             self.state = VerifiedMotionExecutorState.RECOVERING
+            self._recovery_started_at_tick = anchor.movement_tick_id
             return VerifiedMotionDecision(self.state, None, None, index, None, None, 1,
                                           "BODY_RESPONSIBILITY_UNRESOLVED")
         if index == len(handle.hot_view.commands):
@@ -1138,7 +1166,9 @@ class VerifiedMotionExecutor:
         if self._command_index == 0 and self._pending is None:
             variant = proof.start_variant(anchor.movement_tick_id + 1)
             if (variant is not None
-                    and _state_matches_verified_start(anchor.physics_state, variant.entry_state)
+                    and verified_start_state_matches(
+                        anchor.physics_state, variant.entry_state,
+                    )
                     and _proved_prelude_applied(proof, anchor, ledger)):
                 # An unselected first intent has not started the action. Reuse
                 # only a published later start whose real neutral prelude matches.
@@ -1146,7 +1176,7 @@ class VerifiedMotionExecutor:
                 self._start_variant = variant
         if (self._command_index == 0 and self._pending is None
                 and self._start_variant is not None
-                and (not _state_matches_verified_start(
+                and (not verified_start_state_matches(
                     anchor.physics_state, self._start_variant.entry_state,
                 ) or not _proved_prelude_applied(proof, anchor, ledger))):
             self.state = (

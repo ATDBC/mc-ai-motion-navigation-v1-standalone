@@ -12,17 +12,22 @@ from unittest.mock import patch
 from mc2p.contracts.action_v1 import ActionSnapshotV1, MovementTickWindowV1, MovementV1
 from mc2p.contracts.motion_activation import (
     ActivationResult, ActivationStatus, PreparedActivationDelivery,
-    PreparedActivationTransaction, StreamActivationBinding,
+    FirstStreamApplication, PreparedActivationTransaction,
+    StreamActivationBinding, StreamApplicationStatus,
 )
 from mc2p.motion_nav.action_route import ActionRoute, JumpGapSegment, WalkSegment
 from mc2p.motion_nav.action_route_executor import ActionRouteExecutor, ActionRouteState
-from mc2p.motion_nav.async_work import AsyncComputationScope, AsyncWorkIdentity, AsyncWorkKind
+from mc2p.motion_nav.actions.registry import ACTION_REGISTRY, ActionRegistry
+from mc2p.motion_nav.async_work import (
+    AsyncComputationScope, AsyncWorkIdentity, AsyncWorkKind, AsyncWorkWindow,
+)
 from mc2p.motion_nav.body_control import HandoffDisposition, HandoffEvidence
 from mc2p.motion_nav.execution_supervisor import ExecutionSupervisor
 from mc2p.motion_nav.fixed_route import FixedRoute, FixedRouteController, RoutePoint
 from mc2p.motion_nav.jump_gap import JumpGapEdge
 from mc2p.motion_nav.motion_candidate import (
     AdmittedMotionCandidate, MotionCandidateContext, VerifiedMotionCandidate,
+    VerifiedMotionExecutorState,
 )
 from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
@@ -41,6 +46,7 @@ from mc2p.motion_nav.prepared_motion_proof import canonical_motion_digest, prepa
 from mc2p.motion_nav.retry_ledger import RetryLedger
 from mc2p.motion_nav.route_admission import ActiveRoute, ExecutableCorridor
 from mc2p.motion_nav.route_body_controller import RouteControl
+from mc2p.motion_nav.route_validation import ActiveRouteValidationDisposition
 from mc2p.motion_nav.support_surfaces import HorizontalRegion, SupportSurface, SurfaceNodeId
 from mc2p.motion_nav.world_model import CellKnowledge, ObservationStamp, WorldKnowledge, WorldSessionId, WorldView
 from mc2p.motion_nav.world_snapshot import seal_snapshot_version
@@ -223,9 +229,23 @@ class ActionHandoffTests(unittest.TestCase):
                   f"observed={observed!r}")
 
     def ready_next(self):
+        return self.ready_candidate(1)
+
+    def ready_candidate(self, action_index):
         existing_job_ids = {id(job) for job in self.worker.jobs}
-        self.prepare()
-        job = self.wait_for_current_prepared_job(action_index=1, existing_job_ids=existing_job_ids)
+        proof = self.executor.selected_motion(action_index) or self.proofs[action_index]
+        entry = self.anchor(
+            proof.entry_state, self.current.observation_sequence_id,
+        )
+        result = self.coordinator.prepare_action(
+            action_index, proof.commands, entry,
+            ledger_identity=self.ledger_id,
+        )
+        self.assertIs(result.status, PreparedSubmitStatus.ACCEPTED)
+        job = self.wait_for_current_prepared_job(
+            action_index=action_index,
+            existing_job_ids=existing_job_ids,
+        )
         self.worker.put(_execute_job(job))
         self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
         admission = self.inbox.prepared_admission(job.request.async_identity)
@@ -233,6 +253,20 @@ class ActionHandoffTests(unittest.TestCase):
         self.assertIsNotNone(admission.handle)
         self.executor.install_prepared_motion(admission.handle)
         return admission.handle
+
+    @staticmethod
+    def damage_registry():
+        return ActionRegistry(tuple(
+            replace(
+                spec,
+                tracks_damage=True,
+                expected_damage_points=lambda action: 7.0,
+                damage_committed=lambda action, frame, *, force=False: (
+                    force or not frame.body.is_on_ground
+                ),
+            ) if spec.segment_type is JumpGapSegment else spec
+            for spec in ACTION_REGISTRY.specs
+        ))
 
     def observe_first(self, *, stop_airborne=False):
         proof = self.proofs[0]
@@ -262,6 +296,320 @@ class ActionHandoffTests(unittest.TestCase):
         return (self.executor.action_index, self.control.owner_id,
                 self.inbox.usage_active(handle, ProofUse.EXECUTING),
                 self.inbox.usage_active(handle, ProofUse.SAFE_TAIL))
+
+    def prepared_activation(self):
+        self.ledger_id = self.ledger.ledger_identity
+        handle = self.ready_next()
+        self.observe_first()
+        proposal = self.executor.stage_prepared_action(
+            self.frame(self.current), self.current,
+        )
+        approval = self.supervisor.approve_action_handoff(
+            self.control, proposal, self.frame(self.current), self.ledger,
+        )
+        self.assertIs(
+            proposal.entry_result,
+            values.PreparedQueryStatus.READY_MATCH,
+        )
+        self.assertIs(approval.status, values.PreparedHandoffStatus.APPROVED)
+        first = self.control.prepared_action_proposal(approval)
+        self.assertIsNotNone(first)
+        action = ActionSnapshotV1(
+            "episode", 9999, self.current.observation_sequence_id,
+            1_000_000, movement=first.expected_movement,
+        )
+        binding = StreamActivationBinding(
+            handle.proof_token, handle.generation_id, handle.owner_id,
+            self.ledger_id, self.route.world_session, 9999,
+            first.requested_window, self.current.movement_tick_id, action,
+        )
+        transaction = self.supervisor.prepare_action_activation(
+            self.control, approval, binding,
+        )
+        self.assertIsInstance(transaction, PreparedActivationTransaction)
+        accepted = self.supervisor.accept_activation(transaction)
+        self.assertNotIsInstance(
+            accepted, ActivationResult,
+            (accepted, self.inbox._current_facts,
+             self.coordinator.computation_scope, handle.hot_view.stream,
+             self.ledger.ledger_identity, self.ledger_id),
+        )
+        delivered = self.supervisor.deliver_activation(
+            transaction, accepted,
+        )
+        return handle, transaction, accepted, delivered
+
+    @staticmethod
+    def adjusted_entry(anchor, **changes):
+        state = replace(anchor.physics_state, **changes)
+        return replace(
+            anchor,
+            movement_tick_id=state.movement_tick_id,
+            physics_state=state,
+        )
+
+    def activated_prepared_successor(self):
+        handle, transaction, accepted, delivered = self.prepared_activation()
+        committed = self.supervisor.commit_activation(
+            transaction, accepted, delivered,
+        )
+        controller = self.executor.prepared_controller
+        command = handle.hot_view.commands[0]
+        application = FirstStreamApplication(
+            handle.generation_id,
+            9999,
+            delivered.binding.requested_window.earliest_tick,
+            command.movement,
+            command.required_movement_yaw_radians,
+        )
+        applied = controller.record_application(application, command_index=0)
+        self.assertIs(committed.status, ActivationStatus.ACTIVATED)
+        self.assertIs(applied.status, StreamApplicationStatus.APPLIED)
+        return handle, controller, controller.remaining_start_branches[0].trajectory[1]
+
+    def test_prepared_one_ulp_entry_runs_the_verified_successor(self):
+        handle, controller, expected = self.activated_prepared_successor()
+        self.current = self.anchor(
+            expected, self.current.observation_sequence_id + 1,
+        )
+        velocity = list(expected.velocity_blocks_per_tick)
+        velocity[2] = math.nextafter(velocity[2], math.inf)
+        self.current = self.adjusted_entry(
+            self.current,
+            velocity_blocks_per_tick=tuple(velocity),
+        )
+        self.assertNotEqual(self.current.physics_state, expected)
+        self.assertLessEqual(
+            abs(self.current.physics_state.velocity_blocks_per_tick[2]
+                - expected.velocity_blocks_per_tick[2]),
+            math.ulp(expected.velocity_blocks_per_tick[2]),
+        )
+        decision = self.executor.decide(
+            self.frame(self.current),
+            state_anchor=self.current,
+            input_ledger=self.ledger,
+        )
+
+        self.assertEqual(self.executor.action_index, 1)
+        self.assertIs(
+            self.executor.prepared_controller.state,
+            VerifiedMotionExecutorState.RUNNING,
+        )
+        self.assertIs(decision.state, ActionRouteState.RUNNING)
+        self.assertTrue(decision.submit_input)
+
+    def test_prepared_runtime_rejects_real_numeric_deviation(self):
+        handle, controller, expected = self.activated_prepared_successor()
+        velocity = list(expected.velocity_blocks_per_tick)
+        velocity[2] += 1.0e-6
+        self.current = self.adjusted_entry(
+            self.anchor(expected, self.current.observation_sequence_id + 1),
+            velocity_blocks_per_tick=tuple(velocity),
+        )
+
+        decision = self.executor.decide(
+            self.frame(self.current),
+            state_anchor=self.current,
+            input_ledger=self.ledger,
+        )
+
+        self.assertIs(controller.state, VerifiedMotionExecutorState.RECOVERING)
+        self.assertFalse(decision.submit_input)
+        self.assertEqual(decision.reason_code, "BODY_RESPONSIBILITY_UNRESOLVED")
+
+    def test_prepared_recovery_keeps_owner_airborne_then_becomes_input_lost_on_stable_landing(self):
+        handle, controller, expected = self.activated_prepared_successor()
+        velocity = list(expected.velocity_blocks_per_tick)
+        velocity[2] += 1.0e-6
+        deviated = self.adjusted_entry(
+            self.anchor(expected, self.current.observation_sequence_id + 1),
+            velocity_blocks_per_tick=tuple(velocity),
+        )
+
+        airborne = self.executor.decide(
+            self.frame(deviated),
+            state_anchor=deviated,
+            input_ledger=self.ledger,
+        )
+
+        self.assertIs(controller.state, VerifiedMotionExecutorState.RECOVERING)
+        self.assertIs(airborne.state, ActionRouteState.CANCELLING)
+        self.assertFalse(airborne.submit_input)
+        self.assertIs(self.executor.prepared_controller, controller)
+        self.assertTrue(self.inbox.usage_active(handle, ProofUse.EXECUTING))
+
+        # A prepared action need not also have an ordinary admitted candidate.
+        # The stable landing must become typed INPUT_LOST without indexing that
+        # optional table or releasing the registered executing/safe-tail uses.
+        self.executor._verified_motion.pop(self.executor.action_index, None)
+        same_tick_landing_state = replace(
+            handle.hot_view.branches[0].trajectory[-1],
+            movement_tick_id=deviated.movement_tick_id,
+            velocity_blocks_per_tick=(0.0, 0.0, 0.0),
+            on_ground=True,
+        )
+        same_tick_landing = self.anchor(
+            same_tick_landing_state,
+            deviated.observation_sequence_id + 1,
+        )
+        held = self.executor.decide(
+            self.frame(same_tick_landing),
+            state_anchor=same_tick_landing,
+            input_ledger=self.ledger,
+        )
+        self.assertIs(controller.state, VerifiedMotionExecutorState.RECOVERING)
+        self.assertIs(held.state, ActionRouteState.CANCELLING)
+
+        fast_landing_state = replace(
+            same_tick_landing_state,
+            movement_tick_id=deviated.movement_tick_id + 1,
+            velocity_blocks_per_tick=(0.02, 0.0, 0.0),
+        )
+        fast_landing = self.anchor(
+            fast_landing_state,
+            same_tick_landing.observation_sequence_id + 1,
+        )
+        held = self.executor.decide(
+            self.frame(fast_landing),
+            state_anchor=fast_landing,
+            input_ledger=self.ledger,
+        )
+        self.assertIs(controller.state, VerifiedMotionExecutorState.RECOVERING)
+        self.assertIs(held.state, ActionRouteState.CANCELLING)
+
+        landed_state = replace(
+            handle.hot_view.branches[0].trajectory[-1],
+            movement_tick_id=deviated.movement_tick_id + 2,
+            velocity_blocks_per_tick=(0.0, 0.0, 0.0),
+            on_ground=True,
+        )
+        landed = self.anchor(
+            landed_state,
+            fast_landing.observation_sequence_id + 1,
+        )
+        result = self.executor.decide(
+            self.frame(landed),
+            state_anchor=landed,
+            input_ledger=self.ledger,
+        )
+
+        self.assertIs(controller.state, VerifiedMotionExecutorState.INPUT_LOST)
+        self.assertIs(result.state, ActionRouteState.INPUT_LOST)
+        self.assertTrue(self.inbox.usage_active(handle, ProofUse.EXECUTING))
+        self.assertTrue(self.inbox.usage_active(handle, ProofUse.SAFE_TAIL))
+
+    def test_prepared_stable_landing_enters_existing_grounded_reprepare(self):
+        handle, controller, expected = self.activated_prepared_successor()
+        velocity = list(expected.velocity_blocks_per_tick)
+        velocity[2] += 1.0e-6
+        deviated = self.adjusted_entry(
+            self.anchor(expected, self.current.observation_sequence_id + 1),
+            velocity_blocks_per_tick=tuple(velocity),
+        )
+        self.executor.decide(
+            self.frame(deviated),
+            state_anchor=deviated,
+            input_ledger=self.ledger,
+        )
+        self.executor._verified_motion.pop(self.executor.action_index, None)
+        landed_state = replace(
+            handle.hot_view.branches[0].trajectory[-1],
+            movement_tick_id=deviated.movement_tick_id + 1,
+            velocity_blocks_per_tick=(0.0, 0.0, 0.0),
+            on_ground=True,
+        )
+        landed = self.anchor(
+            landed_state,
+            deviated.observation_sequence_id + 1,
+        )
+
+        decision = self.coordinator.decide(
+            self.frame(landed), landed, self.ledger, self.physics_world,
+            changed_cells=(),
+            current_scope=self.coordinator.computation_scope,
+        )
+
+        self.assertIs(controller.state, VerifiedMotionExecutorState.INPUT_LOST)
+        self.assertIs(decision.state, ActionRouteState.RUNNING)
+        self.assertEqual(
+            decision.reason_code,
+            "repreparing_grounded_verified_motion",
+        )
+        self.assertIsNone(self.executor.prepared_controller)
+        self.assertTrue(self.coordinator.recovering_grounded_entry)
+
+    def test_prepared_staging_preserves_numeric_and_discrete_boundary(self):
+        self.ledger_id = self.ledger.ledger_identity
+        handle = self.ready_next()
+        self.observe_first()
+        original = self.current
+        velocity = list(original.physics_state.velocity_blocks_per_tick)
+        velocity[2] = math.nextafter(velocity[2], math.inf)
+        one_ulp = self.adjusted_entry(
+            original, velocity_blocks_per_tick=tuple(velocity),
+        )
+        velocity[2] += 1.0e-6
+        real_deviation = self.adjusted_entry(
+            original, velocity_blocks_per_tick=tuple(velocity),
+        )
+        cases = (
+            ("one_ulp", one_ulp, values.PreparedQueryStatus.READY_MATCH),
+            ("real_numeric_deviation", real_deviation,
+             values.PreparedQueryStatus.ENTRY_MISMATCH),
+            ("movement_tick_id", lambda state: state.movement_tick_id + 1),
+            ("pose", lambda state: "crouching" if state.pose != "crouching" else "standing"),
+            ("on_ground", lambda state: not state.on_ground),
+            ("horizontal_collision", lambda state: not state.horizontal_collision),
+            ("vertical_collision", lambda state: not state.vertical_collision),
+        )
+        for case in cases:
+            name, value = case[:2]
+            expected = (case[2] if len(case) == 3
+                        else values.PreparedQueryStatus.ENTRY_MISMATCH)
+            with self.subTest(case=name):
+                self.current = (value if not callable(value) else
+                    self.adjusted_entry(
+                        original,
+                        **{name: value(original.physics_state)},
+                    ))
+                proposal = self.executor.stage_prepared_action(
+                    self.frame(self.current), self.current,
+                )
+                self.assertIs(proposal.entry_result, expected)
+
+        with patch(
+            "mc2p.motion_nav.action_route_executor.verified_start_state_matches",
+            side_effect=lambda actual, expected: actual == expected,
+        ):
+            proposal = self.executor.stage_prepared_action(
+                self.frame(one_ulp), one_ulp,
+            )
+        self.assertIs(
+            proposal.entry_result,
+            values.PreparedQueryStatus.ENTRY_MISMATCH,
+        )
+
+    def test_always_true_mutation_would_miss_real_prepared_runtime_deviation(self):
+        handle, controller, expected = self.activated_prepared_successor()
+        velocity = list(expected.velocity_blocks_per_tick)
+        velocity[2] += 1.0e-6
+        self.current = self.adjusted_entry(
+            self.anchor(expected, self.current.observation_sequence_id + 1),
+            velocity_blocks_per_tick=tuple(velocity),
+        )
+
+        with patch(
+            "mc2p.motion_nav.motion_candidate.verified_start_state_matches",
+            return_value=True,
+        ):
+            decision = self.executor.decide(
+                self.frame(self.current),
+                state_anchor=self.current,
+                input_ledger=self.ledger,
+            )
+
+        self.assertIs(controller.state, VerifiedMotionExecutorState.RUNNING)
+        self.assertTrue(decision.submit_input)
 
     def test_next_jump_prepares_while_first_is_airborne(self):
         self.observe_first(stop_airborne=True)
@@ -443,6 +791,196 @@ class ActionHandoffTests(unittest.TestCase):
         self.assertIs(bad.status, ActivationStatus.STALE_GENERATION)
         self.assertEqual(before, self.unchanged(incumbent))
 
+    def test_route_progress_prepare_is_pure_and_commit_is_bound_to_one_epoch(self):
+        tracker = self.control.tracker
+        before = tracker.identity
+        self.assertTrue(
+            callable(getattr(tracker, "prepare_progress", None)),
+            "tracker progress has no pure prepare boundary",
+        )
+
+        plan = tracker.prepare_progress(
+            1,
+            None,
+            observation_sequence_id=self.current.observation_sequence_id,
+        )
+
+        self.assertEqual(tracker.identity, before)
+        self.assertEqual(plan.tracker_identity, before)
+        self.assertEqual(plan.action_index, 1)
+        self.assertEqual(
+            plan.observation_sequence_id,
+            self.current.observation_sequence_id,
+        )
+        committed = tracker.commit_progress(plan)
+        self.assertEqual(committed.identity.action_index, 1)
+        rejected = tracker.commit_progress(plan)
+        self.assertIs(rejected.disposition, ActiveRouteValidationDisposition.STOP)
+        self.assertEqual(tracker.identity.action_index, 1)
+
+    def test_tracker_preflight_rejection_leaves_executor_state_unchanged(self):
+        handle, transaction, accepted, delivered = self.prepared_activation()
+        tracker = self.control.tracker
+        tracker.record_progress(
+            99,
+            None,
+            observation_sequence_id=self.current.observation_sequence_id,
+        )
+        before = (
+            self.executor.action_index,
+            self.executor._controller,
+            self.executor.completed_movement_damage_points,
+            dict(self.executor._verified_motion),
+            self.executor.pending_action_boundary_index,
+        )
+
+        result = self.supervisor.commit_activation(
+            transaction, accepted, delivered,
+        )
+
+        self.assertIs(result.status, ActivationStatus.ACTIVATION_MISMATCH)
+        self.assertEqual(self.executor.action_index, before[0])
+        self.assertIs(self.executor._controller, before[1])
+        self.assertEqual(self.executor.completed_movement_damage_points, before[2])
+        self.assertEqual(self.executor._verified_motion, before[3])
+        self.assertEqual(self.executor.pending_action_boundary_index, before[4])
+        self.assertTrue(self.inbox.usage_active(handle, ProofUse.CANDIDATE))
+
+    def test_prepared_commit_completes_tracker_and_releases_candidates_after_commit(self):
+        self.ledger_id = self.ledger.ledger_identity
+        old_candidate = self.ready_candidate(0)
+        self.assertTrue(
+            self.inbox.usage_active(old_candidate, ProofUse.CANDIDATE),
+        )
+        handle, transaction, accepted, delivered = self.prepared_activation()
+        original = self.executor.discard_prepared_candidates
+        calls = []
+
+        def discard(*, action_index=None):
+            acquired = self.inbox._lock.acquire(blocking=False)
+            self.assertTrue(acquired, "candidate cleanup re-entered the registry lock")
+            if acquired:
+                self.inbox._lock.release()
+            calls.append(action_index)
+            return original(action_index=action_index)
+
+        with patch.object(
+                self.executor, "discard_prepared_candidates",
+                side_effect=discard):
+            result = self.supervisor.commit_activation(
+                transaction, accepted, delivered,
+            )
+
+        self.assertIs(result.status, ActivationStatus.ACTIVATED)
+        self.assertEqual(self.executor.action_index, 1)
+        self.assertEqual(self.control.tracker.identity.action_index, 1)
+        self.assertIsNone(self.executor.pending_action_boundary_index)
+        self.assertEqual(calls, [0])
+        self.assertFalse(
+            self.inbox.usage_active(old_candidate, ProofUse.CANDIDATE),
+        )
+        self.assertFalse(self.inbox.usage_active(handle, ProofUse.CANDIDATE))
+        self.assertTrue(self.inbox.usage_active(handle, ProofUse.EXECUTING))
+
+    def test_prepared_completion_books_damage_once(self):
+        handle, transaction, accepted, delivered = self.prepared_activation()
+        with patch(
+                "mc2p.motion_nav.actions.registry.ACTION_REGISTRY",
+                self.damage_registry()):
+            result = self.supervisor.commit_activation(
+                transaction, accepted, delivered,
+            )
+        self.assertIs(result.status, ActivationStatus.ACTIVATED)
+        self.assertEqual(self.executor.completed_movement_damage_points, 7.0)
+        self.assertEqual(self.executor._committed_damage_actions, {0})
+
+    def test_stale_tracker_plan_cannot_half_commit_executor(self):
+        _handle, _transaction, _accepted, delivered = self.prepared_activation()
+        frame = self.supervisor._prepared_approval_frame
+        commit = self.control.prepare_prepared_activation_commit(
+            delivered,
+            frame=frame,
+            observation_sequence_id=frame.body.sequence_id,
+        )
+        self.assertNotIsInstance(commit, ActivationResult)
+        self.control.tracker.record_progress(
+            self.control.tracker.identity.action_index,
+            None,
+            observation_sequence_id=frame.body.sequence_id,
+        )
+        before = (
+            self.executor.action_index,
+            self.executor._controller,
+            self.executor.completed_movement_damage_points,
+            dict(self.executor._verified_motion),
+            self.executor.pending_action_boundary_index,
+        )
+
+        result = commit.commit_prepared_activation(delivered)
+
+        self.assertIs(result.status, ActivationStatus.ACTIVATION_MISMATCH)
+        self.assertEqual(self.executor.action_index, before[0])
+        self.assertIs(self.executor._controller, before[1])
+        self.assertEqual(self.executor.completed_movement_damage_points, before[2])
+        self.assertEqual(self.executor._verified_motion, before[3])
+        self.assertEqual(self.executor.pending_action_boundary_index, before[4])
+
+    def test_stale_executor_plan_cannot_half_commit_tracker(self):
+        _handle, _transaction, _accepted, delivered = self.prepared_activation()
+        frame = self.supervisor._prepared_approval_frame
+        commit = self.control.prepare_prepared_activation_commit(
+            delivered,
+            frame=frame,
+            observation_sequence_id=frame.body.sequence_id,
+        )
+        self.assertNotIsInstance(commit, ActivationResult)
+        installed = self.executor._verified_motion[self.executor.action_index]
+        self.executor._verified_motion[self.executor.action_index] = replace(
+            installed,
+        )
+        before = self.control.tracker.identity
+
+        result = commit.commit_prepared_activation(delivered)
+
+        self.assertIs(result.status, ActivationStatus.ACTIVATION_MISMATCH)
+        self.assertEqual(self.control.tracker.identity, before)
+
+    def test_ordinary_advance_uses_the_shared_action_completion(self):
+        original = self.executor.prepare_action_completion
+        prepared = []
+
+        def prepare(*args, **kwargs):
+            plan = original(*args, **kwargs)
+            prepared.append(plan)
+            return plan
+
+        with patch.object(
+                self.executor, "prepare_action_completion",
+                side_effect=prepare), patch(
+                    "mc2p.motion_nav.actions.registry.ACTION_REGISTRY",
+                    self.damage_registry()):
+            self.observe_first()
+
+        self.assertEqual(len(prepared), 1)
+        self.assertEqual(prepared[0].action_index, 0)
+        self.assertEqual(self.executor.action_index, 1)
+        self.assertEqual(self.executor.completed_movement_damage_points, 7.0)
+        self.assertEqual(self.executor._committed_damage_actions, {0})
+
+    def test_action_completion_does_not_repeat_booked_damage(self):
+        with patch(
+                "mc2p.motion_nav.actions.registry.ACTION_REGISTRY",
+                self.damage_registry()):
+            self.executor._commit_action_damage_if_started(
+                self.route.action_route.actions[0],
+                self.frame(self.current),
+                force=True,
+            )
+            self.observe_first()
+
+        self.assertEqual(self.executor.completed_movement_damage_points, 7.0)
+        self.assertEqual(self.executor._committed_damage_actions, {0})
+
     def test_cancelled_candidate_and_forged_handle_cannot_propose(self):
         incumbent = self.prepared_incumbent()
         handle = self.ready_next()
@@ -473,6 +1011,39 @@ class ActionHandoffTests(unittest.TestCase):
             proposal = self.executor.stage_prepared_action(self.frame(self.current), self.current)
             approved = self.supervisor.approve_action_handoff(self.control, proposal, self.frame(self.current), self.ledger)
         self.assertIs(approved.status, values.PreparedHandoffStatus.APPROVED)
+
+    def test_rejected_lifecycle_apply_does_not_install_or_record_applied(self):
+        identity = AsyncWorkIdentity(
+            self.coordinator.computation_scope,
+            self.coordinator._owner_instance_id,
+            AsyncWorkKind.MOTION_SOLVE,
+            "prepared-apply-rejected",
+            50,
+        )
+        now = self.coordinator._clock()
+        self.coordinator._work.begin(
+            identity,
+            AsyncWorkWindow(self.current.movement_tick_id, now, now + 1_000_000_000),
+        )
+        installed = []
+
+        accepted = self.coordinator._apply_admitted_work(
+            identity,
+            current_scope=replace(
+                self.coordinator.computation_scope,
+                generation=self.coordinator.computation_scope.generation + 1,
+            ),
+            install=lambda: installed.append(True),
+            retirement_cause="must-not-retire",
+        )
+
+        self.assertFalse(accepted)
+        self.assertEqual(installed, [])
+        self.assertEqual(self.coordinator.admission_records, ())
+        self.assertEqual(
+            [event.operation for event in self.coordinator.async_diagnostics.events],
+            ["begin"],
+        )
 
 
     def test_parent_request_building_stays_on_existing_receiver(self):
@@ -560,6 +1131,139 @@ class ActionHandoffTests(unittest.TestCase):
                 self.anchor(self.proofs[1].entry_state, 1), ledger_identity=self.ledger_id)
         self.assertIs(rejected.status, PreparedSubmitStatus.QUEUE_FULL)
         self.assertEqual(self.unchanged(incumbent), before)
+        self.assertFalse(self.executor.prepared_successor_required)
+        self.assertIsNone(self.executor.pending_action_boundary_index)
+        self.assertIsNone(self.coordinator.generation_for(1))
+        self.assertIsNone(self.coordinator._prepared_fields)
+        self.assertIsNone(self.coordinator._prepared_submission)
+        self.assertIsNone(self.coordinator._prepared_signature)
+
+    def test_prepared_expiry_uses_clock_work_tick_and_existing_start_deadline(self):
+        self.prepare()
+        fields = self.coordinator._prepared_fields
+        window = self.coordinator._work_window
+        self.assertIsNotNone(fields)
+        self.assertIsNotNone(window)
+        original_clock = self.coordinator._clock
+        try:
+            self.coordinator._clock = lambda: window.started_monotonic_ns
+            far_stream = replace(
+                fields.stream,
+                requested_window=CandidateExecutionWindow(
+                    window.started_movement_tick + 100,
+                    window.started_movement_tick + 101,
+                ),
+            )
+            self.coordinator._prepared_fields = replace(
+                fields,
+                stream=far_stream,
+            )
+            before = replace(
+                self.current,
+                movement_tick_id=window.started_movement_tick,
+                physics_state=replace(
+                    self.current.physics_state,
+                    movement_tick_id=window.started_movement_tick,
+                ),
+            )
+            self.assertFalse(self.coordinator._work_expired(before))
+
+            self.coordinator._clock = lambda: window.deadline_monotonic_ns
+            self.assertTrue(self.coordinator._work_expired(before))
+
+            self.coordinator._clock = lambda: window.started_monotonic_ns
+            tick_expired = replace(
+                before,
+                movement_tick_id=window.started_movement_tick + 21,
+                physics_state=replace(
+                    before.physics_state,
+                    movement_tick_id=window.started_movement_tick + 21,
+                ),
+            )
+            self.assertTrue(self.coordinator._work_expired(tick_expired))
+
+            self.coordinator._prepared_fields = fields
+            start_expired = replace(
+                before,
+                movement_tick_id=fields.stream.requested_window.earliest_start_tick + 1,
+                physics_state=replace(
+                    before.physics_state,
+                    movement_tick_id=fields.stream.requested_window.earliest_start_tick + 1,
+                ),
+            )
+            self.assertTrue(self.coordinator._work_expired(start_expired))
+        finally:
+            self.coordinator._clock = original_clock
+
+    def test_abandon_exact_prepared_successor_clears_only_speculation(self):
+        handle = self.ready_next()
+        fields = self.coordinator._prepared_fields
+        stream = self.coordinator.generation_for(1)
+        before = (
+            self.executor.action_index,
+            self.executor._controller,
+            self.executor.completed_movement_damage_points,
+        )
+
+        abandoned = self.coordinator._abandon_prepared_successor(
+            fields,
+            "prepared_test_abandon",
+        )
+
+        self.assertTrue(abandoned)
+        self.assertEqual(
+            (
+                self.executor.action_index,
+                self.executor._controller,
+                self.executor.completed_movement_damage_points,
+            ),
+            before,
+        )
+        self.assertFalse(self.executor.prepared_successor_required)
+        self.assertIsNone(self.executor.pending_action_boundary_index)
+        self.assertFalse(self.inbox.usage_active(handle, ProofUse.CANDIDATE))
+        self.assertIsNone(self.coordinator.generation_for(1))
+        self.assertIsNone(self.coordinator._prepared_fields)
+        self.assertIsNone(self.coordinator._prepared_submission)
+        self.assertIsNone(self.coordinator._prepared_signature)
+        self.assertIsNone(self.coordinator._selected_preparation)
+        self.assertIn(fields.async_identity, self.coordinator._known_work_windows)
+
+        # A late cleanup for the old generation must not clear a replacement.
+        replacement = replace(stream, generation_id="stream-replacement")
+        self.coordinator._prepared_streams[1] = replacement
+        self.assertFalse(self.coordinator._abandon_prepared_successor(
+            fields,
+            "stale_prepared_test_abandon",
+        ))
+        self.assertIs(self.coordinator.generation_for(1), replacement)
+
+    def test_abandon_rejects_a_preparation_owned_by_other_active_work(self):
+        self.ready_next()
+        fields = self.coordinator._prepared_fields
+        self.coordinator._retire_work("replace-prepared-owner")
+        foreign = replace(
+            fields.async_identity,
+            subject_id="foreign-prepared-owner",
+            revision=fields.async_identity.revision + 1,
+        )
+        now = self.coordinator._clock()
+        self.coordinator._work.begin(
+            foreign,
+            AsyncWorkWindow(
+                self.current.movement_tick_id,
+                now,
+                now + 1_000_000_000,
+            ),
+        )
+
+        self.assertFalse(self.coordinator._abandon_prepared_successor(
+            fields,
+            "stale-owner-must-not-abandon",
+        ))
+        self.assertEqual(self.coordinator._work_identity, foreign)
+        self.assertTrue(self.executor.prepared_successor_required)
+        self.assertIs(self.coordinator._prepared_fields, fields)
 
     def test_computation_scope_alone_keeps_stream_and_incumbent(self):
         incumbent = self.prepared_incumbent()
@@ -582,6 +1286,44 @@ class ActionHandoffTests(unittest.TestCase):
         self.assertIs(result.status, PreparedComputeStatus.WORKER_FAILED)
         self.assertTrue(self.inbox._receiver.is_alive())
         self.assertEqual(before, self.unchanged(incumbent))
+        with patch.object(
+                self.coordinator,
+                "_prepare_upcoming_from_applied_state",
+                return_value=None):
+            decision = self.coordinator.decide(
+                self.frame(self.current), self.current, self.ledger,
+                self.physics_world, changed_cells=(),
+                current_scope=self.coordinator.computation_scope,
+            )
+        self.assertIs(decision.state, ActionRouteState.RUNNING)
+        self.assertFalse(self.executor.prepared_successor_required)
+        self.assertIsNone(self.coordinator._prepared_fields)
+        self.assertIsNone(self.coordinator.generation_for(1))
+        self.assertEqual(before, self.unchanged(incumbent))
+
+    def test_prepared_apply_rejection_abandons_only_the_successor(self):
+        incumbent = self.prepared_incumbent()
+        handle = self.ready_next()
+        before = self.unchanged(incumbent)
+
+        with patch.object(self.coordinator._work, "try_apply", return_value=False), \
+             patch.object(
+                 self.coordinator,
+                 "_prepare_upcoming_from_applied_state",
+                 return_value=None,
+             ):
+            decision = self.coordinator.decide(
+                self.frame(self.current), self.current, self.ledger,
+                self.physics_world, changed_cells=(),
+                current_scope=self.coordinator.computation_scope,
+            )
+
+        self.assertIs(decision.state, ActionRouteState.RUNNING)
+        self.assertEqual(before, self.unchanged(incumbent))
+        self.assertFalse(self.inbox.usage_active(handle, ProofUse.CANDIDATE))
+        self.assertFalse(self.executor.prepared_successor_required)
+        self.assertIsNone(self.coordinator._prepared_fields)
+        self.assertIsNone(self.coordinator.generation_for(1))
 
     def test_retired_selection_loses_authority_and_keeps_incumbent_uses(self):
         incumbent = self.prepared_incumbent()
