@@ -1,0 +1,6 @@
+== 对照树：+ e87 apply 事件 + e88 tracker 同一提交（只修用户提出的两项），max_ticks=80
+max_ticks=80，30 次
+20 次：{"jumps": [8, 21], "outcome": ["executing", "BODY_RESPONSIBILITY_UNRESOLVED"], "reasons_after_21": ["BODY_RESPONSIBILITY_UNRESOLVED", "prepared_action_boundary"], "tick20": ["ready_match", "approved", null], "tick21_jump": true, "violations": []}
+    （第二跳登记 tick, 终点 z, 第二跳落地 tick, tick 21 之后的有效输入帧数）→ 次数：[((10, 5.85, 32, 0), 20)]
+10 次：{"jumps": [8], "outcome": ["executing", "prepared_action_boundary"], "reasons_after_21": ["prepared_action_boundary"], "tick20": ["not_ready", "rejected", "entry"], "tick21_jump": false, "violations": []}
+    （第二跳登记 tick, 终点 z, 第二跳落地 tick, tick 21 之后的有效输入帧数）→ 次数：[((None, 3.81, None, 0), 10)]

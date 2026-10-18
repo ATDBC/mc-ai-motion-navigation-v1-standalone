@@ -1,0 +1,24 @@
+== 62ec855 原样（D116 诊断补丁恢复自动准备），空闲单核 CPU 0
+max_ticks=80，30 次
+27 次：{"jumps": [8, 21], "outcome": ["executing", "BODY_RESPONSIBILITY_UNRESOLVED"], "reasons_after_21": ["BODY_RESPONSIBILITY_UNRESOLVED", "prepared_action_boundary"], "tick20": ["ready_match", "approved", null], "tick21_jump": true, "violations": ["I19"]}
+    （第二跳登记 tick, 终点 z, 第二跳落地 tick, tick 21 之后的有效输入帧数）→ 次数：[((10, 5.85, 32, 0), 6), ((11, 5.85, 32, 0), 21)]
+3 次：{"jumps": [8], "outcome": ["executing", "prepared_action_boundary"], "reasons_after_21": ["prepared_action_boundary"], "tick20": ["not_ready", "rejected", "entry"], "tick21_jump": false, "violations": []}
+    （第二跳登记 tick, 终点 z, 第二跳落地 tick, tick 21 之后的有效输入帧数）→ 次数：[((None, 3.81, None, 0), 3)]
+
+== 62ec855 + e87+e88+e89+e91（四处对照），空闲单核 CPU 0
+max_ticks=80，30 次
+30 次：{"jumps": [8, 21], "outcome": ["success", "goal_state_satisfied"], "reasons_after_21": ["prepared_action_boundary", "prepared_stream_command"], "tick20": ["ready_match", "approved", null], "tick21_jump": true, "violations": []}
+    （第二跳登记 tick, 终点 z, 第二跳落地 tick, tick 21 之后的有效输入帧数）→ 次数：[((10, 5.69, 32, 1), 6), ((11, 5.69, 32, 1), 24)]
+
+== 62ec855 原样（D116 诊断补丁恢复自动准备），CPU 1 同核另有忙循环
+max_ticks=80，30 次
+25 次：{"jumps": [8, 21], "outcome": ["executing", "BODY_RESPONSIBILITY_UNRESOLVED"], "reasons_after_21": ["BODY_RESPONSIBILITY_UNRESOLVED", "prepared_action_boundary"], "tick20": ["ready_match", "approved", null], "tick21_jump": true, "violations": ["I19"]}
+    （第二跳登记 tick, 终点 z, 第二跳落地 tick, tick 21 之后的有效输入帧数）→ 次数：[((10, 5.85, 32, 0), 14), ((11, 5.85, 32, 0), 11)]
+5 次：{"jumps": [8], "outcome": ["executing", "prepared_action_boundary"], "reasons_after_21": ["prepared_action_boundary"], "tick20": ["not_ready", "rejected", "entry"], "tick21_jump": false, "violations": []}
+    （第二跳登记 tick, 终点 z, 第二跳落地 tick, tick 21 之后的有效输入帧数）→ 次数：[((None, 3.81, None, 0), 5)]
+
+== 62ec855 + e87+e88+e89+e91（四处对照），CPU 1 同核另有忙循环
+max_ticks=80，30 次
+30 次：{"jumps": [8, 21], "outcome": ["success", "goal_state_satisfied"], "reasons_after_21": ["prepared_action_boundary", "prepared_stream_command"], "tick20": ["ready_match", "approved", null], "tick21_jump": true, "violations": []}
+    （第二跳登记 tick, 终点 z, 第二跳落地 tick, tick 21 之后的有效输入帧数）→ 次数：[((10, 5.69, 32, 1), 23), ((11, 5.69, 32, 1), 7)]
+

@@ -1,0 +1,77 @@
+== 62ec855 原样（D116 诊断补丁恢复自动准备）
+注入：borrow_snapshot_version() 一律返回 None；max_ticks=80
+终态=executing 原因=prepared_action_boundary 伤害=0.0
+监视器违规: []
+出现 jump 输入: 第二跳未开始
+协调器退役原因（原因 → 发生时最近一次 decide 的 tick）: {"motion_restarted": [null], "motion_proof_installed": [6], "upcoming_motion_selection_rejected": [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], "route_stop_closed": [80]}
+
+tick | action index | 仍要求 prepared 后继 | 会话原因
+1 | 0 | False | tracking_fixed_route
+2 | 0 | False | tracking_fixed_route
+3 | 0 | False | tracking_fixed_route
+4 | 0 | False | tracking_fixed_route
+5 | 0 | False | tracking_conditional_motion_entry
+6 | 0 | False | tracking_conditional_motion_entry
+7 | 1 | False | submit_verified_command
+8 | 1 | False | submit_verified_command
+9 | 1 | True | submit_verified_command
+10 | 1 | True | submit_verified_command
+11 | 1 | True | submit_verified_command
+12 | 1 | True | submit_verified_command
+13 | 1 | True | submit_verified_command
+14 | 1 | True | submit_verified_command
+15 | 1 | True | submit_verified_command
+16 | 1 | True | submit_verified_command
+17 | 1 | True | submit_verified_command
+18 | 1 | True | submit_verified_command
+19 | 1 | True | submit_verified_command
+20 | 1 | True | prepared_action_boundary
+21 | 1 | True | prepared_action_boundary
+22 | 1 | True | prepared_action_boundary
+23 | 1 | True | prepared_action_boundary
+24 | 1 | True | prepared_action_boundary
+30 | 1 | True | prepared_action_boundary
+40 | 1 | True | prepared_action_boundary
+50 | 1 | True | prepared_action_boundary
+60 | 1 | True | prepared_action_boundary
+70 | 1 | True | prepared_action_boundary
+80 | 1 | True | prepared_action_boundary
+
+== 四处对照修复树（e87+e88+e89+e91）
+注入：borrow_snapshot_version() 一律返回 None；max_ticks=80
+终态=executing 原因=prepared_action_boundary 伤害=0.0
+监视器违规: []
+出现 jump 输入: 第二跳未开始
+协调器退役原因（原因 → 发生时最近一次 decide 的 tick）: {"motion_restarted": [null], "motion_proof_installed": [6], "upcoming_motion_selection_rejected": [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], "route_stop_closed": [80]}
+
+tick | action index | 仍要求 prepared 后继 | 会话原因
+1 | 0 | False | tracking_fixed_route
+2 | 0 | False | tracking_fixed_route
+3 | 0 | False | tracking_fixed_route
+4 | 0 | False | tracking_fixed_route
+5 | 0 | False | tracking_conditional_motion_entry
+6 | 0 | False | tracking_conditional_motion_entry
+7 | 1 | False | submit_verified_command
+8 | 1 | False | submit_verified_command
+9 | 1 | True | submit_verified_command
+10 | 1 | True | submit_verified_command
+11 | 1 | True | submit_verified_command
+12 | 1 | True | submit_verified_command
+13 | 1 | True | submit_verified_command
+14 | 1 | True | submit_verified_command
+15 | 1 | True | submit_verified_command
+16 | 1 | True | submit_verified_command
+17 | 1 | True | submit_verified_command
+18 | 1 | True | submit_verified_command
+19 | 1 | True | submit_verified_command
+20 | 1 | True | prepared_action_boundary
+21 | 1 | True | prepared_action_boundary
+22 | 1 | True | prepared_action_boundary
+23 | 1 | True | prepared_action_boundary
+24 | 1 | True | prepared_action_boundary
+30 | 1 | True | prepared_action_boundary
+40 | 1 | True | prepared_action_boundary
+50 | 1 | True | prepared_action_boundary
+60 | 1 | True | prepared_action_boundary
+70 | 1 | True | prepared_action_boundary
+80 | 1 | True | prepared_action_boundary

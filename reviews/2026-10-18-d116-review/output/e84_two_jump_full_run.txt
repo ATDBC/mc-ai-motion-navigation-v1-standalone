@@ -1,0 +1,136 @@
+== 62ec855 原样（D116 诊断补丁恢复自动准备）
+max_ticks=80 终态=executing 原因=BODY_RESPONSIBILITY_UNRESOLVED 终点=[0.5, 64.0, 5.85] 伤害=0.0
+规划动作: WalkSegment -> JumpGapSegment -> JumpGapSegment
+监视器违规: [(13, 'I19', 'result applied without current identity, facts or time')]
+里程碑: {"owner_gap_ticks": [], "single_movement_winner_at_handoff": true, "tick20_ready_match": true, "tick20_supervisor_approved": true, "tick21_second_jump_applied": true, "zero_damage": true}
+
+tick | action(进入→退出) | 着地 | 实际输入 | 路线复核 | prepared/批准 | session
+1 | None→0 | True | - | - | - | None/None
+2 | None→0 | True | f | 0:unaffected/no_intersection | - | executing/tracking_fixed_route
+3 | None→0 | True | f | 0:unaffected/no_intersection | - | executing/tracking_fixed_route
+4 | None→0 | True | f | 0:unaffected/no_intersection | - | executing/tracking_fixed_route
+5 | None→0 | True | f | 0:unaffected/no_intersection | - | executing/tracking_fixed_route
+6 | None→0 | True | f | 0:unaffected/no_intersection | - | executing/tracking_conditional_motion_entry
+7 | 0→1 | True | f | 0:unaffected/no_intersection | - | executing/tracking_conditional_motion_entry
+8 | None→1 | False | fjs | 0:unaffected/no_intersection | - | executing/submit_verified_command
+9 | None→1 | False | f | 1:unaffected/no_intersection | - | executing/submit_verified_command
+10 | None→1 | False | f | 1:unaffected/no_intersection | - | executing/submit_verified_command
+11 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+12 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+13 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+14 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+15 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+16 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+17 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+18 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+19 | None→1 | True | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+20 | 1→1 | True | f | 1:unaffected/no_intersection | ready_match/approved | executing/submit_verified_command
+21 | None→2 | False | fjs | 1:unaffected/no_intersection | - | executing/prepared_action_boundary
+22 | None→2 | False | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+23 | None→2 | False | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+24 | None→2 | False | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+25 | None→2 | False | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+26 | None→2 | False | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+27 | None→2 | False | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+28 | None→2 | False | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+29 | None→2 | False | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+30 | None→2 | False | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+31 | None→2 | False | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+32 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+33 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+34 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+35 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+36 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+37 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+38 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+39 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+40 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+41 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+42 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+43 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+44 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+45 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+46 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+47 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+48 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+49 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+50 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+51 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+52 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+53 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+54 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+55 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+56 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+57 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+58 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+59 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+60 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+61 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+62 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+63 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+64 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+65 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+66 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+67 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+68 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+69 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+70 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+71 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+72 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+73 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+74 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+75 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+76 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+77 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+78 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+79 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+80 | None→2 | True | - | - | - | executing/BODY_RESPONSIBILITY_UNRESOLVED
+
+出现 jump 输入的 tick: [8, 21]
+
+== 四处对照修复树（e87+e88+e89+e91）
+max_ticks=80 终态=success 原因=goal_state_satisfied 终点=[0.5, 64.0, 5.69] 伤害=0.0
+规划动作: WalkSegment -> JumpGapSegment -> JumpGapSegment
+监视器违规: []
+里程碑: {"owner_gap_ticks": [], "single_movement_winner_at_handoff": true, "tick20_ready_match": true, "tick20_supervisor_approved": true, "tick21_second_jump_applied": true, "zero_damage": true}
+
+tick | action(进入→退出) | 着地 | 实际输入 | 路线复核 | prepared/批准 | session
+1 | None→0 | True | - | - | - | None/None
+2 | None→0 | True | f | 0:unaffected/no_intersection | - | executing/tracking_fixed_route
+3 | None→0 | True | f | 0:unaffected/no_intersection | - | executing/tracking_fixed_route
+4 | None→0 | True | f | 0:unaffected/no_intersection | - | executing/tracking_fixed_route
+5 | None→0 | True | f | 0:unaffected/no_intersection | - | executing/tracking_fixed_route
+6 | None→0 | True | f | 0:unaffected/no_intersection | - | executing/tracking_conditional_motion_entry
+7 | 0→1 | True | f | 0:unaffected/no_intersection | - | executing/tracking_conditional_motion_entry
+8 | None→1 | False | fjs | 0:unaffected/no_intersection | - | executing/submit_verified_command
+9 | None→1 | False | f | 1:unaffected/no_intersection | - | executing/submit_verified_command
+10 | None→1 | False | f | 1:unaffected/no_intersection | - | executing/submit_verified_command
+11 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+12 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+13 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+14 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+15 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+16 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+17 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+18 | None→1 | False | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+19 | None→1 | True | - | 1:unaffected/no_intersection | - | executing/submit_verified_command
+20 | 1→1 | True | f | 1:unaffected/no_intersection | ready_match/approved | executing/submit_verified_command
+21 | None→2 | False | fjs | 1:unaffected/no_intersection | - | executing/prepared_action_boundary
+22 | None→2 | False | f | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+23 | None→2 | False | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+24 | None→2 | False | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+25 | None→2 | False | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+26 | None→2 | False | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+27 | None→2 | False | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+28 | None→2 | False | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+29 | None→2 | False | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+30 | None→2 | False | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+31 | None→2 | False | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+32 | None→2 | True | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+33 | None→2 | True | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+34 | None→2 | True | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+35 | None→2 | True | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+36 | 2→2 | True | - | 2:unaffected/no_intersection | - | executing/prepared_stream_command
+
+出现 jump 输入的 tick: [8, 21]
+

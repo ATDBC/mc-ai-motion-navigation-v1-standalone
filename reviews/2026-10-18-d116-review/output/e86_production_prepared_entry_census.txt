@@ -1,0 +1,6 @@
+场景 | 终态 | 原因 | _submit_action | prepare_upcoming_action | prepare_action | _seal_snapshot | commit_prepared_activation
+action-continuity-gap-0 | success | goal_state_satisfied | 1 | 0 | 0 | 0 | 0
+action-continuity-gap-1 | success | goal_state_satisfied | 1 | 0 | 0 | 0 | 0
+action-continuity-gap-2 | success | goal_state_satisfied | 1 | 0 | 0 | 0 | 0
+action-continuity-gap-3 | success | goal_state_satisfied | 1 | 0 | 0 | 0 | 0
+d116-formal-two-jump-attribution | success | goal_state_satisfied | 2 | 0 | 0 | 0 | 0

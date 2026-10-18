@@ -1,0 +1,18 @@
+15 个模块：test_d116_handoff_timeline test_d116_semantic_dependency_handoff test_d102_{action_handoff,runtime_activation,registry_lifecycle,receiver,prepared_proof,contracts,contract_red,world_snapshot} test_d114_b10_formal_driver test_d113_delivery_adaptation test_action_continuity_formal test_r27_async_admission tests.test_b10_runtime_probe；单进程，taskset -c 3
+
+== 62ec855 原样
+FAIL: test_d116_zero_red_is_an_explicit_legacy_gate_replay (tests.motion_nav.test_d116_handoff_timeline.D116HandoffTimelineTests.test_d116_zero_red_is_an_explicit_legacy_gate_replay)
+Ran 364 tests in 687.621s
+FAILED (failures=1, skipped=3)
+
+== 对照树（e87+e88+e89）
+FAIL: test_new_tracker_and_async_lifecycle_blockers_are_typed_and_bounded (tests.motion_nav.test_d116_handoff_timeline.D116HandoffTimelineTests.test_new_tracker_and_async_lifecycle_blockers_are_typed_and_bounded)
+AssertionError: 'unaffected' != 'stop'
+Ran 364 tests in 693.322s
+FAILED (failures=1, skipped=3)
+
+== 对照树（e87+e88+e89+e91）
+FAIL: test_new_tracker_and_async_lifecycle_blockers_are_typed_and_bounded (tests.motion_nav.test_d116_handoff_timeline.D116HandoffTimelineTests.test_new_tracker_and_async_lifecycle_blockers_are_typed_and_bounded)
+AssertionError: 'unaffected' != 'stop'
+Ran 364 tests in 672.391s
+FAILED (failures=1, skipped=3)

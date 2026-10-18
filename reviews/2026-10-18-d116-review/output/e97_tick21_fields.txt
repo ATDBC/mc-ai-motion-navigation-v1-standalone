@@ -1,0 +1,31 @@
+== 62ec855 原样（D116 诊断补丁恢复自动准备）
+第 1 次运行 tick 20 为 READY_MATCH；监视器违规: [(12, 'I19')]
+  incumbent_validation: stop
+  incumbent_validation_reason: route_identity_changed
+  route_cancel_after_validation: True
+  prepared_expected_state_matches: False
+  prepared_controller_reason: BODY_RESPONSIBILITY_UNRESOLVED
+  prepared_controller_state_after: recovering
+  prepared_expected_velocity: [0.0, 0.3332000064849853, 0.22913268755160499]
+  prepared_actual_velocity: [0.0, 0.3332000064849853, 0.22913268755160496]
+
+== 62ec855 + e87 + e88（只修 a、b）
+第 3 次运行 tick 20 为 READY_MATCH；监视器违规: []
+  incumbent_validation: unaffected
+  incumbent_validation_reason: no_intersection
+  route_cancel_after_validation: False
+  prepared_expected_state_matches: False
+  prepared_controller_reason: BODY_RESPONSIBILITY_UNRESOLVED
+  prepared_controller_state_after: recovering
+  prepared_expected_velocity: [0.0, 0.3332000064849853, 0.22913268755160499]
+  prepared_actual_velocity: [0.0, 0.3332000064849853, 0.22913268755160496]
+
+== 对照：D116 公开的 Windows 证据 evidence/motion_navigation/d116-handoff-timeline-v1/d116-1-semantic-result-timeline.json，tick 21
+  incumbent_validation: stop
+  incumbent_validation_reason: route_identity_changed
+  route_cancel_after_validation: True
+  prepared_expected_state_matches: False
+  prepared_controller_reason: BODY_RESPONSIBILITY_UNRESOLVED
+  prepared_controller_state_after: recovering
+  prepared_expected_velocity: [0.0, 0.3332000064849853, 0.22913268755160499]
+  prepared_actual_velocity: [0.0, 0.3332000064849853, 0.22913268755160496]

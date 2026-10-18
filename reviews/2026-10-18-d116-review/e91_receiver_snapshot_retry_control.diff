@@ -1,0 +1,18 @@
+diff --git a/mc2p/motion_nav/motion_worker.py b/mc2p/motion_nav/motion_worker.py
+index 9af5daf..0a965dc 100644
+--- a/mc2p/motion_nav/motion_worker.py
++++ b/mc2p/motion_nav/motion_worker.py
+@@ -1329,6 +1329,13 @@ class MotionResultInbox:
+         result = SnapshotLeaseResult(SnapshotLeaseStatus.NOT_READY)
+         try:
+             version = port.borrow_snapshot_version(record.bounds, ruleset=record.ruleset)
++            # E91 control: the receiver retries a busy, non-blocking borrow a
++            # bounded number of times instead of turning it into a rejection.
++            for _attempt in range(5):
++                if version is not None or record.retired or self._closed:
++                    break
++                time.sleep(.001)
++                version = port.borrow_snapshot_version(record.bounds, ruleset=record.ruleset)
+             if version is not None:
+                 sealed = seal_snapshot_version(version, record.ruleset)
+                 if port.publish_sealed_snapshot(version, sealed):

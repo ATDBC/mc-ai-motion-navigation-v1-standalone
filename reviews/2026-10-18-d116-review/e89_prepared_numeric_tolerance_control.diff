@@ -1,0 +1,15 @@
+diff --git a/mc2p/motion_nav/motion_candidate.py b/mc2p/motion_nav/motion_candidate.py
+index 323ea97..6833683 100644
+--- a/mc2p/motion_nav/motion_candidate.py
++++ b/mc2p/motion_nav/motion_candidate.py
+@@ -545,7 +545,9 @@ class VerifiedMotionExecutor:
+                                           "BODY_RESPONSIBILITY_UNRESOLVED")
+         branch, = self.remaining_start_branches
+         index = self._command_index
+-        if (index >= len(branch.trajectory) or anchor.physics_state != branch.trajectory[index]):
++        # E89 control: reuse the ordinary verified-motion numerical tolerance.
++        if (index >= len(branch.trajectory)
++                or not _state_matches_verified_start(anchor.physics_state, branch.trajectory[index])):
+             self.state = VerifiedMotionExecutorState.RECOVERING
+             return VerifiedMotionDecision(self.state, None, None, index, None, None, 1,
+                                           "BODY_RESPONSIBILITY_UNRESOLVED")

@@ -1,0 +1,4 @@
+== 对照树：+ e87 + e88 + e89 + e91 receiver 有界重试借快照，max_ticks=80
+max_ticks=80，30 次
+30 次：{"jumps": [8, 21], "outcome": ["success", "goal_state_satisfied"], "reasons_after_21": ["prepared_action_boundary", "prepared_stream_command"], "tick20": ["ready_match", "approved", null], "tick21_jump": true, "violations": []}
+    （第二跳登记 tick, 终点 z, 第二跳落地 tick, tick 21 之后的有效输入帧数）→ 次数：[((10, 5.69, 32, 1), 30)]

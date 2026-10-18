@@ -1,0 +1,26 @@
+diff --git a/mc2p/motion_nav/motion_coordination.py b/mc2p/motion_nav/motion_coordination.py
+index af0540b..74c2d56 100644
+--- a/mc2p/motion_nav/motion_coordination.py
++++ b/mc2p/motion_nav/motion_coordination.py
+@@ -1419,10 +1419,17 @@ class MotionRouteCoordinator:
+             fields = self._prepared_fields
+             query = self.result_inbox.query_prepared(fields.async_identity, movement_tick=anchor.movement_tick_id)
+             if query.handle is not None:
+-                self.executor.install_prepared_motion(query.handle)
+-                self._record_admission(AsyncAdmissionDisposition.APPLIED, identity_matched=True, facts_valid=True)
+-                self._retire_work("prepared_motion_installed")
+-                installed = True
++                # E87 control: the prepared admission uses the same apply entry
++                # as an ordinary motion result before it records APPLIED.
++                accepted_ns = self._clock()
++                if self._work.try_apply(fields.async_identity, accepted_ns, current_scope=current_scope):
++                    self.executor.install_prepared_motion(query.handle)
++                    self._record_admission(AsyncAdmissionDisposition.APPLIED, identity_matched=True,
++                                           facts_valid=True, accepted_ns=accepted_ns)
++                    self._retire_work("prepared_motion_installed")
++                    installed = True
++                else:
++                    self._retire_work("prepared_motion_unavailable")
+             elif self._work_expired(anchor) or self.result_inbox.prepared_compute_result(fields.async_identity) is not None:
+                 self._retire_work("prepared_motion_unavailable")
+         elif self._work_expired(anchor):

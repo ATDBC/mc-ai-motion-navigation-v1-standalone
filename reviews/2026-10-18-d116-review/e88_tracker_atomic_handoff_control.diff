@@ -1,0 +1,22 @@
+diff --git a/mc2p/motion_nav/route_body_controller.py b/mc2p/motion_nav/route_body_controller.py
+index de32a8f..e4432ab 100644
+--- a/mc2p/motion_nav/route_body_controller.py
++++ b/mc2p/motion_nav/route_body_controller.py
+@@ -162,7 +162,16 @@ class RouteControl:
+                 or self.executor._prepared_route_revision != self.route.route_revision):
+             from mc2p.contracts.motion_activation import ActivationResult, ActivationStatus, ActivationRejectReason
+             return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.OWNER)
+-        return self.executor.commit_prepared_activation(delivered)
++        # E88 control: the executor action index and the route tracker move
++        # to the prepared action inside the same registry commit.
++        from mc2p.contracts.motion_activation import ActivationStatus
++        assert self.tracker is not None
++        sequence_id = self.executor._last_prepared_frame.body.sequence_id
++        result = self.executor.commit_prepared_activation(delivered)
++        if result.status is ActivationStatus.ACTIVATED:
++            self.tracker.record_progress(
++                self.executor.action_index, None, observation_sequence_id=sequence_id)
++        return result
+
+     def advance(
+         self, frame: NavigationFrame,

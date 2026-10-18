@@ -1,0 +1,13 @@
+== 62ec855，同核另有忙循环（CPU 1）
+检出 62ec855
+  test_d116_handoff_timeline：20 次 → {'OK': 15, 'FAILED (failures=6)': 4, 'FAILED (failures=1)': 1}；最长连续通过 7；单次用时 6.4–10.8 s
+    首个失败：FAIL: test_tick_twenty_one_applies_one_owned_second_jump_input (tests.motion_nav.test_d116_handoff_timeline.D116HandoffTimelineTests.test_tick_twenty_one_applies_one_owned_second_jump_input) | AssertionError: {'forward': 0, 'strafe': 0, 'jump': False, 'sneak': False, 'sprint': False} != {'forward': 1, 'strafe': 0, 'jump': True, 'sneak': False, 'sprint': True} | FAIL: test_tick_twenty_publishes_boundary_before_session_approval (tests.motion_nav.test_d116_handoff_timeline.D116HandoffTimelineTests.test_tick_twenty_publishes_boundary_before_session_approval) | AssertionError: 'rejected' != 'approved'
+== 62ec855，空闲单核（CPU 0）
+检出 62ec855
+  test_d116_handoff_timeline：20 次 → {'OK': 18, 'FAILED (failures=6)': 2}；最长连续通过 7；单次用时 3.1–5.1 s
+    首个失败：FAIL: test_tick_twenty_one_applies_one_owned_second_jump_input (tests.motion_nav.test_d116_handoff_timeline.D116HandoffTimelineTests.test_tick_twenty_one_applies_one_owned_second_jump_input) | AssertionError: {'forward': 0, 'strafe': 0, 'jump': False, 'sneak': False, 'sprint': False} != {'forward': 1, 'strafe': 0, 'jump': True, 'sneak': False, 'sprint': True} | FAIL: test_tick_twenty_publishes_boundary_before_session_approval (tests.motion_nav.test_d116_handoff_timeline.D116HandoffTimelineTests.test_tick_twenty_publishes_boundary_before_session_approval) | AssertionError: 'rejected' != 'approved'
+
+== 补充：单独重复 test_d116_zero_red_is_an_explicit_legacy_gate_replay（空闲单核 CPU 0），第 1 次即失败：
+  File "tests/motion_nav/test_d116_handoff_timeline.py", line 37, in test_d116_zero_red_is_an_explicit_legacy_gate_replay
+AssertionError: 'not_ready' != 'dependency_changed'
+  （RED 重放那一次的第二跳准备没有登记，tick 20 查询为 not_ready）
