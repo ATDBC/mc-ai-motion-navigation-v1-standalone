@@ -1,0 +1,8 @@
+== dce230f，空闲单核（CPU 0）
+检出 dce230f
+  test_d116_handoff_timeline：20 次 → {'OK': 20}；最长连续通过 20；单次用时 23.0–27.2 s
+  test_d117_prepared_liveness_monitor：10 次 → {'OK': 10}；最长连续通过 10；单次用时 0.4–0.6 s
+== dce230f，同核另有忙循环（CPU 1）
+检出 dce230f
+  test_d116_handoff_timeline：20 次 → {'OK': 20}；最长连续通过 20；单次用时 47.1–56.1 s
+  test_d117_prepared_liveness_monitor：10 次 → {'OK': 10}；最长连续通过 10；单次用时 0.9–1.2 s

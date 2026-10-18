@@ -1,0 +1,19 @@
+== dce230f，空闲单核 CPU 0
+mode=normal，30 次
+30 次：{"damage": 0.0, "finish_tick": 36, "jumps": [8, 21], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": true, "violations": []}
+
+== dce230f，空闲单核 CPU 0，快照注入 busy_5
+mode=busy_5，5 次
+5 次：{"damage": 0.0, "finish_tick": 36, "jumps": [8, 21], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": true, "violations": []}
+
+== dce230f，空闲单核 CPU 0，快照注入 prepared_always_busy
+mode=prepared_always_busy，5 次
+5 次：{"damage": 0.0, "finish_tick": 39, "jumps": [8, 24], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": false, "violations": []}
+
+== dce230f，空闲单核 CPU 0，快照注入 always_busy
+mode=always_busy，5 次
+5 次：{"damage": 0.0, "finish_tick": 45, "jumps": [8, 30], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": false, "violations": []}
+
+== dce230f，CPU 1 同核另有忙循环
+mode=normal，30 次
+30 次：{"damage": 0.0, "finish_tick": 36, "jumps": [8, 21], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": true, "violations": []}

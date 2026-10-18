@@ -1,0 +1,5 @@
+== dce230f 现行生产链，第一段间隙 1、中间平台 1、第二段间隙 W（复用 D116 审查的 e93 脚本）
+mode=production
+{"damage": 0.0, "final_z": 6.57, "jumps": [8, 22], "landings": [19, 33], "outcome": "success", "planned": ["WalkSegment", "JumpGapSegment", "JumpGapSegment", "WalkSegment"], "reason": "goal_state_satisfied", "ticks": 62, "violations": [], "width": 1}
+{"damage": 0.0, "final_z": 0.5, "jumps": [], "landings": [], "outcome": "failed", "planned": [], "reason": "no_route_within_complete_scope", "ticks": 21, "violations": [], "width": 3}
+{"damage": 0.0, "final_z": 0.5, "jumps": [], "landings": [], "outcome": "failed", "planned": [], "reason": "no_route_within_complete_scope", "ticks": 21, "violations": [], "width": 4}

@@ -1,0 +1,21 @@
+终态=success 原因=goal_state_satisfied 违规=[]
+tick | z | 水平速度 b/s | 已着地 | 实际输入 | 会话原因
+6 | 1.332 | 2.243 | True | f | tracking_conditional_motion_entry
+7 | 1.542 | 2.295 | True | f | submit_verified_command
+8 | 1.985 | 4.828 | False | fjs | submit_verified_command
+9 | 2.206 | 4.037 | False | f | submit_verified_command
+10 | 2.389 | 3.317 | False | f | submit_verified_command
+11 | 2.554 | 3.018 | False | - | submit_verified_command
+12 | 2.705 | 2.747 | False | - | submit_verified_command
+13 | 2.843 | 2.499 | False | - | submit_verified_command
+14 | 2.968 | 2.275 | False | - | submit_verified_command
+15 | 3.081 | 2.07 | False | - | submit_verified_command
+16 | 3.185 | 1.884 | False | - | submit_verified_command
+17 | 3.279 | 1.714 | False | - | submit_verified_command
+18 | 3.365 | 1.56 | False | - | submit_verified_command
+19 | 3.443 | 1.419 | True | - | submit_verified_command
+20 | 3.612 | 1.845 | True | f | prepared_action_boundary
+21 | 4.031 | 4.583 | False | fjs | prepared_stream_command
+22 | 4.241 | 3.813 | False | f | prepared_stream_command
+23 | 4.432 | 3.47 | False | - | prepared_stream_command
+24 | 4.605 | 3.158 | False | - | prepared_stream_command
