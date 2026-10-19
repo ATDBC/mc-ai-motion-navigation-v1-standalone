@@ -1,0 +1,163 @@
+{
+ "message_limit_bytes": 2097152,
+ "incumbent_VerifiedMotionResult": {
+  "canonical_bytes": 413586,
+  "by_field_top": {
+   "delayed_start_variants": 204399,
+   "fallback_tails": 185804,
+   "trajectory": 14701,
+   "solver_policy": 2040,
+   "commands": 1854,
+   "tick_inputs": 1566,
+   "exit_state": 851,
+   "entry_state": 809
+  },
+  "by_type": {
+   "VerifiedMotionResult": [
+    413586,
+    1
+   ],
+   "FallbackTailProof": [
+    371584,
+    34
+   ],
+   "PhysicsState": [
+    352592,
+    410
+   ],
+   "VerifiedMotionStartVariant": [
+    204397,
+    1
+   ],
+   "TickInput": [
+    39279,
+    405
+   ],
+   "WorldSessionId": [
+    11070,
+    410
+   ],
+   "FallbackCandidate": [
+    7735,
+    35
+   ],
+   "AirTransitionSolverPolicy": [
+    2040,
+    1
+   ],
+   "MotionCommandTick": [
+    1837,
+    16
+   ],
+   "AirTransitionCommandTemplate": [
+    1797,
+    12
+   ],
+   "MovementV1": [
+    1053,
+    16
+   ],
+   "TaskDamageBudget": [
+    76,
+    1
+   ]
+  },
+  "trajectory_ticks": 17,
+  "fallback_tails": 17,
+  "fallback_tail_ticks": [
+   2,
+   19,
+   18,
+   17,
+   16,
+   15,
+   14,
+   13,
+   12,
+   11,
+   10,
+   9,
+   8,
+   7,
+   6,
+   5,
+   4
+  ],
+  "delayed_start_variants": 1
+ },
+ "successor_PreparedMotionProof": {
+  "canonical_bytes": 544471,
+  "by_field_top": {
+   "branches": 534624,
+   "dependency_facts": 6266,
+   "stream": 2843,
+   "dependency_versions": 354,
+   "ruleset": 217,
+   "physics_steps": 3,
+   "stopping_tail_steps": 3,
+   "nodes_scanned": 2
+  },
+  "by_type": {
+   "PreparedMotionProof": [
+    544471,
+    1
+   ],
+   "PreparedBranchProof": [
+    534621,
+    2
+   ],
+   "PreparedSafetyTail": [
+    492896,
+    34
+   ],
+   "PhysicsState": [
+    381234,
+    443
+   ],
+   "CellFact": [
+    84894,
+    406
+   ],
+   "ObservationStamp": [
+    50750,
+    406
+   ],
+   "TickInput": [
+    44314,
+    457
+   ],
+   "WorldSessionId": [
+    22923,
+    849
+   ],
+   "ProvenFallbackSelection": [
+    17510,
+    34
+   ],
+   "FallbackCandidate": [
+    7514,
+    34
+   ],
+   "BlockGeometry": [
+    6688,
+    76
+   ],
+   "CandidateExecutionWindow": [
+    3381,
+    69
+   ]
+  }
+ },
+ "one_PhysicsState_canonical_bytes": 809,
+ "one_PhysicsState_pickle_bytes": 395,
+ "existing_successor_wire_message": {
+  "pickle_payload_bytes": 663717,
+  "sealed_bytes_inside_payload": 557059,
+  "payload_limit_ratio": 0.3165
+ },
+ "estimates_without_duplicate_graphs": {
+  "reference_digest_exit_fallback_extra_bytes": 4249,
+  "successor_message_plus_one_incumbent_pickle_bytes": 752814,
+  "same_plus_incumbent_canonical_once_bytes": 1166400
+ }
+}

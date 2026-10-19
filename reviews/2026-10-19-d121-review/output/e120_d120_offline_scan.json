@@ -1,0 +1,41 @@
+{
+ "manifest_sha256": "89c5ee269da0b8ac969d69be781a589c8f28449faf0b153fe69a6b2c2a433dd6",
+ "matches_published_manifest": true,
+ "directions": [
+  {
+   "direction": 0,
+   "samples": 243,
+   "suffixes": 729,
+   "suffixes_passed": 729,
+   "main_physics_steps": 11907,
+   "validate_coverage": "passed"
+  },
+  {
+   "direction": 1,
+   "samples": 243,
+   "suffixes": 729,
+   "suffixes_passed": 729,
+   "main_physics_steps": 11907,
+   "validate_coverage": "passed"
+  },
+  {
+   "direction": 2,
+   "samples": 243,
+   "suffixes": 729,
+   "suffixes_passed": 729,
+   "main_physics_steps": 11907,
+   "validate_coverage": "passed"
+  },
+  {
+   "direction": 3,
+   "samples": 243,
+   "suffixes": 729,
+   "suffixes_passed": 729,
+   "main_physics_steps": 11907,
+   "validate_coverage": "passed"
+  }
+ ],
+ "total_samples": 972,
+ "total_suffixes": 2916,
+ "elapsed_seconds": 6.7
+}

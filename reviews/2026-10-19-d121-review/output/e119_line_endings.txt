@@ -1,0 +1,34 @@
+dce230f..3889d10 代码、测试、脚本、配置的 diff 行数：原样 vs 忽略行尾（git diff --stat --ignore-cr-at-eol）
+ config/motion-navigation/standalone-export-v1.json | 75 | config/motion-navigation/standalone-export-v1.json | 75
+ mc2p/motion_nav/motion_chain.py | 249 | mc2p/motion_nav/motion_chain.py | 249
+ mc2p/motion_nav/motion_solver.py | 3564 | mc2p/motion_nav/motion_solver.py | 376
+ mc2p/motion_nav/physics_1_21.py | 1122 | mc2p/motion_nav/physics_1_21.py | 18 +-
+ mc2p/motion_nav/prepared_motion.py | 61 | mc2p/motion_nav/prepared_motion.py | 61
+ mc2p/motion_nav/prepared_motion_proof.py | 839 | mc2p/motion_nav/prepared_motion_proof.py | 123
+ scripts/d118_momentum_calibration.py | 901 | scripts/d118_momentum_calibration.py | 901
+ scripts/d118_momentum_calibration_runtime.py | 1114 | scripts/d118_momentum_calibration_runtime.py | 1114
+ scripts/d120_momentum_calibration.py | 462 | scripts/d120_momentum_calibration.py | 462
+ scripts/d120_momentum_entry_calibration.py | 500 | scripts/d120_momentum_entry_calibration.py | 500
+ scripts/d121_joint_worker_stop_probe.py | 345 | scripts/d121_joint_worker_stop_probe.py | 345
+ scripts/d121_momentum_handoff_probe.py | 316 | scripts/d121_momentum_handoff_probe.py | 316
+ scripts/probe_fabric_deployment_observation.py | 287 | scripts/probe_fabric_deployment_observation.py | 287
+ tests/motion_nav/test_b09r_physics_step.py | 1121 | tests/motion_nav/test_b09r_physics_step.py | 113
+ tests/motion_nav/test_d102_contracts.py | 17 +-| tests/motion_nav/test_d102_contracts.py | 17 +-
+ tests/motion_nav/test_d102_registry_lifecycle.py | 2754 | tests/motion_nav/test_d102_registry_lifecycle.py | 8 +-
+ tests/motion_nav/test_d118_momentum_calibration.py | 1439 | tests/motion_nav/test_d118_momentum_calibration.py | 1439
+ tests/motion_nav/test_d120_momentum_entry_calibration.py | 649 | tests/motion_nav/test_d120_momentum_entry_calibration.py | 649
+ tests/motion_nav/test_d121_joint_worker_stop.py | 87 | tests/motion_nav/test_d121_joint_worker_stop.py | 87
+ tests/motion_nav/test_d121_momentum_handoff.py | 677 | tests/motion_nav/test_d121_momentum_handoff.py | 677
+ tests/motion_nav/test_motion_baseline_recovery.py | 385 | tests/motion_nav/test_motion_baseline_recovery.py | 45
+ tests/motion_nav/test_standalone_export.py | 141 | tests/motion_nav/test_standalone_export.py | 141
+ tests/test_fabric_deployment_probe.py | 2060 | tests/test_fabric_deployment_probe.py | 12 +-
+ 23 files changed, 13399 insertions(+), 5766 deletions(-)| 23 files changed, 7824 insertions(+), 191 deletions(-)
+
+整文件 CRLF→LF 的文件（CRLF 行数／总行数）
+mc2p/motion_nav/motion_solver.py dce230f 1695/1695 -> 3889d10 0/1869
+mc2p/motion_nav/physics_1_21.py dce230f 556/556 -> 3889d10 0/566
+mc2p/motion_nav/prepared_motion_proof.py dce230f 379/379 -> 3889d10 0/460
+tests/motion_nav/test_b09r_physics_step.py dce230f 506/506 -> 3889d10 0/615
+tests/motion_nav/test_d102_registry_lifecycle.py dce230f 1374/1374 -> 3889d10 0/1380
+tests/motion_nav/test_motion_baseline_recovery.py dce230f 172/172 -> 3889d10 0/213
+tests/test_fabric_deployment_probe.py dce230f 1030/1030 -> 3889d10 0/1030

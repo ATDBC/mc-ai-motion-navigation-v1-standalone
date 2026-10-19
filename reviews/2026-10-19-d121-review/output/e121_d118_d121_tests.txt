@@ -1,0 +1,3 @@
+== 3889d10，CPU 2：python3 -m unittest tests.motion_nav.test_d121_momentum_handoff tests.motion_nav.test_d121_joint_worker_stop tests.motion_nav.test_d120_momentum_entry_calibration tests.motion_nav.test_d118_momentum_calibration tests.motion_nav.test_b09r_physics_step
+Ran 117 tests in 149.245s
+OK

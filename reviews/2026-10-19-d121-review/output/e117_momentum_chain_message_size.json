@@ -1,0 +1,75 @@
+{
+ "scenario": "D120 south: W1=1 P=1 W2=4",
+ "message_limit_bytes": 2097152,
+ "first_jump_exit_equals_D120_nominal_entry": true,
+ "first_jump_exit_tick": 26,
+ "first_jump_neutral_only": {
+  "status": "blocked",
+  "missing_cells": 0
+ },
+ "first_jump_neutral_then_sneak": {
+  "status": "prepared",
+  "branches": 1,
+  "ticks_per_branch": [
+   26
+  ],
+  "safety_tails": 27,
+  "safety_tail_states": 337,
+  "tail_states_equal_to_main_trajectory": 70,
+  "distinct_tail_states_not_in_main": 222,
+  "selected_fallbacks": [
+   "neutral",
+   "sneak"
+  ],
+  "exit_tail_candidate": "sneak",
+  "exit_tail_inputs": 9,
+  "exit_tail_canonical_bytes": 13756,
+  "proof_digest_hex_chars": 64,
+  "proof_canonical_bytes": 509406,
+  "wire_payload_bytes": 613205,
+  "sealed_bytes_inside_payload": 525964,
+  "wire_payload_limit_ratio": 0.2924
+ },
+ "second_jump_on_time_only": {
+  "status": "prepared",
+  "branches": 1,
+  "ticks_per_branch": [
+   20
+  ],
+  "safety_tails": 21,
+  "safety_tail_states": 251,
+  "tail_states_equal_to_main_trajectory": 189,
+  "distinct_tail_states_not_in_main": 46,
+  "selected_fallbacks": [
+   "neutral"
+  ],
+  "exit_tail_candidate": "neutral",
+  "exit_tail_inputs": 1,
+  "exit_tail_canonical_bytes": 5148,
+  "proof_digest_hex_chars": 64,
+  "proof_canonical_bytes": 402219,
+  "wire_payload_bytes": 469369,
+  "sealed_bytes_inside_payload": 416551,
+  "wire_payload_limit_ratio": 0.2238
+ },
+ "second_jump_on_time_and_late1": {
+  "status": "blocked",
+  "missing_cells": 0
+ },
+ "second_jump_ticks": 20,
+ "late1_hold_state": {
+  "entry_position": [
+   0.5,
+   64.0,
+   2.0502355877734346
+  ],
+  "hold_position": [
+   0.5,
+   64.0,
+   2.436956392157114
+  ],
+  "hold_on_ground": true,
+  "entry_standard_support": true,
+  "hold_standard_support": false
+ }
+}

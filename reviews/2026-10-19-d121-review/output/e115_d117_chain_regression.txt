@@ -1,0 +1,36 @@
+== 3889d10，空闲单核 CPU 0（复用 D117 审查的 e99 脚本）
+mode=normal，10 次
+10 次：{"damage": 0.0, "finish_tick": 36, "jumps": [8, 21], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": true, "violations": []}
+
+== 3889d10，CPU 0，快照注入 busy_5
+mode=busy_5，3 次
+3 次：{"damage": 0.0, "finish_tick": 36, "jumps": [8, 21], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": true, "violations": []}
+
+== 3889d10，CPU 0，快照注入 prepared_always_busy
+mode=prepared_always_busy，3 次
+2 次：{"damage": 0.0, "finish_tick": 45, "jumps": [8, 30], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": false, "violations": []}
+1 次：{"damage": 0.0, "finish_tick": 39, "jumps": [8, 24], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": false, "violations": []}
+
+== 3889d10，CPU 0，快照注入 always_busy
+mode=always_busy，3 次
+3 次：{"damage": 0.0, "finish_tick": 45, "jumps": [8, 30], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": false, "violations": []}
+
+== dce230f，CPU 0，prepared_always_busy
+mode=prepared_always_busy，8 次
+8 次：{"damage": 0.0, "finish_tick": 39, "jumps": [8, 24], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": false, "violations": []}
+== 3889d10，CPU 0，prepared_always_busy
+mode=prepared_always_busy，8 次
+8 次：{"damage": 0.0, "finish_tick": 39, "jumps": [8, 24], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": false, "violations": []}
+
+== dce230f，CPU 1，prepared_always_busy
+mode=prepared_always_busy，20 次
+20 次：{"damage": 0.0, "finish_tick": 39, "jumps": [8, 24], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": false, "violations": []}
+== dce230f，CPU 1，always_busy
+mode=always_busy，20 次
+20 次：{"damage": 0.0, "finish_tick": 45, "jumps": [8, 30], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": false, "violations": []}
+== 3889d10，CPU 1，prepared_always_busy
+mode=prepared_always_busy，20 次
+20 次：{"damage": 0.0, "finish_tick": 39, "jumps": [8, 24], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": false, "violations": []}
+== 3889d10，CPU 1，always_busy
+mode=always_busy，20 次
+20 次：{"damage": 0.0, "finish_tick": 45, "jumps": [8, 30], "lifecycle": null, "outcome": ["success", "goal_state_satisfied"], "prepared_second_jump_applied": false, "violations": []}

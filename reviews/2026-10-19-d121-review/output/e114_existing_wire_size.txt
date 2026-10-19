@@ -1,0 +1,42 @@
+== dce230f
+{
+ "message_limit_bytes": 2097152,
+ "wire_schema": "mc2p.prepared-motion-bundle.v1",
+ "incumbent_canonical_bytes": 41684,
+ "incumbent_pickle_bytes": 9913,
+ "incumbent_trajectory_states": 17,
+ "incumbent_fallback_tails": 0,
+ "incumbent_fallback_tail_states": 0,
+ "incumbent_delayed_start_variants": 1,
+ "successor_message": {
+  "pickle_payload_bytes": 663645,
+  "sealed_bytes": 560501,
+  "proof_canonical_bytes": 546720,
+  "branches": 2,
+  "safety_tails": 34,
+  "safety_tail_states": 408,
+  "main_trajectory_states": 34
+ },
+ "successor_payload_limit_ratio": 0.3165
+}
+== 3889d10
+{
+ "message_limit_bytes": 2097152,
+ "wire_schema": "mc2p.prepared-motion-bundle.v1",
+ "incumbent_canonical_bytes": 413586,
+ "incumbent_pickle_bytes": 90096,
+ "incumbent_trajectory_states": 17,
+ "incumbent_fallback_tails": 17,
+ "incumbent_fallback_tail_states": 186,
+ "incumbent_delayed_start_variants": 1,
+ "successor_message": {
+  "pickle_payload_bytes": 695487,
+  "sealed_bytes": 579100,
+  "proof_canonical_bytes": 565093,
+  "branches": 2,
+  "safety_tails": 34,
+  "safety_tail_states": 408,
+  "main_trajectory_states": 34
+ },
+ "successor_payload_limit_ratio": 0.3316
+}

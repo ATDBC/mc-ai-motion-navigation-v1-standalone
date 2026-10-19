@@ -1,0 +1,52 @@
+== dce230f，CPU 0
+{
+ "repeats": 15,
+ "solve_one_cell_gap": {
+  "median_ms": 33.33,
+  "max_ms": 41.4
+ },
+ "canonical_motion_bytes": {
+  "median_ms": 3.71,
+  "max_ms": 4.2
+ },
+ "canonical_motion_digest": {
+  "median_ms": 3.8,
+  "max_ms": 3.94
+ },
+ "pickle_dumps": {
+  "median_ms": 0.29,
+  "max_ms": 0.36
+ },
+ "proof_canonical_bytes": 41684,
+ "proof_pickle_bytes": 9913,
+ "main_trajectory_states": 17,
+ "fallback_tails_main": 0,
+ "fallback_tails_delayed_variants": 0,
+ "fallback_tail_states_main": 0
+}
+== 3889d10，CPU 0
+{
+ "repeats": 15,
+ "solve_one_cell_gap": {
+  "median_ms": 68.86,
+  "max_ms": 92.05
+ },
+ "canonical_motion_bytes": {
+  "median_ms": 33.35,
+  "max_ms": 40.37
+ },
+ "canonical_motion_digest": {
+  "median_ms": 31.38,
+  "max_ms": 75.19
+ },
+ "pickle_dumps": {
+  "median_ms": 2.97,
+  "max_ms": 5.43
+ },
+ "proof_canonical_bytes": 413586,
+ "proof_pickle_bytes": 90096,
+ "main_trajectory_states": 17,
+ "fallback_tails_main": 17,
+ "fallback_tails_delayed_variants": 17,
+ "fallback_tail_states_main": 186
+}
