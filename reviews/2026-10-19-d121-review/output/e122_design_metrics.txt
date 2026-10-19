@@ -1,0 +1,9 @@
+== 3889d10 原样
+FAIL: test_handoff_disposition_is_internal_lifecycle (tests.motion_nav.test_navigation_design_metrics.NavigationDesignMetricsTests.test_handoff_disposition_is_internal_lifecycle)
+FAIL: test_repository_derived_details_are_deterministic_and_constraints_are_visible (tests.motion_nav.test_navigation_design_metrics.NavigationDesignMetricsTests.test_repository_derived_details_are_deterministic_and_constraints_are_visible)
+Ran 33 tests in 10.795s
+FAILED (failures=2)
+
+== 对照树（e122：脚本和测试各登记 FallbackTerminalMode、FallbackYawMode 为非实现选择）
+Ran 33 tests in 11.029s
+OK

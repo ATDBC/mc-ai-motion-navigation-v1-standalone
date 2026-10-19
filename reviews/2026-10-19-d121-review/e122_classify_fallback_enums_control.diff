@@ -1,0 +1,26 @@
+diff --git a/scripts/navigation_design_metrics.py b/scripts/navigation_design_metrics.py
+index b126d28..58ca469 100644
+--- a/scripts/navigation_design_metrics.py
++++ b/scripts/navigation_design_metrics.py
+@@ -88,6 +88,8 @@ TYPED_LIFECYCLE_CLASSIFICATIONS = {
+     'StreamApplicationReason': '输入流应用失败或偏离原因',
+     'StreamApplicationStatus': '输入流实际应用结果',
+     'StreamStartBranch': '输入流起点按时或晚一 tick 分支',
++    'FallbackTerminalMode': '已证明 fallback 尾段的终态安全判据，不选择动作或控制器',
++    'FallbackYawMode': 'fallback 输入朝向取值方式，不选择动作或控制器',
+ }
+ NON_IMPLEMENTATION_ENUMS.update(TYPED_LIFECYCLE_CLASSIFICATIONS)
+ CLASSIFICATION_NOTES.update(TYPED_LIFECYCLE_CLASSIFICATIONS)
+diff --git a/tests/motion_nav/test_navigation_design_metrics.py b/tests/motion_nav/test_navigation_design_metrics.py
+index 94f9d3c..4eee2ef 100644
+--- a/tests/motion_nav/test_navigation_design_metrics.py
++++ b/tests/motion_nav/test_navigation_design_metrics.py
+@@ -30,6 +30,8 @@ class NavigationDesignMetricsTests(unittest.TestCase):
+             'StreamApplicationReason',
+             'StreamApplicationStatus',
+             'StreamStartBranch',
++            'FallbackTerminalMode',
++            'FallbackYawMode',
+         }
+         self.assertEqual(set(TYPED_LIFECYCLE_CLASSIFICATIONS), expected)
+         self.assertTrue(expected.issubset(NON_IMPLEMENTATION_ENUMS))

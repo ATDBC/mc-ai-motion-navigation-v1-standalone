@@ -70,6 +70,20 @@ T="tests.motion_nav.test_d121_momentum_handoff tests.motion_nav.test_d121_joint_
   (cd "$PROJECT" && taskset -c 2 python3 -m unittest $T 2>&1 | grep -E "^(Ran|OK|FAILED|FAIL:|ERROR:)" || true)
 } > "$OUT/e121_d118_d121_tests.txt"
 
+# E122：设计度量测试，原样与对照树（临时 worktree，结束时删除）
+SCRATCH=$(mktemp -d)
+git -C "$PROJECT" worktree add --detach "$SCRATCH/e122" HEAD > /dev/null 2>&1
+git -C "$SCRATCH/e122" apply "$HERE/e122_classify_fallback_enums_control.diff"
+M=tests.motion_nav.test_navigation_design_metrics
+{
+  echo "== $(head_of "$PROJECT") 原样"
+  (cd "$PROJECT" && taskset -c 2 python3 -m unittest $M 2>&1 | grep -E "^(Ran|OK|FAILED|FAIL:|ERROR:)" || true)
+  echo; echo "== 对照树（e122：脚本和测试各登记 FallbackTerminalMode、FallbackYawMode 为非实现选择）"
+  (cd "$SCRATCH/e122" && taskset -c 2 python3 -m unittest $M 2>&1 | grep -E "^(Ran|OK|FAILED|FAIL:|ERROR:)" || true)
+} > "$OUT/e122_design_metrics.txt"
+git -C "$PROJECT" worktree remove --force "$SCRATCH/e122"
+rmdir "$SCRATCH"
+
 # E119：行尾（PROJECT 仓库里需要同时有 dce230f 和 3889d10 两个提交）
 {
   echo "dce230f..3889d10 代码、测试、脚本、配置的 diff 行数：原样 vs 忽略行尾（git diff --stat --ignore-cr-at-eol）"
