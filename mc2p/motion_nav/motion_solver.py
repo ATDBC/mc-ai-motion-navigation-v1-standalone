@@ -17,9 +17,9 @@ from mc2p.motion_nav.online_motion import (
     project_movement_command,
 )
 from mc2p.motion_nav.motion_chain import (
-    FallbackCandidate, FallbackTailProof,
+    FallbackCandidate, FallbackTailProof, FixedSuccessorSpec, SuccessorFeasibilityBinding,
     fallback_release_witness_body_ready, fallback_requires_continuous_support,
-    fallback_terminal_body_ready, preserve_current_neutral_fallback,
+    fallback_terminal_body_ready, main_suffix_digest, preserve_current_neutral_fallback,
     validate_fallback_candidates,
 )
 from mc2p.motion_nav.geometry import QueryStatus, query_support
@@ -27,7 +27,7 @@ from mc2p.motion_nav.motion_risk import (
     TaskDamageBudget, conservative_plain_fall_damage_points,
 )
 from mc2p.motion_nav.physics_1_21 import step
-from mc2p.motion_nav.physics_adapter import PhysicsWorldView
+from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds, PhysicsWorldView
 from mc2p.motion_nav.physics_types import (
     CalculationStatus, JAVA_1_21_RULESET, PhysicsState, TickInput,
 )
@@ -301,8 +301,14 @@ class GapSolveRequest:
     recovery_horizon_ticks: int | None = None
     continuation: MotionContinuationRequirement | None = None
     fallback_candidates: tuple[FallbackCandidate, ...] | None = None
+    allow_committed_main_suffix: bool = field(default=False, kw_only=True)
+    fixed_successor_spec: FixedSuccessorSpec | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
+        if self.fixed_successor_spec is not None and type(self.fixed_successor_spec) is not FixedSuccessorSpec:
+            raise ContractViolation("fixed successor declaration must be typed")
+        if type(self.allow_committed_main_suffix) is not bool:
+            raise ContractViolation("committed main suffix permission must be boolean")
         if self.direction not in _CARDINAL_DIRECTIONS:
             raise ContractViolation("B10 gap solver requires a cardinal direction")
         if type(self.landing) is not LandingRegion:
@@ -379,6 +385,8 @@ class GapSolveRequest:
             recovery_horizon_ticks=self.recovery_horizon_ticks,
             continuation=self.continuation,
             fallback_candidates=self.fallback_candidates,
+            allow_committed_main_suffix=self.allow_committed_main_suffix,
+            fixed_successor_spec=self.fixed_successor_spec,
         )
 
 
@@ -397,8 +405,14 @@ class AirTransitionSolveRequest:
     recovery_horizon_ticks: int | None = None
     continuation: MotionContinuationRequirement | None = None
     fallback_candidates: tuple[FallbackCandidate, ...] | None = None
+    allow_committed_main_suffix: bool = field(default=False, kw_only=True)
+    fixed_successor_spec: FixedSuccessorSpec | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
+        if self.fixed_successor_spec is not None and type(self.fixed_successor_spec) is not FixedSuccessorSpec:
+            raise ContractViolation("fixed successor declaration must be typed")
+        if type(self.allow_committed_main_suffix) is not bool:
+            raise ContractViolation("committed main suffix permission must be boolean")
         if type(self.kind) is not MotionSolveKind:
             raise ContractViolation("air transition request requires a solve kind")
         if self.direction not in _CARDINAL_DIRECTIONS:
@@ -491,14 +505,41 @@ class VerifiedMotionStartVariant:
         if (self.resource_incomplete_reasons
                 != tuple(sorted(set(self.resource_incomplete_reasons)))):
             raise ContractViolation("verified start resource reasons must be unique")
-        if (type(self.fallback_tails) is not tuple
-                or len(self.fallback_tails) != len(self.trajectory)
-                or any(type(tail) is not FallbackTailProof
-                       or tail.boundary_index != index
-                       or tail.trajectory[0] != self.trajectory[index]
-                       or not set(tail.dependencies).issubset(self.world_dependencies)
-                       for index, tail in enumerate(self.fallback_tails))):
-            raise ContractViolation("verified start fallback tails are incomplete")
+        _validate_fallback_references(
+            self.tick_inputs, self.trajectory, self.fallback_tails,
+            self.world_dependencies, self.resource_incomplete_reasons,
+            self.release_safe_command_indices)
+
+
+def _validate_fallback_references(
+        inputs, trajectory, tails, dependencies, resource_reasons, release_safe_indices):
+    if (type(tails) is not tuple or len(tails) != len(trajectory)
+            or any(state.session != trajectory[0].session
+                   or state.movement_tick_id != trajectory[0].movement_tick_id + index
+                   for index, state in enumerate(trajectory))):
+        raise ContractViolation("verified main trajectory or fallback references are incomplete")
+    for index, tail in enumerate(tails):
+        if (type(tail) is not FallbackTailProof or tail.boundary_index != index
+                or not index <= tail.recovery_boundary_index < len(trajectory)
+                or tail.trajectory[0] != trajectory[tail.recovery_boundary_index]
+                or not set(tail.dependencies).issubset(dependencies)
+                or not set(tail.resource_incomplete_reasons).issubset(resource_reasons)):
+            raise ContractViolation("verified fallback is detached from its parent")
+        recovered = tail.recovery_boundary_index
+        if recovered > index:
+            if (not trajectory[recovered].on_ground
+                    or tail.main_suffix_digest != main_suffix_digest(
+                        inputs[index:recovered], trajectory[index:recovered + 1])
+                    or replace(tail, boundary_index=recovered, main_suffix_digest=None)
+                       != tails[recovered]):
+                raise ContractViolation("committed fallback differs from its parent suffix or exit tail")
+    if release_safe_indices != _immediate_release_indices(tails):
+        raise ContractViolation("release-safe indices must name only immediate fallback boundaries")
+
+
+def _immediate_release_indices(tails):
+    return tuple(tail.boundary_index for tail in tails[:-1]
+                 if tail.recovery_boundary_index == tail.boundary_index)
 
 
 @dataclass(frozen=True, slots=True)
@@ -595,8 +636,13 @@ class VerifiedMotionResult:
     continuation: MotionContinuationRequirement | None = field(default=None, kw_only=True)
     fallback_candidates: tuple[FallbackCandidate, ...] = field(default=(), kw_only=True)
     fallback_tails: tuple[FallbackTailProof, ...] = field(default=(), kw_only=True)
+    allow_committed_main_suffix: bool = field(default=False, kw_only=True)
+    successor_binding: SuccessorFeasibilityBinding | None = field(default=None, kw_only=True)
+    world_dependency_versions: tuple[tuple[BlockPos, int], ...] = field(default=(), kw_only=True)
 
     def __post_init__(self) -> None:
+        if type(self.allow_committed_main_suffix) is not bool:
+            raise ContractViolation("committed main suffix permission must be boolean")
         require_identifier(self.solver_id, "solver id")
         if self.continuation is not None:
             if type(self.continuation) is not MotionContinuationRequirement:
@@ -657,17 +703,18 @@ class VerifiedMotionResult:
             raise ContractViolation("release-safe command indices are invalid")
         if self.world_dependencies != tuple(sorted(set(self.world_dependencies))):
             raise ContractViolation("world dependencies must be sorted and unique")
+        if type(self.world_dependency_versions) is not tuple:
+            raise ContractViolation("world dependency versions must be immutable")
+        if self.world_dependency_versions or self.successor_binding is not None:
+            if tuple(pos for pos, _ in self.world_dependency_versions) != self.world_dependencies:
+                raise ContractViolation("bound world versions must cover the exact parent dependencies")
+            for _, version in self.world_dependency_versions:
+                require_nonnegative_int(version, "parent world semantic version")
         validate_fallback_candidates(self.fallback_candidates)
-        if (len(self.fallback_tails) != len(self.trajectory)
-                or any(type(tail) is not FallbackTailProof
-                       or tail.boundary_index != index
-                       or tail.trajectory[0] != self.trajectory[index]
-                       or tail.candidate not in self.fallback_candidates
-                       or tail.expected_damage_points
-                          > self.maximum_expected_damage_points + 1.0e-9
-                       or not set(tail.dependencies).issubset(self.world_dependencies)
-                       for index, tail in enumerate(self.fallback_tails))):
-            raise ContractViolation("verified motion fallback tails are incomplete")
+        _validate_fallback_references(
+            self.tick_inputs, self.trajectory, self.fallback_tails,
+            self.world_dependencies, self.resource_incomplete_reasons,
+            self.release_safe_command_indices)
         expected_delayed_ticks = tuple(range(
             self.execution_window.earliest_start_tick + 1,
             self.execution_window.latest_start_tick + 1,
@@ -684,13 +731,29 @@ class VerifiedMotionResult:
             or not set(variant.resource_incomplete_reasons).issubset(
                 self.resource_incomplete_reasons
             )
-            or any(tail.candidate not in self.fallback_candidates
-                   or tail.expected_damage_points
-                      > self.maximum_expected_damage_points + 1.0e-9
-                   for tail in variant.fallback_tails)
             for variant in self.delayed_start_variants
         ):
             raise ContractViolation("verified delayed start is detached")
+        for variant in (self, *self.delayed_start_variants):
+            if (not self.allow_committed_main_suffix
+                    and len(variant.release_safe_command_indices) != count):
+                raise ContractViolation("ordinary verified motion requires immediate fallback at every boundary")
+            for index, command in enumerate(self.commands):
+                projected = project_movement_command(
+                    variant.trajectory[index], command.movement,
+                    movement_yaw_radians=command.required_movement_yaw_radians)
+                if (projected.status is not ProjectionStatus.READY
+                        or projected.tick_input != variant.tick_inputs[index]):
+                    raise ContractViolation("verified command differs from its exact parent input")
+            for tail in variant.fallback_tails:
+                route = (variant.trajectory[:tail.recovery_boundary_index]
+                         + tail.trajectory)
+                if (tail.candidate not in self.fallback_candidates
+                        or tail.expected_damage_points > self.maximum_expected_damage_points + 1.0e-9
+                        or _trajectory_damage_points(route) > self.maximum_expected_damage_points + 1.0e-9
+                        or tail.recovery_boundary_index - tail.boundary_index + len(tail.inputs)
+                           > 2 * self.recovery_horizon_ticks):
+                    raise ContractViolation("verified fallback exceeds its declaration or route limits")
         if self.direction not in _CARDINAL_DIRECTIONS:
             raise ContractViolation("verified gap motion requires a cardinal direction")
         if self.exit_direction is None:
@@ -700,6 +763,8 @@ class VerifiedMotionResult:
               or type(self.exit_motion_ticks) is not int
               or not 1 <= self.exit_motion_ticks <= 4):
             raise ContractViolation("verified moving exit is invalid")
+        if self.successor_binding is not None:
+            _validate_bound_parent(self, self.successor_binding)
 
     def start_variant(self, start_tick: int) -> VerifiedMotionStartVariant | None:
         require_nonnegative_int(start_tick, "verified start tick")
@@ -748,6 +813,163 @@ def prepare_fixed_motion(request: PreparedMotionRequest,
     """
     from mc2p.motion_nav.prepared_motion_proof import prepare_fixed_motion as prepare
     return prepare(request, snapshot)
+
+
+def _validate_bound_parent(proof, binding) -> None:
+    from mc2p.motion_nav.prepared_motion_proof import canonical_motion_digest
+    if (type(binding) is not SuccessorFeasibilityBinding
+            or proof.delayed_start_variants
+            or binding.first_start_tick != proof.execution_window.earliest_start_tick
+            or proof.execution_window.latest_start_tick != binding.first_start_tick
+            or binding.exit_boundary_index != len(proof.commands)
+            or binding.entry_state != proof.exit_state
+            or binding.input_projection_version != proof.input_projection_version
+            or binding.ruleset != JAVA_1_21_RULESET
+            or binding.ruleset.ruleset_id != proof.ruleset_id
+            or tuple(pos for pos, _ in binding.parent_dependency_versions) != proof.world_dependencies
+            or binding.parent_dependency_versions != proof.world_dependency_versions
+            or binding.parent_main_digest != canonical_motion_digest((
+                proof.commands, proof.tick_inputs, proof.trajectory, proof.world_dependency_versions))
+            or binding.exit_fallback_digest != canonical_motion_digest(proof.fallback_tails[-1])
+            or proof.fallback_tails[-1].boundary_index != len(proof.commands)
+            or proof.fallback_tails[-1].recovery_boundary_index != len(proof.commands)):
+        raise ContractViolation("successor binding is detached from its exact parent branch or exit fallback")
+
+
+def _fixed_parent_request_matches(proof, request) -> bool:
+    return (type(request) in (GapSolveRequest, AirTransitionSolveRequest)
+        and request.execution_window == proof.execution_window
+        and request.direction == proof.direction and request.landing == proof.landing
+        and request.policy == proof.solver_policy and request.continuation == proof.continuation
+        and request.exit_direction == proof.exit_direction and request.exit_motion_ticks == proof.exit_motion_ticks
+        and request.recovery_horizon_ticks == proof.recovery_horizon_ticks
+        and len(proof.commands) <= request.max_ticks
+        and proof.execution_window.earliest_start_tick == proof.entry_state.movement_tick_id + 1
+        and getattr(request, "kind", MotionSolveKind.JUMP_GAP) is proof.kind
+        and getattr(request, "damage_budget", TaskDamageBudget()) == proof.damage_budget
+        and request.fallback_candidates == proof.fallback_candidates
+        and request.allow_committed_main_suffix == proof.allow_committed_main_suffix)
+
+
+def validate_fixed_successor_parent(proof, request, spec) -> None:
+    """Independent caller input comparison, only at explicit preparation."""
+    from mc2p.motion_nav.prepared_motion_proof import canonical_motion_digest
+    binding = proof.successor_binding
+    if (type(request) not in (GapSolveRequest, AirTransitionSolveRequest)
+            or type(spec) is not FixedSuccessorSpec or binding is None
+            or request.fixed_successor_spec != spec or binding.spec != spec
+            or binding.parent_request_digest != canonical_motion_digest(request)
+            or not _fixed_parent_request_matches(proof, request)):
+        raise ContractViolation("fixed successor differs from the independently retained parent request")
+    _validate_bound_parent(proof, binding)
+    binding.__post_init__()
+
+
+def bind_fixed_successor(proof: VerifiedMotionResult,
+                         request: GapSolveRequest | AirTransitionSolveRequest,
+                         spec: FixedSuccessorSpec, snapshot: SealedSnapshot, *,
+                         damage_remaining_points: float) -> SolveResult:
+    """Replay one fixed successor, discard its trajectory, attach feasibility.
+
+    This explicit preparation entry cannot select alternatives, register a
+    handle, or authorize either action. Full safety tails still need PREPARE.
+    damage_remaining_points is the balance BEFORE reserving the current
+    action; reserve that action exactly once here.
+    """
+    from mc2p.motion_nav.prepared_motion_proof import canonical_motion_digest
+    from mc2p.motion_nav.world_snapshot import SealedSnapshot
+    if (type(proof) is not VerifiedMotionResult or type(spec) is not FixedSuccessorSpec
+            or type(request) not in (GapSolveRequest, AirTransitionSolveRequest)
+            or type(snapshot) is not SealedSnapshot or request.fixed_successor_spec != spec):
+        raise ContractViolation("fixed successor requires an independently selected native parent request")
+    if (proof.successor_binding is not None or proof.delayed_start_variants
+            or proof.execution_window.earliest_start_tick != proof.execution_window.latest_start_tick
+            or not _fixed_parent_request_matches(proof, request)):
+        raise ContractViolation("fixed successor parent input or branch is detached")
+    if (type(damage_remaining_points) not in (int, float)
+            or not math.isfinite(damage_remaining_points) or damage_remaining_points < 0
+            or damage_remaining_points > proof.damage_budget.maximum_expected_damage_points):
+        raise ContractViolation("fixed successor damage balance exceeds its task budget")
+    available = damage_remaining_points - proof.maximum_expected_damage_points
+    if available < 0:
+        return SolveResult(SolveStatus.HARD_CONFLICT, reasons=("successor_damage_balance",))
+    if len(spec.commands) > spec.maximum_replay_steps:
+        return SolveResult(SolveStatus.BUDGET_EXHAUSTED, reasons=("fixed_successor_step_budget",))
+    if (snapshot.identity.ruleset != JAVA_1_21_RULESET
+            or snapshot.identity.world_session_id != proof.entry_state.session.value):
+        return SolveResult(SolveStatus.INVALID_INPUT, reasons=("successor_snapshot_rules",))
+    versions = dict(snapshot.dependency_versions)
+    if any(pos not in versions for pos in proof.world_dependencies):
+        return SolveResult(SolveStatus.NEEDS_WORLD, reasons=("parent_snapshot_dependency_missing",))
+    parent_versions = tuple((pos, versions[pos]) for pos in proof.world_dependencies)
+    if proof.world_dependency_versions and proof.world_dependency_versions != parent_versions:
+        return SolveResult(SolveStatus.NEEDS_WORLD, reasons=("parent_snapshot_versions_mismatch",))
+    world = PhysicsWorldView.from_snapshot(snapshot)
+    # Check the existing selected branch and its exact exit tail against this
+    # same immutable source; this is preparation, never a control-frame scan.
+    for controls, states in ((proof.tick_inputs, proof.trajectory),
+                             (proof.fallback_tails[-1].inputs, proof.fallback_tails[-1].trajectory)):
+        for index, control in enumerate(controls):
+            calculated = step(states[index], control, world, JAVA_1_21_RULESET)
+            if calculated.status is not CalculationStatus.OK or calculated.next_state != states[index + 1]:
+                return SolveResult(SolveStatus.NEEDS_WORLD, reasons=("parent_snapshot_replay_mismatch",))
+    parent_steps = len(proof.tick_inputs) + len(proof.fallback_tails[-1].inputs)
+    tail = proof.fallback_tails[-1]
+    if tail.release_witness_input is not None:
+        witnessed = step(tail.trajectory[-1], tail.release_witness_input, world, JAVA_1_21_RULESET)
+        parent_steps += 1
+        if witnessed.status is not CalculationStatus.OK or witnessed.next_state != tail.release_witness_state:
+            return SolveResult(SolveStatus.NEEDS_WORLD, reasons=("parent_snapshot_witness_mismatch",))
+    current = proof.exit_state
+    states, events, inputs = [current], [], []
+    dependencies, resources = set(), set()
+    for command in spec.commands:
+        projected = project_movement_command(current, command.movement,
+            movement_yaw_radians=command.required_movement_yaw_radians)
+        if projected.status is not ProjectionStatus.READY or projected.tick_input is None:
+            return SolveResult(SolveStatus.UNSUPPORTED, reasons=projected.reasons)
+        calculated = step(current, projected.tick_input, world, JAVA_1_21_RULESET)
+        dependencies.update(calculated.dependencies)
+        if calculated.status is CalculationStatus.NEEDS_WORLD:
+            return SolveResult(SolveStatus.NEEDS_WORLD, missing_cells=calculated.missing_cells,
+                               reasons=("fixed_successor_world_incomplete",))
+        if calculated.status is CalculationStatus.UNSUPPORTED:
+            return SolveResult(SolveStatus.UNSUPPORTED, reasons=calculated.unsupported_reasons)
+        if calculated.status is not CalculationStatus.OK or calculated.next_state is None:
+            return SolveResult(SolveStatus.INVALID_INPUT, reasons=calculated.invalid_reasons)
+        inputs.append(projected.tick_input)
+        events.append(calculated.events)
+        resources.update(calculated.resource_update.incomplete_reasons)
+        current = calculated.next_state
+        states.append(current)
+    validation_request = AirTransitionSolveRequest(spec.kind, spec.direction, spec.landing,
+        CandidateExecutionWindow(proof.exit_state.movement_tick_id + 1, proof.exit_state.movement_tick_id + 1),
+        proof.damage_budget, policy=DEFAULT_AIR_TRANSITION_POLICIES[spec.kind],
+        fallback_candidates=spec.fallback_candidates)
+    validation = validate_gap_trajectory(tuple(states), tuple(events), validation_request)
+    if not validation.accepted:
+        return SolveResult(SolveStatus.NEEDS_STATE, reasons=validation.reasons)
+    damage = _trajectory_damage_points(tuple(states))
+    if damage > available:
+        return SolveResult(SolveStatus.HARD_CONFLICT, reasons=("successor_damage_balance",))
+    if any(pos not in versions for pos in dependencies):
+        return SolveResult(SolveStatus.NEEDS_WORLD, reasons=("successor_dependency_version_missing",))
+    # A bounded margin around actual swept cells also covers the original
+    # producer's fallbacks; missing information stays a typed PREPARE failure.
+    bounds = PhysicsWorldBounds(
+        min(pos[0] for pos in dependencies) - 1, max(pos[0] for pos in dependencies) + 1,
+        min(pos[1] for pos in dependencies) - 1, max(pos[1] for pos in dependencies) + 1,
+        min(pos[2] for pos in dependencies) - 1, max(pos[2] for pos in dependencies) + 1)
+    dependency_versions = tuple((pos, versions[pos]) for pos in sorted(dependencies))
+    binding = SuccessorFeasibilityBinding(spec, canonical_motion_digest(request),
+        canonical_motion_digest((proof.commands, proof.tick_inputs, proof.trajectory, parent_versions)),
+        canonical_motion_digest(proof.fallback_tails[-1]), proof.execution_window.earliest_start_tick,
+        len(proof.commands), proof.exit_state, tuple(inputs), canonical_motion_digest(tuple(inputs)),
+        current, validation_request.execution_window, JAVA_1_21_RULESET, proof.input_projection_version,
+        canonical_motion_digest(dependency_versions), dependency_versions, parent_versions,
+        tuple(sorted(resources)), damage, available, len(inputs), parent_steps, bounds)
+    return SolveResult(SolveStatus.SOLVED, replace(proof, successor_binding=binding,
+                                                 world_dependency_versions=parent_versions))
 
 
 def _angle_error(a: float, b: float) -> float:
@@ -936,15 +1158,6 @@ class _ReleaseRecoveryEvidence:
     missing_cells: tuple[BlockPos, ...] = ()
     reasons: tuple[str, ...] = ()
 
-    def __iter__(self):
-        """Keep the old private diagnostic unpacking while carrying full tails."""
-        yield self.safe_indices
-        yield self.dependencies
-        yield self.resource_incomplete_reasons
-        yield self.status
-        yield self.missing_cells
-        yield self.reasons
-
 
 def _fallback_support_fraction(state, world, dependencies):
     support = query_support(state.body_box, world._world)
@@ -1061,7 +1274,7 @@ def _prove_fallback_candidate(
                             candidate, current, witness_input, witness_state)):
                     continue
             proof = FallbackTailProof(
-                boundary_index, candidate, tuple(inputs), tuple(states),
+                boundary_index, boundary_index, candidate, tuple(inputs), tuple(states),
                 tuple(sorted(dependencies)), tuple(sorted(resource_reasons)),
                 damage, witness_input, witness_state,
             )
@@ -1075,8 +1288,11 @@ def _prove_fallback_candidate(
 def _release_recovery_evidence(
         trajectory: tuple[PhysicsState, ...], world: PhysicsWorldView,
         request: GapSolveRequest | AirTransitionSolveRequest,
+        *, tick_inputs: tuple[TickInput, ...],
 ) -> _ReleaseRecoveryEvidence:
-    """Prove one declared fallback from every command boundary."""
+    """Prove immediate tails or one bounded main suffix to supported recovery."""
+    if len(tick_inputs) + 1 != len(trajectory):
+        raise ContractViolation("fallback proof requires the exact parent input horizon")
     safe = []
     tails = []
     dependencies = set()
@@ -1103,7 +1319,8 @@ def _release_recovery_evidence(
             }))
             if missing:
                 return _ReleaseRecoveryEvidence(
-                    tuple(safe), tuple(tails), tuple(sorted(dependencies)),
+                    tuple(safe), tuple(tail for tail in tails if tail is not None),
+                    tuple(sorted(dependencies)),
                     tuple(sorted(resource_reasons)), SolveStatus.NEEDS_WORLD,
                     missing, ("release_recovery_world_incomplete",),
                 )
@@ -1118,19 +1335,53 @@ def _release_recovery_evidence(
                        else ("final_exit_stop_tail_not_safe",)
                        if index == len(trajectory) - 1
                        else ("release_recovery_not_safe",))
-            return _ReleaseRecoveryEvidence(
-                tuple(safe), tuple(tails), tuple(sorted(dependencies)),
-                tuple(sorted(resource_reasons)), status, (), reasons,
-            )
+            if (failure is not None or index == len(trajectory) - 1
+                    or not request.allow_committed_main_suffix):
+                return _ReleaseRecoveryEvidence(
+                    tuple(safe), tuple(tail for tail in tails if tail is not None),
+                    tuple(sorted(dependencies)), tuple(sorted(resource_reasons)),
+                    status, (), reasons,
+                )
+            tails.append(None)
+            continue
         tails.append(selected)
         dependencies.update(selected.dependencies)
         resource_reasons.update(selected.resource_incomplete_reasons)
         if index < len(trajectory) - 1:
             safe.append(index)
+    intervals, first = [], None
+    for index, tail in enumerate(tails):
+        if tail is None and first is None:
+            first = index
+        elif tail is not None and first is not None and trajectory[index].on_ground:
+            support, failure = _fallback_support_fraction(
+                trajectory[index], world, dependencies)
+            if failure is not None:
+                return _ReleaseRecoveryEvidence(
+                    (), (), tuple(sorted(dependencies)), tuple(sorted(resource_reasons)),
+                    failure.status, failure.missing_cells, failure.reasons)
+            if support < .15 - 1.0e-9:
+                continue
+            intervals.append((first, index))
+            first = None
+    if first is not None or len(intervals) > 1:
+        return _ReleaseRecoveryEvidence(
+            (), (), tuple(sorted(dependencies)), tuple(sorted(resource_reasons)),
+            SolveStatus.NO_SOLUTION_WITHIN_SEARCH, (), ("release_recovery_not_safe",))
+    for first, recovered in intervals:
+        for index in range(first, recovered):
+            tails[index] = replace(
+                tails[recovered], boundary_index=index,
+                main_suffix_digest=main_suffix_digest(
+                    tick_inputs[index:recovered], trajectory[index:recovered + 1]))
+    if any(tail.recovery_boundary_index - tail.boundary_index + len(tail.inputs)
+           > 2 * request.recovery_horizon_ticks for tail in tails):
+        return _ReleaseRecoveryEvidence(
+            (), (), tuple(sorted(dependencies)), tuple(sorted(resource_reasons)),
+            SolveStatus.NO_SOLUTION_WITHIN_SEARCH, (), ("release_recovery_not_safe",))
     return _ReleaseRecoveryEvidence(
-        tuple(safe), tuple(tails), tuple(sorted(dependencies)),
-        tuple(sorted(resource_reasons)),
-    )
+        _immediate_release_indices(tails), tuple(tails), tuple(sorted(dependencies)),
+        tuple(sorted(resource_reasons)))
 
 def _replay_verified_commands(
         entry_state: PhysicsState,
@@ -1189,7 +1440,7 @@ def _replay_verified_commands(
             SolveStatus.NEEDS_STATE,
             reasons=("start_window_commands_failed", *validation.reasons),
         )
-    recovery = _release_recovery_evidence(trajectory, world, request)
+    recovery = _release_recovery_evidence(trajectory, world, request, tick_inputs=tuple(inputs))
     if recovery.status is not None:
         return None, SolveResult(
             recovery.status,
@@ -1198,7 +1449,9 @@ def _replay_verified_commands(
                      if recovery.status is SolveStatus.NO_SOLUTION_WITHIN_SEARCH
                      else recovery.reasons),
         )
-    if len(recovery.safe_indices) != len(commands):
+    if (len(recovery.fallback_tails) != len(trajectory)
+            or (not request.allow_committed_main_suffix
+                and len(recovery.safe_indices) != len(commands))):
         return None, SolveResult(
             SolveStatus.NO_SOLUTION_WITHIN_SEARCH,
             reasons=("start_window_release_recovery_not_safe",),
@@ -1359,6 +1612,7 @@ def revalidate_gap_motion(
                 recovery_horizon_ticks=proof.recovery_horizon_ticks,
                 continuation=proof.continuation,
                 fallback_candidates=proof.fallback_candidates,
+                allow_committed_main_suffix=proof.allow_committed_main_suffix,
             )
     else:
         request = GapSolveRequest(
@@ -1370,6 +1624,7 @@ def revalidate_gap_motion(
             recovery_horizon_ticks=proof.recovery_horizon_ticks,
             continuation=proof.continuation,
             fallback_candidates=proof.fallback_candidates,
+            allow_committed_main_suffix=proof.allow_committed_main_suffix,
         )
     if entry_prefix:
         return _prepare_air_transition(
@@ -1420,15 +1675,16 @@ def revalidate_gap_motion(
         tuple(sorted(dependencies)), tuple(sorted(resource_reasons)),
         execution_window, proof.direction, proof.exit_direction,
         proof.exit_motion_ticks, delayed_variants, proof.kind,
-        max(
+        max((
             _trajectory_damage_points(primary.trajectory),
             *(_trajectory_damage_points(variant.trajectory)
               for variant in delayed_variants),
-        ), proof.damage_budget,
+        )), proof.damage_budget,
         recovery_horizon_ticks=proof.recovery_horizon_ticks,
         continuation=proof.continuation,
         fallback_candidates=proof.fallback_candidates,
         fallback_tails=primary.fallback_tails,
+        allow_committed_main_suffix=proof.allow_committed_main_suffix,
     )
     return SolveResult(SolveStatus.SOLVED, refreshed, candidates_evaluated=0)
 
@@ -1635,7 +1891,7 @@ def solve_air_transition(
                 absorption_points=anchor.absorption_points):
             saw_damage_budget_failure = True
             continue
-        recovery = _release_recovery_evidence(trajectory, world, request)
+        recovery = _release_recovery_evidence(trajectory, world, request, tick_inputs=tuple(inputs))
         if recovery.status is SolveStatus.NO_SOLUTION_WITHIN_SEARCH:
             saw_release_recovery_failure = True
             continue
@@ -1644,7 +1900,9 @@ def solve_air_transition(
                 recovery.status, candidates_evaluated=evaluated,
                 missing_cells=recovery.missing_cells, reasons=recovery.reasons,
             )
-        if len(recovery.safe_indices) != len(commands):
+        if (len(recovery.fallback_tails) != len(trajectory)
+                or (not request.allow_committed_main_suffix
+                    and len(recovery.safe_indices) != len(commands))):
             saw_release_recovery_failure = True
             continue
         dependencies.update(recovery.dependencies)
@@ -1667,11 +1925,11 @@ def solve_air_transition(
             )
         dependencies.update(delayed_dependencies)
         resource_reasons.update(delayed_resource_reasons)
-        maximum_expected_damage = max(
+        maximum_expected_damage = max((
             maximum_expected_damage,
             *(_trajectory_damage_points(variant.trajectory)
               for variant in delayed_variants),
-        )
+        ))
         if not request.damage_budget.allows(
                 maximum_expected_damage,
                 health_points=anchor.health_points,
@@ -1694,6 +1952,7 @@ def solve_air_transition(
             continuation=request.continuation,
             fallback_candidates=request.fallback_candidates,
             fallback_tails=recovery.fallback_tails,
+            allow_committed_main_suffix=request.allow_committed_main_suffix,
         )
         return SolveResult(
             SolveStatus.SOLVED, proof=proof,

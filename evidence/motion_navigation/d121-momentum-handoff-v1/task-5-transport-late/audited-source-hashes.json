@@ -1,0 +1,22 @@
+{
+  "baseline_commit": "c4f353868e1976bad4c94fd0ed5df43bf12c9f4d",
+  "files": {
+    "scripts/d121_transport_late_probe.py": "dcb99ce9a01ba81d91b4be702b6df3e44361bc44397cc648f3b2d6413570868c",
+    "tests/motion_nav/test_d121_transport_late.py": "3a37d0354093e072255067c8d631c988ba2f0a1b07865dff4050d575f8f491dd",
+    "scripts/d121_handoff_execution_probe.py": "7ce68f5a3162e4734738e7d8b7d06ee066471c7d61a7ec87b6ae83f68fd7d2c0",
+    "tests/sim/backend.py": "3a93a5dac30d8d4fb4e68b436297813593a82741dbb00444dc0fbfe805737733",
+    "mc2p/contracts/action_v1.py": "587e0f2bd3afba606ca8971388ce541c7cc69ed27db95aeae4a404432f575725",
+    "mc2p/backends/client_behavior_payload.py": "0fc757dbcf4ec9fa124e65af2f8803be196b6b89b4c44dc3f4aebb707860b60e",
+    "mc2p/runtime/backend_v1.py": "cae436f84e3b852653f3b782e29e58050b4cbd98b60dd1dbd5235d9c61d10843",
+    "mc2p/runtime/player_runtime_v1.py": "1ff08c28669ec5ff258eccdf8245846667ac450998eebdf8782f2ec7b8666c87",
+    "mc2p/runtime/arbiter_v1.py": "3816760434283653ea762626d6cf8b030fff2d9878201e2c5d7ee23894258909",
+    "mc2p/motion_nav/navigation_session.py": "7c3d0cfe475e116628eecd25d646e554ae5c91766eedd157d053eedf5788042f",
+    "mc2p/motion_nav/known_map_planner.py": "fe9c95e28c9b2a043d47f1a0079e6be2e842304ef68895f53f93c9b7555b3e51",
+    "config/motion-navigation/standalone-export-v1.json": "d6340ae99630dc7b9ae16f26dac73bee81003ae344623666245a2b8a91e2a984",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientActionRequest.java": "bde63db27a00d2ed0769f3c739227077f310bd88c48a1a2da5ba5d07b17c2160",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientRequestGate.java": "fa1da4fd036c9943c9f70dfce048fca31921f9cc16e1403ba238569c92b727bd",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java": "76c7ebf40d143837498058975d0dd35d547f14794d9de5fcb98223b25be2afc5",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java": "86f333bf904374a6d5bde4b21eb1b6ef08a68aabedfc3064189f5ad1325476d1"
+  },
+  "production_changed": false
+}

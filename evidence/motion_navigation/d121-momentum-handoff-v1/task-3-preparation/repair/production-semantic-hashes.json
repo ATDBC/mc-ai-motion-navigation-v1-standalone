@@ -1,0 +1,17 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D121 Task 3 review repair: complete dependency and anchor identity checks",
+  "normalization": "CRLF_TO_LF",
+  "status": "current",
+  "source_base_commit": "ec280f7bfd71afd4471c3b3965e1ce139476bd86",
+  "historical_s1_record_sha256": "01235a49e63f7659f7d96e302154b5d4f746eb3d693f82c30e119e6c4dec2b4b",
+  "files": {
+    "mc2p/motion_nav/motion_chain.py": "af3f111d6560d4e1cf1861f42e92ec220fc36b4eead0bd374f82890b2c16e822",
+    "mc2p/motion_nav/motion_coordination.py": "03dad9d0db604fb92b02867b790849de7b9bafd464e40ddb6f8ca76cac682684",
+    "mc2p/motion_nav/motion_solver.py": "615d5455f0fdc540548c4f31ea988aca77b7ff69f57d8e15dd8a879cf3ecc998",
+    "mc2p/motion_nav/prepared_motion.py": "bf1c233e7ad0aa58b140b34dbc3a146dfd7ea25cd3e22c208d14c76b7ac492e2",
+    "mc2p/motion_nav/prepared_motion_proof.py": "fd1fb0929f5de35c1e5d587aea1bcb16160b1544a54a8e2c4be2c227905908ab",
+    "mc2p/motion_nav/motion_candidate.py": "9adcef55e9724dedd0295691389533ce370ee2998fc1d0f86ae127a3288bb238"
+  },
+  "previous_task3_record_sha256": "4f2a8cb8d79612b57914ed71e4b04cf485ffb3e540119d87628c06650f721569"
+}

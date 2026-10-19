@@ -1,7 +1,7 @@
 """B10-C task binding, admission and receipt-driven execution for verified motion."""
 from __future__ import annotations
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, replace
 from enum import StrEnum
 import math
 from uuid import uuid4
@@ -11,13 +11,13 @@ from mc2p.contracts.motion_activation import (
     ActivationRejectReason, ActivationResult, ActivationStatus, FirstStreamApplication,
     PreparedActivationAcceptance, PreparedActivationDelivery, PreparedActivationTransaction,
     StreamActivationProposal, StreamApplicationReason, StreamApplicationResult,
-    StreamApplicationStatus, StreamStartBranch,
+    StreamApplicationStatus, StreamStartBranch, IncumbentFallbackDispatch,
 )
 from mc2p.contracts.common import (
     ContractViolation, require_identifier, require_nonnegative_int,
 )
 from mc2p.motion_nav.motion_solver import (
-    VerifiedMotionResult, VerifiedMotionStartVariant,
+    MotionCommandTick, VerifiedMotionResult, VerifiedMotionStartVariant,
 )
 from mc2p.motion_nav.online_motion import (
     InputApplicationLedger, InputApplicationStatus, StateAnchor,
@@ -90,6 +90,7 @@ class AdmittedMotionCandidate:
     admitted_observation_sequence_id: int
     admitted_movement_tick_id: int
     intended_start_tick: int
+    committed_executor: object | None = None
 
     def __post_init__(self) -> None:
         if type(self.candidate) is not VerifiedMotionCandidate:
@@ -275,7 +276,31 @@ def _state_satisfies_verified_exit(
 class MotionCandidateAdmitter:
     """Check whether one task-bound proof still has authority to start now."""
 
-    def admit(
+    def admit(self, candidate, anchor, **values) -> MotionCandidateAdmission:
+        return self._admit(candidate, anchor, **values)
+
+    def admit_committed(self, candidate, anchor, *, executor,
+                        **values) -> MotionCandidateAdmission:
+        """Opt in only for a bound proof and the executor retaining its body."""
+        if (type(executor) is not VerifiedMotionExecutor
+                or executor.state is not VerifiedMotionExecutorState.IDLE
+                or executor.prepared_handle is not None
+                or type(candidate) is not VerifiedMotionCandidate
+                or not candidate.proof.allow_committed_main_suffix
+                or candidate.proof.successor_binding is None):
+            return MotionCandidateAdmission(MotionCandidateStatus.REJECTED,
+                                            "committed_execution_binding_missing")
+        if any(value.forward not in (-1., 0., 1.) or value.strafe not in (-1., 0., 1.)
+               or value.sneak and (value.forward != 0. or value.strafe != 0.)
+               for variant in (candidate.proof, *candidate.proof.delayed_start_variants)
+               for tail in variant.fallback_tails
+               for value in (*tail.inputs, *((tail.release_witness_input,)
+                   if tail.release_witness_input is not None else ()))):
+            return MotionCandidateAdmission(MotionCandidateStatus.REJECTED,
+                                            "committed_input_projection_unsupported")
+        return self._admit(candidate, anchor, committed_executor=executor, **values)
+
+    def _admit(
             self, candidate: VerifiedMotionCandidate, anchor: StateAnchor, *,
             planning_request_id: str, planning_generation: int,
             goal_id: str, goal_revision: int,
@@ -284,6 +309,7 @@ class MotionCandidateAdmitter:
             intended_start_tick: int,
             changed_cells: tuple[BlockPos, ...],
             input_ledger: InputApplicationLedger | None = None,
+            committed_executor=None,
     ) -> MotionCandidateAdmission:
         if (type(candidate) is not VerifiedMotionCandidate
                 or type(anchor) is not StateAnchor
@@ -323,6 +349,11 @@ class MotionCandidateAdmitter:
                 MotionCandidateStatus.REJECTED, "risk_policy_changed",
             )
         proof = candidate.proof
+        if proof.allow_committed_main_suffix and committed_executor is None:
+            return MotionCandidateAdmission(
+                MotionCandidateStatus.REJECTED,
+                "committed_main_suffix_execution_not_enabled",
+            )
         if (proof.damage_budget != current.damage_budget
                 or not current.damage_budget.allows(
                     proof.maximum_expected_damage_points,
@@ -376,6 +407,7 @@ class MotionCandidateAdmitter:
             AdmittedMotionCandidate(
                 candidate, anchor.observation_sequence_id,
                 anchor.movement_tick_id, intended_start_tick,
+                committed_executor,
             ),
         )
 
@@ -388,6 +420,16 @@ class VerifiedMotionExecutorState(StrEnum):
     CANCELLED = "cancelled"
     FAILED = "failed"
     INPUT_LOST = "input_lost"
+
+
+class CommittedExecutionPhase(StrEnum):
+    MAIN = "main"
+    COMMITTED_SUFFIX = "committed_suffix"
+    EXIT_CHOICE = "exit_choice"
+    FALLBACK = "fallback"
+    WITNESS = "witness"
+    RELEASED = "released"
+    UNRESOLVED = "unresolved"
 
 
 @dataclass(frozen=True, slots=True)
@@ -409,6 +451,7 @@ class _PendingSubmission:
     control_sequence: int
     requested_movement_tick: int
     requested_latest_movement_tick: int
+    committed_phase: CommittedExecutionPhase | None = None
 
 
 class VerifiedMotionExecutor:
@@ -431,6 +474,13 @@ class VerifiedMotionExecutor:
         self._activation_handoff_token: str | None = None
         self._stream_tracker = None
         self._application_result: StreamApplicationResult | None = None
+        self._committed_phase: CommittedExecutionPhase | None = None
+        self._committed_variants = {}
+        self._tail_command_views = {}
+        self._selected_tail = None
+        self._tail_cursor = 0
+        self._release_sequence: int | None = None
+        self._runtime_fallback: IncumbentFallbackDispatch | None = None
 
     @property
     def prepared_handle(self):
@@ -626,6 +676,9 @@ class VerifiedMotionExecutor:
     def start(self, candidate: AdmittedMotionCandidate) -> None:
         if type(candidate) is not AdmittedMotionCandidate:
             raise ContractViolation("verified executor requires an admitted candidate")
+        if (candidate.proof.allow_committed_main_suffix
+                and candidate.committed_executor is not self):
+            raise ContractViolation("committed proof requires this executor's explicit admission")
         intended_start_tick = candidate.intended_start_tick
         if not candidate.proof.execution_window.allows_start(intended_start_tick):
             raise ContractViolation("verified candidate start is outside its window")
@@ -637,6 +690,22 @@ class VerifiedMotionExecutor:
         self._start_variant = candidate.proof.start_variant(intended_start_tick)
         if self._start_variant is None:
             raise ContractViolation("verified candidate omitted its intended start")
+        if candidate.committed_executor is self:
+            self._committed_phase = CommittedExecutionPhase.MAIN
+            self._committed_variants = {
+                variant.start_tick: variant for variant in
+                (self._start_variant, *candidate.proof.delayed_start_variants)}
+            self._tail_command_views = {
+                id(tail): tuple(MotionCommandTick(MovementV1(
+                    int(value.forward), int(value.strafe), value.jump,
+                    value.sneak, value.sprint), value.movement_yaw_radians)
+                    for value in (*tail.inputs, *((tail.release_witness_input,)
+                        if tail.release_witness_input is not None else ())))
+                for variant in self._committed_variants.values()
+                for tail in variant.fallback_tails}
+            self._selected_tail = None
+            self._tail_cursor = 0
+            self._release_sequence = None
         self._start_tick = intended_start_tick
         self._command_index = 0
         self._pending = None
@@ -686,7 +755,10 @@ class VerifiedMotionExecutor:
         self._pending = _PendingSubmission(
             command_index, control_sequence, requested_movement_tick,
             requested_latest_movement_tick,
+            self._committed_phase,
         )
+        if self._committed_phase is CommittedExecutionPhase.EXIT_CHOICE:
+            self._committed_phase = CommittedExecutionPhase.FALLBACK
 
     def predicted_exit_state(self) -> PhysicsState | None:
         """Return the chosen start variant's exit after its first receipt.
@@ -762,6 +834,10 @@ class VerifiedMotionExecutor:
             raise ContractViolation("verified entry check requires an anchor")
         if self._candidate is None or self.has_started():
             return False
+        if self._committed_phase is not None:
+            variant = self._committed_variants.get(anchor.movement_tick_id + 1)
+            return variant is not None and verified_start_state_matches(
+                anchor.physics_state, variant.entry_state)
         return verified_candidate_can_start(self._candidate, anchor)
 
     def cancel(
@@ -776,6 +852,10 @@ class VerifiedMotionExecutor:
         if self.state is not VerifiedMotionExecutorState.RUNNING:
             return
         self._cancel_requested = True
+        if self._committed_phase is not None:
+            # Pending input is authoritative. Select its post-boundary only
+            # after its real receipt is consumed by decide().
+            return
         self._recovery_started_at_tick = anchor.movement_tick_id
         self.state = VerifiedMotionExecutorState.RECOVERING
         self._recovery_uses_verified_remainder = (
@@ -794,6 +874,10 @@ class VerifiedMotionExecutor:
         still owns the body and sends neutral movement until a later anchor can
         confirm landing and finish the recovery.
         """
+        if self._committed_phase is not None:
+            self._committed_phase = CommittedExecutionPhase.UNRESOLVED
+            self.state = VerifiedMotionExecutorState.RECOVERING
+            return self._decision(None, None, "BODY_RESPONSIBILITY_UNRESOLVED")
         if self._prepared_handle is not None and self._stream_tracker is not None:
             self.state = VerifiedMotionExecutorState.RECOVERING
             return VerifiedMotionDecision(self.state, None, None, self._command_index, None, None, 1,
@@ -863,9 +947,22 @@ class VerifiedMotionExecutor:
         if not records:
             return "awaiting_application"
         record = records[-1]
-        expected_command = self._candidate.proof.commands[
-            self._pending.command_index
-        ].movement
+        if self._committed_phase is not None and (
+                self._pending.committed_phase != self._committed_phase
+                and not (self._pending.committed_phase is CommittedExecutionPhase.EXIT_CHOICE
+                         and self._committed_phase is CommittedExecutionPhase.FALLBACK)):
+            self.state = VerifiedMotionExecutorState.INPUT_LOST
+            return "applied_phase_changed"
+        if self._committed_phase is not None and (
+                record.requested_first_tick != self._pending.requested_movement_tick
+                or record.latest_allowed_first_tick != self._pending.requested_latest_movement_tick
+                or record.action.valid_for_ticks != 1
+                or record.session != self._candidate.proof.entry_state.session):
+            self.state = VerifiedMotionExecutorState.INPUT_LOST
+            return "applied_window_or_identity_changed"
+        expected_command = self._current_committed_command().movement if (
+            self._committed_phase is not None) else self._candidate.proof.commands[
+                self._pending.command_index].movement
         if record.action.movement != expected_command:
             self.state = VerifiedMotionExecutorState.INPUT_LOST
             return "applied_command_changed"
@@ -896,13 +993,19 @@ class VerifiedMotionExecutor:
             # is observed, all remaining commands are anchored to that real
             # player movement tick and must continue without gaps.
             actual_start_tick = record.applied_ticks[0]
-            variant = self._candidate.proof.start_variant(actual_start_tick)
+            variant = (self._committed_variants.get(actual_start_tick)
+                if self._committed_phase is not None else
+                self._candidate.proof.start_variant(actual_start_tick))
             if variant is None:
                 self.state = VerifiedMotionExecutorState.INPUT_LOST
                 return "unverified_start_tick"
             self._start_tick = actual_start_tick
             self._start_variant = variant
         self._command_index += 1
+        if self._committed_phase in {CommittedExecutionPhase.FALLBACK,
+                                    CommittedExecutionPhase.WITNESS}:
+            self._tail_cursor += 1
+            self._release_sequence = self._pending.control_sequence
         self._pending = None
         return None
 
@@ -1008,6 +1111,178 @@ class VerifiedMotionExecutor:
             for sample in samples if sample is not None
         ) else None
 
+    @property
+    def committed_execution(self) -> bool:
+        return self._committed_phase is not None
+
+    @property
+    def committed_exit_choice(self) -> bool:
+        return (self._committed_phase is CommittedExecutionPhase.EXIT_CHOICE
+                and not self._cancel_requested and self._pending is None)
+
+    def incumbent_fallback(self, action, anchor, ledger, *, owner_id, changed_cells):
+        if (self._committed_phase is not CommittedExecutionPhase.EXIT_CHOICE
+                or self._pending is not None or self._tail_cursor != 0
+                or self._selected_tail is not self._start_variant.fallback_tails[-1]
+                or anchor.movement_tick_id + 1 != self._expected_tick()
+                or ledger.latest_movement_tick_id != anchor.movement_tick_id
+                or action.observation_sequence_id != anchor.observation_sequence_id
+                or set(changed_cells).intersection(self._candidate.proof.world_dependencies)
+                or not verified_start_state_matches(anchor.physics_state,
+                    self._selected_tail.trajectory[0])):
+            return None
+        command = self._current_committed_command()
+        delta = math.atan2(math.sin(command.required_movement_yaw_radians - anchor.physics_state.yaw_radians),
+                           math.cos(command.required_movement_yaw_radians - anchor.physics_state.yaw_radians))
+        final = replace(action, movement=command.movement,
+                        look=LookV1(math.degrees(delta), 0.), valid_for_ticks=1)
+        self._runtime_fallback = IncumbentFallbackDispatch(final,
+            MovementTickWindowV1(self._expected_tick(), self._expected_tick()),
+            self._command_index, owner_id, self)
+        return self._runtime_fallback
+
+    def cached_incumbent_fallback(self, action):
+        cached = self._runtime_fallback
+        if cached is None:
+            return None
+        old = cached.action
+        return old if ((old.episode_id, old.request_sequence_id, old.observation_sequence_id,
+                        old.deadline_monotonic_ns) ==
+                       (action.episode_id, action.request_sequence_id, action.observation_sequence_id,
+                        action.deadline_monotonic_ns)) else None
+
+    def matches_successor_handle(self, handle) -> bool:
+        from mc2p.motion_nav.motion_chain import SuccessorPreparationReference
+        binding = self._candidate.proof.successor_binding
+        suffix = handle.hot_view.stream.suffix_identity
+        if (not self.committed_exit_choice or binding is None or len(suffix) != 1
+                or type(suffix[0]) is not SuccessorPreparationReference):
+            return False
+        reference = suffix[0]
+        return (all(getattr(reference, name) == getattr(binding, name) for name in (
+            "parent_request_digest", "parent_main_digest", "exit_fallback_digest", "input_digest",
+            "entry_state", "exit_state", "requested_window", "ruleset", "input_projection_version",
+            "dependency_versions", "parent_dependency_versions", "damage_remaining_points"))
+            and reference.scan_budget == binding.spec.scan_budget
+            and handle.hot_view.commands == binding.spec.commands)
+
+    def _current_committed_command(self):
+        if self._committed_phase in {CommittedExecutionPhase.MAIN,
+                                    CommittedExecutionPhase.COMMITTED_SUFFIX}:
+            return self._candidate.proof.commands[self._command_index]
+        return self._tail_command_views[id(self._selected_tail)][self._tail_cursor]
+
+    def _committed_expected_state(self):
+        if self._selected_tail is None or self._committed_phase in {
+                CommittedExecutionPhase.MAIN, CommittedExecutionPhase.COMMITTED_SUFFIX}:
+            return self._start_variant.trajectory[self._command_index]
+        if self._tail_cursor < len(self._selected_tail.trajectory):
+            return self._selected_tail.trajectory[self._tail_cursor]
+        return self._selected_tail.release_witness_state
+
+    def exact_release_ready(self, anchor, ledger, *, changed_cells=()) -> bool:
+        if (self._committed_phase is not CommittedExecutionPhase.RELEASED
+                or self._selected_tail is None or self._pending is not None
+                or set(changed_cells).intersection(self._candidate.proof.world_dependencies)):
+            return False
+        expected = self._committed_expected_state()
+        if not verified_start_state_matches(anchor.physics_state, expected):
+            return False
+        record = ledger.record(self._release_sequence)
+        return (record is not None and record.status is InputApplicationStatus.APPLIED
+                and record.session == anchor.session
+                and record.applied_ticks == (expected.movement_tick_id,))
+
+    def retired_release_still_current(self, anchor, ledger, *, confirmed_tick):
+        """Read an already completed witness for the sole source-cleanup call.
+
+        One neutral Runtime receipt may stand the body up after route retirement.
+        It does not re-authorize this controller or manufacture another witness.
+        """
+        if (self._committed_phase is not CommittedExecutionPhase.RELEASED
+                or self._pending is not None or self._selected_tail is None):
+            return False
+        witness = self._committed_expected_state()
+        if confirmed_tick != witness.movement_tick_id or not (
+                confirmed_tick <= anchor.movement_tick_id <= confirmed_tick + 1):
+            return False
+        record = ledger.record(self._release_sequence)
+        if (record is None or record.status is not InputApplicationStatus.APPLIED
+                or record.session != anchor.session or record.applied_ticks != (confirmed_tick,)):
+            return False
+        if anchor.movement_tick_id == confirmed_tick:
+            return verified_start_state_matches(anchor.physics_state, witness)
+        sample = ledger.sample(confirmed_tick + 1)
+        next_record = (None if sample is None or sample.request_sequence_id is None
+                       else ledger.record(sample.request_sequence_id))
+        if (next_record is None or next_record.status is not InputApplicationStatus.APPLIED
+                or next_record.applied_ticks != (confirmed_tick + 1,)
+                or next_record.action.movement != MovementV1()
+                or next_record.action.look != LookV1()
+                or anchor.physics_state.pose not in {witness.pose, self._start_variant.entry_state.pose}):
+            return False
+        height = (witness.body_height if anchor.physics_state.pose == witness.pose
+                  else self._start_variant.entry_state.body_height)
+        return verified_start_state_matches(anchor.physics_state,
+            replace(witness, movement_tick_id=anchor.movement_tick_id,
+                    pose=anchor.physics_state.pose, body_height=height))
+
+    def _committed_unresolved(self, reason):
+        self._committed_phase = CommittedExecutionPhase.UNRESOLVED
+        self.state = VerifiedMotionExecutorState.RECOVERING
+        return self._decision(None, None, reason)
+
+    def _decide_committed(self, anchor, ledger, changed_cells):
+        proof = self._candidate.proof
+        if set(changed_cells).intersection(proof.world_dependencies):
+            return self._committed_unresolved("committed_world_dependency_changed")
+        if self._committed_phase is CommittedExecutionPhase.UNRESOLVED:
+            return self._decision(None, None, "BODY_RESPONSIBILITY_UNRESOLVED")
+        if (anchor.session != proof.entry_state.session
+                or anchor.ruleset_id != proof.ruleset_id
+                or anchor.state_schema != proof.entry_state.state_schema
+                or anchor.input_projection_version != proof.input_projection_version):
+            return self._committed_unresolved("committed_state_identity_changed")
+        pending = self._consume_pending(ledger)
+        if pending is not None:
+            if (self.state is VerifiedMotionExecutorState.INPUT_LOST
+                    or (self._pending is not None and anchor.movement_tick_id
+                        >= self._pending.requested_latest_movement_tick)):
+                return self._committed_unresolved("committed_" + pending)
+            return self._decision(None, None, pending)
+        if not verified_start_state_matches(
+                anchor.physics_state, self._committed_expected_state()):
+            return self._committed_unresolved("committed_post_state_changed")
+        if self._committed_phase is CommittedExecutionPhase.RELEASED:
+            return self._decision(None, None, "committed_fallback_released")
+        if self._selected_tail is None and (self._cancel_requested
+                or self._command_index == len(proof.commands)):
+            self._selected_tail = self._start_variant.fallback_tails[self._command_index]
+            self._tail_cursor = 0
+            self._committed_phase = (
+                CommittedExecutionPhase.COMMITTED_SUFFIX
+                if self._command_index < self._selected_tail.recovery_boundary_index
+                else (CommittedExecutionPhase.EXIT_CHOICE
+                    if not self._cancel_requested else CommittedExecutionPhase.FALLBACK))
+        if (self._committed_phase is CommittedExecutionPhase.COMMITTED_SUFFIX
+                and self._command_index == self._selected_tail.recovery_boundary_index):
+            self._committed_phase = CommittedExecutionPhase.FALLBACK
+        if self._selected_tail is not None and self._committed_phase in {
+                CommittedExecutionPhase.FALLBACK, CommittedExecutionPhase.WITNESS}:
+            view = self._tail_command_views[id(self._selected_tail)]
+            if self._tail_cursor == len(view):
+                self._committed_phase = CommittedExecutionPhase.RELEASED
+                self.state = VerifiedMotionExecutorState.INPUT_LOST
+                return self._decision(None, None, "committed_fallback_released")
+            if self._tail_cursor == len(self._selected_tail.inputs):
+                self._committed_phase = CommittedExecutionPhase.WITNESS
+        if anchor.movement_tick_id + 1 != self._expected_tick():
+            return self._committed_unresolved("committed_command_window_expired")
+        command = self._current_committed_command()
+        return self._decision(command.movement, command.required_movement_yaw_radians,
+            "committed_" + self._committed_phase.value,
+            submittable_as_verified_command=True)
+
     def decide(self, anchor: StateAnchor,
                ledger: InputApplicationLedger, *,
                changed_cells: tuple[BlockPos, ...] = ()) -> VerifiedMotionDecision:
@@ -1022,6 +1297,8 @@ class VerifiedMotionExecutor:
         if self._candidate is None:
             self.state = VerifiedMotionExecutorState.IDLE
             return self._decision(None, None, "not_started")
+        if self._committed_phase is not None:
+            return self._decide_committed(anchor, ledger, changed_cells)
         proof = self._candidate.proof
         if (self.state in {
                 VerifiedMotionExecutorState.RUNNING,

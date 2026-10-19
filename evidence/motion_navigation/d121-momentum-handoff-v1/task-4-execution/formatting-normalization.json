@@ -1,0 +1,91 @@
+{
+  "scope": "Only new uncommitted Task4 evidence",
+  "transformation": "CRLF_TO_LF before first commit; JSON values unchanged",
+  "files": [
+    {
+      "file": "hotpath-baseline.json",
+      "original_sha256": "84a1e95410d6c7a1ae09baa8fcb0a82ac1b25b232b62c3dbf3db7f46d80c272a",
+      "lf_sha256": "1c4c9003606714d272205780593db8f8a25235d4788a89490e8d3f78610833ea"
+    },
+    {
+      "file": "hotpath-current-final.json",
+      "original_sha256": "aff874e050fd7c7edda45695ea17f61e4d1132956b198ed9500467183924742c",
+      "lf_sha256": "4e354b20682f0fa09571e0de363b21dd117d97d38f79fc02157dc660c9450c69"
+    },
+    {
+      "file": "hotpath-current.json",
+      "original_sha256": "e1961d49493ec68ab27616c1c126dd2a53843f33275b2f9a17cb213238f4709c",
+      "lf_sha256": "5720f2465faff7638a3ab7170293359340f51a56c2263f4e197af5b6803cffcf"
+    },
+    {
+      "file": "matrix-directions-first-1.json",
+      "original_sha256": "d992f9f7812243da77b616d134f973badd941ea7d6a9c0aaec4ba6d1553553d7",
+      "lf_sha256": "fbcb927b28c3548cc33bd1630ac2f3d0b481774ba07ff3b35b8d236f741861aa"
+    },
+    {
+      "file": "matrix-directions-first-2.json",
+      "original_sha256": "c05239b8155e9bd921f2a37655fc38387709ee59b379b753e664d3ce3afb6948",
+      "lf_sha256": "ef1b0acefc778a366d6c3f2d283dc7fa96801e92c8ab099067048703c8f9bebb"
+    },
+    {
+      "file": "matrix-probe-1.json",
+      "original_sha256": "ed62c4f1bb78c01b0ec8dcf3308ab1c1f9a13fa2408f4598c4fa07e8795426aa",
+      "lf_sha256": "b442baeaca5728c4228a4c60edaf93a57eecd49bdff0095f39c4bcadb6acb2e5"
+    },
+    {
+      "file": "matrix-probe-2.json",
+      "original_sha256": "3539c5ad5e679aaecf44febab63ec4b1ac495b6df8b17e62ad013b0016c4f327",
+      "lf_sha256": "4d9443cfcecdb45c905c6ceeee9dc51acde1b65ffacea7eab8b21ba3d1d96216"
+    },
+    {
+      "file": "matrix-required-1.json",
+      "original_sha256": "2ff1b839beb964eab32fd8148e66ff64825e28f20d120d10f68f5afd0871699f",
+      "lf_sha256": "811a89329c8bc7e0fba36fa0c8a5fe8ce03c83d60577cdc0cc95bbcb000578cf"
+    },
+    {
+      "file": "matrix-south-rejections-1.json",
+      "original_sha256": "3f919077a07f5d3dc633366a50d862184c4815fbab53ba4a9d0566190e44fb61",
+      "lf_sha256": "20c521e17f5558a7598afc7c62a95eeb715b1d3219b79538f3d50e8e498629dc"
+    },
+    {
+      "file": "matrix-south-rejections-2.json",
+      "original_sha256": "44d67b377b91118b746cccae1ff10754549e35766178dab879483ce6d3ba2ffe",
+      "lf_sha256": "d0c5f69295b4c24a84e70870aa37c0676a3cb45d67b3e24006e8178f8a48977c"
+    },
+    {
+      "file": "matrix-south-rejections-3.json",
+      "original_sha256": "09b7b526773d8142968b3db320a07e39ccd181ab99949b34d63575e26a7b431c",
+      "lf_sha256": "72a42f8c75422c2d34657520758186f2c7e5ff047a0e1b8585184a7f82295635"
+    },
+    {
+      "file": "matrix-south-rejections-4.json",
+      "original_sha256": "2454def2bcb54d019582e4bf1f00e455ecd5919ddf4bea67a5c692c077968946",
+      "lf_sha256": "27327214a9c4f5266355330bde159b7235db4c71f81a3ce6da674abf4a09a6e6"
+    },
+    {
+      "file": "matrix-south-worker-1.json",
+      "original_sha256": "21ff6feeab28f0d4945879ecd5acd76d399a321a345eb952678cf5ad14c2c934",
+      "lf_sha256": "be90ebdd81a54f75ced915b296e0511d68651e8e976ec530bb1344cdadcd2ac6"
+    },
+    {
+      "file": "matrix-south-worker-2.json",
+      "original_sha256": "6d57e36e83239b7f81e482770fa2fc671a29797723345bccb62c3b3ba2c93ea3",
+      "lf_sha256": "bca140a88c015a08d214eab14fa67a65cc1308546cb9522cae50d9106c0383b6"
+    },
+    {
+      "file": "matrix-south-worker-3.json",
+      "original_sha256": "f540f1f759b3be745a4dfab385a19394496fe21a25d8c8c02a6a95aa97c73f01",
+      "lf_sha256": "b9c2a66e96c7573ec57a7ccddaa86bcb09e2c34ce9a33091a918639df1726831"
+    },
+    {
+      "file": "matrix-summary.json",
+      "original_sha256": "bc8c1ca04e821ae36ded78108793b062d6a7a020ae4315bd0cf6d0f99fbe6030",
+      "lf_sha256": "8b240416ce8f1307a048bef5ac1c2d9de116319ada8993b79419d9e40e6f1f87"
+    },
+    {
+      "file": "production-semantic-hashes.json",
+      "original_sha256": "b17fa71733fb30ac59815ae9c8c9457116a588324862ca77e2b2c9e25b565c28",
+      "lf_sha256": "dc51d00c08380047f1f2c1a18520a1eef6f4afab4834b66deaf96faf7d16c5ce"
+    }
+  ]
+}

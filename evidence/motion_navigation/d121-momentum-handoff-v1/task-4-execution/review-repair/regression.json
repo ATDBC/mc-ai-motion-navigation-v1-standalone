@@ -1,0 +1,30 @@
+{
+  "schema": "mc2p.d121-task4-review-repair-regression.v1",
+  "platform": "Windows",
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-X",
+    "utf8",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d121_momentum_handoff",
+    "tests.motion_nav.test_d121_successor_binding",
+    "tests.motion_nav.test_d121_handoff_execution",
+    "tests.motion_nav.test_d102_runtime_activation",
+    "tests.motion_nav.test_d102_action_handoff",
+    "tests.motion_nav.test_d102_registry_lifecycle",
+    "tests.motion_nav.test_d102_receiver",
+    "tests.motion_nav.test_d116_handoff_timeline",
+    "tests.motion_nav.test_d116_semantic_dependency_handoff",
+    "tests.motion_nav.test_d117_prepared_liveness_monitor",
+    "tests.motion_nav.test_b10_motion_candidate",
+    "tests.motion_nav.test_motion_continuation_quality",
+    "tests.motion_nav.test_navigation_design_metrics",
+    "tests.motion_nav.test_standalone_export",
+    "-q"
+  ],
+  "elapsed_seconds": 480.8770164998714,
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "----------------------------------------------------------------------\nRan 412 tests in 480.240s\n\nOK\n"
+}

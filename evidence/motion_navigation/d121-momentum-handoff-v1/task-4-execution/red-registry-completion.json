@@ -1,0 +1,10 @@
+{
+  "result": "RED",
+  "tests": ["test_ordinary_D117_completion_releases_existing_registry_uses", "test_new_READY_completion_releases_registry_with_real_terminals"],
+  "elapsed_seconds": 4.390,
+  "failures": 2,
+  "observed": {"registered_handles_after_safe_source_release_and_close": 1, "candidate_use": false, "executing_use": true, "safe_tail_use": true},
+  "baseline": "Read-only 0e6b0141 ordinary D116/D117 timeline reproduces the same retained handle after close.",
+  "actual_new_READY_command_terminals": {"APPLIED": 21},
+  "required_behavior": "The existing supervisor safe-completion check must forward actual ledger terminals and the confirmed owner exit through existing release_usage for EXECUTING and SAFE_TAIL. No Session changes or new lifecycle owner."
+}

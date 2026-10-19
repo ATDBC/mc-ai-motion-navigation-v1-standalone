@@ -1,0 +1,8 @@
+{
+  "attempted": "python -m unittest tests.motion_nav.test_d102_activation tests.motion_nav.test_d102_registry_lifecycle -q",
+  "result": "FAILED (errors=1)",
+  "error": "ModuleNotFoundError: tests.motion_nav.test_d102_activation",
+  "elapsed_seconds": 71.480,
+  "existing_registry_tests_passed": 40,
+  "correction": "The actual module is tests.motion_nav.test_d102_runtime_activation. The final complete collection uses that module; no compatibility module was created."
+}

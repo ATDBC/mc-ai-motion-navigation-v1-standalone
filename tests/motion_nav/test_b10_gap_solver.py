@@ -7,7 +7,7 @@ from mc2p.motion_nav.online_motion import (
     CandidateExecutionWindow, MotionTickPhase, StateAnchor,
 )
 from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds, PhysicsWorldView
-from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET, PhysicsState
+from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET, PhysicsState, TickInput
 from mc2p.motion_nav.world_model import (
     BlockGeometry, ObservationStamp, WorldKnowledge, WorldSessionId,
 )
@@ -352,16 +352,17 @@ class B10GapSolverTests(unittest.TestCase):
             velocity_blocks_per_tick=(0.0, -0.0784000015258789, 0.3),
         )
 
-        safe, _, _, status, _, _ = _release_recovery_evidence(
+        evidence = _release_recovery_evidence(
             (fast_edge_state, fast_edge_state),
             world,
             self.request(target),
+            tick_inputs=(TickInput(0., 0., False, False, False, 0.),),
         )
 
         # The final state's stop tail is now checked too. Neither a moving
         # entry nor a moving exit may silently count as safe support.
-        self.assertIs(status, SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
-        self.assertEqual(safe, ())
+        self.assertIs(evidence.status, SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
+        self.assertEqual(evidence.safe_indices, ())
 
     def test_missing_world_and_unsupported_body_are_not_called_blocked(self):
         from mc2p.motion_nav.motion_solver import SolveStatus, solve_one_cell_gap

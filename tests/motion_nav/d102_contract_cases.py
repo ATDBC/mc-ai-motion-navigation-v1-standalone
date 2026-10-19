@@ -13,6 +13,7 @@ from pathlib import Path
 import pickle
 import threading
 import unittest
+from unittest.mock import patch
 from dataclasses import asdict
 
 from mc2p.motion_nav.async_work import AsyncComputationScope, AsyncWorkIdentity, AsyncWorkKind
@@ -694,11 +695,19 @@ def _record_complete_release(test, handle, raw, event):
     anchor = test.f.anchor(test.backend.state, test.runtime.observation.sequence_id)
     frame = test.f.frame(anchor)
     action_exit = test.f.control.safe_to_release(frame, test.f.ledger, anchor, input_floor=0)
-    confirmed = test.f.supervisor.evaluate_quiescence(frame, test.f.ledger, anchor)
-    test.assertIs(action_exit.disposition, HandoffDisposition.QUIESCENT)
-    test.assertEqual(confirmed, action_exit)
     commands = inbox._registry[handle.proof_token].commands
     terminals = tuple(test.f.ledger.record(action.request_sequence_id) for action in commands)
+    original_release = test.f.executor.release_prepared_usage
+    observed_releases = {}
+    def observe_release(handle, *, use, evidence):
+        result = original_release(handle, use=use, evidence=evidence)
+        if result.status is ReferenceStatus.RELEASED:
+            observed_releases[use] = result
+        return result
+    with patch.object(test.f.executor, "release_prepared_usage", observe_release):
+        confirmed = test.f.supervisor.evaluate_quiescence(frame, test.f.ledger, anchor)
+    test.assertIs(action_exit.disposition, HandoffDisposition.QUIESCENT)
+    test.assertEqual(confirmed, action_exit)
     terminal_ids = []
     for record in terminals:
         terminal_id = f"terminal/{record.control_sequence}"
@@ -715,7 +724,7 @@ def _record_complete_release(test, handle, raw, event):
         raw["supervisor_events"].append(event("body_responsibility_released", producer="ExecutionSupervisor",
             event_id=supervisor_id, action_id=raw["input"]["identity"]["action_id"], use=use.value.replace("_", "-"),
             command_terminal_event_ids=terminal_ids, safe_boundary=True, native_handoff=asdict(confirmed)))
-        released = test.f.executor.release_prepared_usage(handle, use=use, evidence=evidence)
+        released = observed_releases[use]
         test.assertIs(released.status, ReferenceStatus.RELEASED)
         raw["reference_events"].append(event("release", use=use.value.replace("_", "-"), user_id=handle.owner_id,
             command_terminals_complete=True, responsibility_resolved=True, supervisor_confirmed=True,

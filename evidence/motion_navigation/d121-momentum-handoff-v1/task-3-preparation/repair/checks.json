@@ -1,0 +1,56 @@
+{
+  "platform": "Windows",
+  "python": "D:/My_project/mc_ai/.venv/python.exe",
+  "base_commit": "ec280f7bfd71afd4471c3b3965e1ce139476bd86",
+  "scope": "Task 3 preparation review repair only",
+  "review_result_before_repair": "FAIL: two P1 and one P2",
+  "red_record": "red.json",
+  "final_checks": [
+    {
+      "modules": ["test_d121_successor_binding", "test_d121_momentum_handoff", "test_d116_handoff_timeline", "test_d116_semantic_dependency_handoff", "test_d117_prepared_liveness_monitor", "test_b10_motion_candidate"],
+      "tests": 147,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "seconds": 104.282
+    },
+    {
+      "modules": ["test_d102_contracts", "test_d102_prepared_proof", "test_d102_receiver", "test_d102_registry_lifecycle", "test_d102_action_handoff"],
+      "tests": 185,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "seconds": 312.588
+    },
+    {
+      "modules": ["test_d121_joint_worker_stop", "test_navigation_design_metrics", "test_standalone_export"],
+      "tests": 62,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "seconds": 57.575
+    },
+    {
+      "command": "scripts/d121_successor_preparation_probe.py --output evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/repair/summary.json",
+      "directions": 4,
+      "actual_process_requests": 4,
+      "actual_process_results": 4,
+      "maximum_message_bytes": 526521,
+      "exit_code": 0
+    },
+    {"command": "git diff --check", "exit_code": 0}
+  ],
+  "final_unique_unittest_count": 394,
+  "historical_stop_sha256": "fb45e9c21e1bad9c54ea0a4f1aeedd680b5781f3bbe7cfad6ee1b10265bdf667",
+  "preserved_boundaries": [
+    "Only bound parent proofs retain exact source dependency versions; ordinary proof behavior is unchanged.",
+    "Complete proof tail-only changes and UNKNOWN revoke the candidate; stamp-only refresh remains eligible.",
+    "An already applied complete local proof does not become invalid solely because its worker later dies.",
+    "No execution authorization, action/tracker/owner/damage advancement, or successor movement send.",
+    "Queries and apply do not recompute proof digests or reconstruct complete proofs."
+  ],
+  "not_run": ["full source shard matrix", "independent exported snapshot test matrix", "Fabric", "physical 1-1-4 handoff", "committed tail execution", "L+2 client transport rejection"]
+}

@@ -1,0 +1,8 @@
+{
+  "schema": "mc2p.d121-transport-late-check.v1",
+  "result": "INVALID_ENVIRONMENT",
+  "command": "python -m unittest tests.motion_nav.test_d121_transport_late tests.motion_nav.test_d121_handoff_execution tests.motion_nav.test_d102_runtime_activation tests.motion_nav.test_navigation_design_metrics tests.motion_nav.test_standalone_export -q",
+  "tests_run": 125,
+  "failure": "standalone exported-module import used the system interpreter without numpy; rerun uses the project Windows .venv interpreter",
+  "product_failure": false
+}

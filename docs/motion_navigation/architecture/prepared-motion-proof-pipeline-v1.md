@@ -303,3 +303,11 @@ D102／D103 未验证的正式边界包括：入口范围及 ±0.05 落点偏差
 ## 14. 当前事实
 
 本次只增加设计文档与紧凑证据，没有修改生产／测试代码，没有接入正式链或运行 Fabric。D101 M0 整体失败、M1／M2 未实施和 D098 P3 失败都保持不变。D102／D103 的 APPROVED 仅签署各自隔离试验的声明范围。
+
+## 15. D121 显式尾段执行的本地接口
+
+D121 及时输入组件入口把带紧凑绑定的 committed proof 绑定给唯一当前 `VerifiedMotionExecutor`。该执行器缓存已验证分支和输入视图，逐真实 receipt 消费主后缀、精确 fallback 和松键见证。普通接纳器继续拒绝这种许可；紧凑绑定不能启动后继。
+
+Runtime 通过可选本地 `IncumbentFallbackPort` 向同一 supervisor 借用本次尚未发送的备用 action。值绑定当前执行器、owner、真实 sequence 和 exact window，不能序列化为 worker 消息。activation 任一 commit 前拒绝由该端口登记实际 fallback；随后仍由 Runtime 唯一出口发送。成功 commit 后不回滚。当前执行器实际完成见证后，supervisor 才确认释放；普通和新路径的 prepared executing／safe-tail 引用都使用原 ledger、动作退出和 supervisor 证据，经原 release_usage 注销。
+
+L 与 tail 不新增物理计算或证明重建。每个真实观察允许既有 residual 监视的一步预测；摘要、规范编码、pickle、variant重建和证明／tail重放均不进入该路径。此接口只签署及时输入组件范围；真实 transport L+2、规划器接入和 Fabric 仍需各自验收。

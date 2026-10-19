@@ -1,0 +1,8 @@
+{
+  "command": "D:\\My_project\\mc_ai\\.venv\\python.exe -m unittest tests.motion_nav.test_d121_handoff_execution.RouteTailTests -v",
+  "result": "FAILED (failures=1)",
+  "failing": "test_same_frame_cancel_at_L_keeps_default_fallback",
+  "actual": "MovementV1(forward=0, strafe=0, jump=False, sneak=False, sprint=False)",
+  "expected": "MovementV1(forward=0, strafe=0, jump=False, sneak=True, sprint=False)",
+  "fact": "The existing grounded stop-protection replaced the proved L+1 sneak with neutral."
+}

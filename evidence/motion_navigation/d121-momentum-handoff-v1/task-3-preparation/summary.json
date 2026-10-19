@@ -1,0 +1,1703 @@
+{
+  "schema": "mc2p.d121-task3-preparation.v1",
+  "scope": "preparation only",
+  "hard_limit_bytes": 2097152,
+  "representative_limit_bytes": 1048576,
+  "directions": [
+    {
+      "direction_index": 0,
+      "sizes_bytes": {
+        "current_result_canonical": 313926,
+        "current_result_pickle5": 41650,
+        "prepared_job_canonical": 242015,
+        "prepared_job_pickle5": 93190,
+        "prepared_job_queue_sender": 93190,
+        "bundle_canonical": 458359,
+        "wire_protocol5_payload": 512176
+      },
+      "actual_process_transport": true,
+      "worker_jobs": 1,
+      "worker_results": 1,
+      "actual_current_worker_submission": false,
+      "current_result_boundary": "format-only; D120 fixed first proof wrapped by component",
+      "movement_clock": "frozen deterministic component clock; not full Runtime frames",
+      "worker_completed_tick": null,
+      "worker_completion_boundary": "prepared wire has no worker completion tick; not inferred",
+      "receiver_published_tick": 0,
+      "first_control_visible_ready_tick": 0,
+      "landing_tick": 26,
+      "preparation_margin_component_ticks": 26,
+      "wall_submit_to_visible_ms": 994.3889,
+      "receiver_diagnostics": [
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 1,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434237806269600,
+          "finished_monotonic_ns": 1434237808058900,
+          "duration_ns": 1789300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 2,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434237819548700,
+          "finished_monotonic_ns": 1434237823573700,
+          "duration_ns": 4025000,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 3,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434237823580600,
+          "finished_monotonic_ns": 1434237961901300,
+          "duration_ns": 138320700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v4",
+          "event": "worker_submit",
+          "identity": "'motion_solve:b50a2248fd0f6fd2c367fee59e456660a794ec9eaf656b1e728ed55aa1c1192d'",
+          "movement_tick": 0,
+          "worker_submit_tick": 0,
+          "job_anchor_movement_tick": null,
+          "prepared_entry_state_movement_tick": 26,
+          "monotonic_ns": 1434237967090700
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 4,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434237961907000,
+          "finished_monotonic_ns": 1434237967705800,
+          "duration_ns": 5798800,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 5,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434237990077000,
+          "finished_monotonic_ns": 1434237990161700,
+          "duration_ns": 84700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 6,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238006012300,
+          "finished_monotonic_ns": 1434238006084700,
+          "duration_ns": 72400,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 7,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238022057200,
+          "finished_monotonic_ns": 1434238022168600,
+          "duration_ns": 111400,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 8,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238037444200,
+          "finished_monotonic_ns": 1434238037519600,
+          "duration_ns": 75400,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 9,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238053106700,
+          "finished_monotonic_ns": 1434238053171900,
+          "duration_ns": 65200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 10,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238068601600,
+          "finished_monotonic_ns": 1434238068686900,
+          "duration_ns": 85300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 11,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238083703300,
+          "finished_monotonic_ns": 1434238083770300,
+          "duration_ns": 67000,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 12,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238099167200,
+          "finished_monotonic_ns": 1434238099254900,
+          "duration_ns": 87700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 13,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238114626300,
+          "finished_monotonic_ns": 1434238114693000,
+          "duration_ns": 66700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 14,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238130654700,
+          "finished_monotonic_ns": 1434238130721400,
+          "duration_ns": 66700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 15,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238146604300,
+          "finished_monotonic_ns": 1434238146670300,
+          "duration_ns": 66000,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 16,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238162053500,
+          "finished_monotonic_ns": 1434238162128600,
+          "duration_ns": 75100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 17,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238177545400,
+          "finished_monotonic_ns": 1434238177611700,
+          "duration_ns": 66300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 18,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238193559600,
+          "finished_monotonic_ns": 1434238193644000,
+          "duration_ns": 84400,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 19,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238208533900,
+          "finished_monotonic_ns": 1434238208599100,
+          "duration_ns": 65200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 20,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238224530300,
+          "finished_monotonic_ns": 1434238224600000,
+          "duration_ns": 69700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 21,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238240483100,
+          "finished_monotonic_ns": 1434238240545400,
+          "duration_ns": 62300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 22,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238255724900,
+          "finished_monotonic_ns": 1434238255801900,
+          "duration_ns": 77000,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 23,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238271224800,
+          "finished_monotonic_ns": 1434238271296000,
+          "duration_ns": 71200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 24,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238286732400,
+          "finished_monotonic_ns": 1434238286806900,
+          "duration_ns": 74500,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 25,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238302249600,
+          "finished_monotonic_ns": 1434238302354800,
+          "duration_ns": 105200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 26,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238318199800,
+          "finished_monotonic_ns": 1434238318296900,
+          "duration_ns": 97100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 27,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238333690000,
+          "finished_monotonic_ns": 1434238333775100,
+          "duration_ns": 85100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 28,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238348700600,
+          "finished_monotonic_ns": 1434238348818200,
+          "duration_ns": 117600,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 29,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238363670900,
+          "finished_monotonic_ns": 1434238363754200,
+          "duration_ns": 83300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 30,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238379657700,
+          "finished_monotonic_ns": 1434238379729100,
+          "duration_ns": 71400,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 31,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238395614300,
+          "finished_monotonic_ns": 1434238395691600,
+          "duration_ns": 77300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 32,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238411318100,
+          "finished_monotonic_ns": 1434238411393300,
+          "duration_ns": 75200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 33,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238426799700,
+          "finished_monotonic_ns": 1434238426872600,
+          "duration_ns": 72900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 34,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238442277300,
+          "finished_monotonic_ns": 1434238442348600,
+          "duration_ns": 71300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 35,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238457789100,
+          "finished_monotonic_ns": 1434238457861900,
+          "duration_ns": 72800,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "registry_publish",
+          "identity": "'motion_solve:b50a2248fd0f6fd2c367fee59e456660a794ec9eaf656b1e728ed55aa1c1192d'",
+          "movement_tick": 0,
+          "monotonic_ns": 1434238811012800,
+          "status": "registered"
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 36,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434238473302600,
+          "finished_monotonic_ns": 1434238811029800,
+          "duration_ns": 337727200,
+          "result_count": 1
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v4",
+          "identity": "'motion_solve:b50a2248fd0f6fd2c367fee59e456660a794ec9eaf656b1e728ed55aa1c1192d'",
+          "movement_tick": 0,
+          "monotonic_ns": 1434238811085000,
+          "access_kind": "prepared_ready_query",
+          "removes_result": false,
+          "event": "first_control_visible"
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v4",
+          "identity": "'motion_solve:b50a2248fd0f6fd2c367fee59e456660a794ec9eaf656b1e728ed55aa1c1192d'",
+          "movement_tick": 0,
+          "monotonic_ns": 1434238811085000,
+          "access_kind": "prepared_ready_query",
+          "removes_result": false,
+          "event": "first_control_consume"
+        }
+      ],
+      "requested_window": [
+        27,
+        27
+      ],
+      "branches": [
+        "on_time"
+      ],
+      "counts": {
+        "nodes_scanned": 38,
+        "physics_steps": 253,
+        "stopping_tail_steps": 232,
+        "completed_candidates": 1
+      },
+      "feasibility_physics_steps": 21,
+      "parent_verification_physics_steps": 36,
+      "async_operations": [
+        "begin",
+        "apply",
+        "finish"
+      ],
+      "action_index": 0,
+      "successor_controller_activated": false,
+      "fallback_physically_applied": false
+    },
+    {
+      "direction_index": 1,
+      "sizes_bytes": {
+        "current_result_canonical": 325875,
+        "current_result_pickle5": 42019,
+        "prepared_job_canonical": 243892,
+        "prepared_job_pickle5": 93775,
+        "prepared_job_queue_sender": 93775,
+        "bundle_canonical": 472196,
+        "wire_protocol5_payload": 526484
+      },
+      "actual_process_transport": true,
+      "worker_jobs": 1,
+      "worker_results": 1,
+      "actual_current_worker_submission": false,
+      "current_result_boundary": "format-only; D120 fixed first proof wrapped by component",
+      "movement_clock": "frozen deterministic component clock; not full Runtime frames",
+      "worker_completed_tick": null,
+      "worker_completion_boundary": "prepared wire has no worker completion tick; not inferred",
+      "receiver_published_tick": 0,
+      "first_control_visible_ready_tick": 0,
+      "landing_tick": 26,
+      "preparation_margin_component_ticks": 26,
+      "wall_submit_to_visible_ms": 962.2707,
+      "receiver_diagnostics": [
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 1,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239253875500,
+          "finished_monotonic_ns": 1434239257630500,
+          "duration_ns": 3755000,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 2,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239257638200,
+          "finished_monotonic_ns": 1434239391560100,
+          "duration_ns": 133921900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v4",
+          "event": "worker_submit",
+          "identity": "'motion_solve:c06968b3b9ce63ec5362ed766df86388bd1aa14740ba16fed404342e4537481b'",
+          "movement_tick": 0,
+          "worker_submit_tick": 0,
+          "job_anchor_movement_tick": null,
+          "prepared_entry_state_movement_tick": 26,
+          "monotonic_ns": 1434239396680700
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 3,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239391568800,
+          "finished_monotonic_ns": 1434239397242900,
+          "duration_ns": 5674100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 4,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239409387400,
+          "finished_monotonic_ns": 1434239409456100,
+          "duration_ns": 68700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 5,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239424852600,
+          "finished_monotonic_ns": 1434239424933200,
+          "duration_ns": 80600,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 6,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239440312300,
+          "finished_monotonic_ns": 1434239440372900,
+          "duration_ns": 60600,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 7,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239455781300,
+          "finished_monotonic_ns": 1434239455860500,
+          "duration_ns": 79200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 8,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239471760300,
+          "finished_monotonic_ns": 1434239471824700,
+          "duration_ns": 64400,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 9,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239486763000,
+          "finished_monotonic_ns": 1434239486826600,
+          "duration_ns": 63600,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 10,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239502449000,
+          "finished_monotonic_ns": 1434239502530600,
+          "duration_ns": 81600,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 11,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239517418500,
+          "finished_monotonic_ns": 1434239517487600,
+          "duration_ns": 69100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 12,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239533388000,
+          "finished_monotonic_ns": 1434239533454800,
+          "duration_ns": 66800,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 13,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239549345300,
+          "finished_monotonic_ns": 1434239549402400,
+          "duration_ns": 57100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 14,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239564843700,
+          "finished_monotonic_ns": 1434239564906900,
+          "duration_ns": 63200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 15,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239580874800,
+          "finished_monotonic_ns": 1434239580947200,
+          "duration_ns": 72400,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 16,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239596325900,
+          "finished_monotonic_ns": 1434239596401800,
+          "duration_ns": 75900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 17,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239611779300,
+          "finished_monotonic_ns": 1434239611824400,
+          "duration_ns": 45100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 18,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239627260900,
+          "finished_monotonic_ns": 1434239627330800,
+          "duration_ns": 69900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 19,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239642740000,
+          "finished_monotonic_ns": 1434239642839800,
+          "duration_ns": 99800,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 20,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239658220700,
+          "finished_monotonic_ns": 1434239658290100,
+          "duration_ns": 69400,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 21,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239673697700,
+          "finished_monotonic_ns": 1434239673766200,
+          "duration_ns": 68500,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 22,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239689394700,
+          "finished_monotonic_ns": 1434239689472400,
+          "duration_ns": 77700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 23,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239705350700,
+          "finished_monotonic_ns": 1434239705445400,
+          "duration_ns": 94700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 24,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239721318000,
+          "finished_monotonic_ns": 1434239721397700,
+          "duration_ns": 79700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 25,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239736805900,
+          "finished_monotonic_ns": 1434239736919200,
+          "duration_ns": 113300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 26,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239752276700,
+          "finished_monotonic_ns": 1434239752358500,
+          "duration_ns": 81800,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 27,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239768268300,
+          "finished_monotonic_ns": 1434239768380800,
+          "duration_ns": 112500,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 28,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239784244700,
+          "finished_monotonic_ns": 1434239784324600,
+          "duration_ns": 79900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 29,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239799754300,
+          "finished_monotonic_ns": 1434239799860500,
+          "duration_ns": 106200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 30,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239815709900,
+          "finished_monotonic_ns": 1434239815783000,
+          "duration_ns": 73100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 31,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239831184700,
+          "finished_monotonic_ns": 1434239831292000,
+          "duration_ns": 107300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 32,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239846948700,
+          "finished_monotonic_ns": 1434239847040500,
+          "duration_ns": 91800,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "registry_publish",
+          "identity": "'motion_solve:c06968b3b9ce63ec5362ed766df86388bd1aa14740ba16fed404342e4537481b'",
+          "movement_tick": 0,
+          "monotonic_ns": 1434240202750100,
+          "status": "registered"
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 33,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434239862411400,
+          "finished_monotonic_ns": 1434240202776500,
+          "duration_ns": 340365100,
+          "result_count": 1
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v4",
+          "identity": "'motion_solve:c06968b3b9ce63ec5362ed766df86388bd1aa14740ba16fed404342e4537481b'",
+          "movement_tick": 0,
+          "monotonic_ns": 1434240213104500,
+          "access_kind": "prepared_ready_query",
+          "removes_result": false,
+          "event": "first_control_visible"
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v4",
+          "identity": "'motion_solve:c06968b3b9ce63ec5362ed766df86388bd1aa14740ba16fed404342e4537481b'",
+          "movement_tick": 0,
+          "monotonic_ns": 1434240213104500,
+          "access_kind": "prepared_ready_query",
+          "removes_result": false,
+          "event": "first_control_consume"
+        }
+      ],
+      "requested_window": [
+        27,
+        27
+      ],
+      "branches": [
+        "on_time"
+      ],
+      "counts": {
+        "nodes_scanned": 38,
+        "physics_steps": 253,
+        "stopping_tail_steps": 232,
+        "completed_candidates": 1
+      },
+      "feasibility_physics_steps": 21,
+      "parent_verification_physics_steps": 36,
+      "async_operations": [
+        "begin",
+        "apply",
+        "finish"
+      ],
+      "action_index": 0,
+      "successor_controller_activated": false,
+      "fallback_physically_applied": false
+    },
+    {
+      "direction_index": 2,
+      "sizes_bytes": {
+        "current_result_canonical": 324878,
+        "current_result_pickle5": 41995,
+        "prepared_job_canonical": 245133,
+        "prepared_job_pickle5": 94922,
+        "prepared_job_queue_sender": 94922,
+        "bundle_canonical": 472385,
+        "wire_protocol5_payload": 526985
+      },
+      "actual_process_transport": true,
+      "worker_jobs": 1,
+      "worker_results": 1,
+      "actual_current_worker_submission": false,
+      "current_result_boundary": "format-only; D120 fixed first proof wrapped by component",
+      "movement_clock": "frozen deterministic component clock; not full Runtime frames",
+      "worker_completed_tick": null,
+      "worker_completion_boundary": "prepared wire has no worker completion tick; not inferred",
+      "receiver_published_tick": 0,
+      "first_control_visible_ready_tick": 0,
+      "landing_tick": 26,
+      "preparation_margin_component_ticks": 26,
+      "wall_submit_to_visible_ms": 996.6398,
+      "receiver_diagnostics": [
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 1,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240656871500,
+          "finished_monotonic_ns": 1434240669310800,
+          "duration_ns": 12439300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 2,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240672237300,
+          "finished_monotonic_ns": 1434240822521500,
+          "duration_ns": 150284200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v4",
+          "event": "worker_submit",
+          "identity": "'motion_solve:7750509d244abcca0a9c073832137a783d3baa1f3f5279f6385b96f42b53aecf'",
+          "movement_tick": 0,
+          "worker_submit_tick": 0,
+          "job_anchor_movement_tick": null,
+          "prepared_entry_state_movement_tick": 26,
+          "monotonic_ns": 1434240827590100
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 3,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240822526100,
+          "finished_monotonic_ns": 1434240828336900,
+          "duration_ns": 5810800,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 4,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240842027600,
+          "finished_monotonic_ns": 1434240842108300,
+          "duration_ns": 80700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 5,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240857454400,
+          "finished_monotonic_ns": 1434240857534600,
+          "duration_ns": 80200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 6,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240872934100,
+          "finished_monotonic_ns": 1434240873010500,
+          "duration_ns": 76400,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 7,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240888436400,
+          "finished_monotonic_ns": 1434240888499100,
+          "duration_ns": 62700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 8,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240904052200,
+          "finished_monotonic_ns": 1434240904151200,
+          "duration_ns": 99000,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 9,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240920136500,
+          "finished_monotonic_ns": 1434240920205700,
+          "duration_ns": 69200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 10,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240935681700,
+          "finished_monotonic_ns": 1434240935759600,
+          "duration_ns": 77900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 11,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240951261600,
+          "finished_monotonic_ns": 1434240951331600,
+          "duration_ns": 70000,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 12,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240967236200,
+          "finished_monotonic_ns": 1434240967316500,
+          "duration_ns": 80300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 13,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240983268700,
+          "finished_monotonic_ns": 1434240983349500,
+          "duration_ns": 80800,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 14,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434240999389000,
+          "finished_monotonic_ns": 1434240999481700,
+          "duration_ns": 92700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 15,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241014900200,
+          "finished_monotonic_ns": 1434241014990400,
+          "duration_ns": 90200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 16,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241030909400,
+          "finished_monotonic_ns": 1434241030986700,
+          "duration_ns": 77300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 17,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241046373800,
+          "finished_monotonic_ns": 1434241046459100,
+          "duration_ns": 85300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 18,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241062383900,
+          "finished_monotonic_ns": 1434241062452800,
+          "duration_ns": 68900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 19,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241077836100,
+          "finished_monotonic_ns": 1434241077947600,
+          "duration_ns": 111500,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 20,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241093794400,
+          "finished_monotonic_ns": 1434241093876700,
+          "duration_ns": 82300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 21,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241109053200,
+          "finished_monotonic_ns": 1434241109118300,
+          "duration_ns": 65100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 22,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241124486900,
+          "finished_monotonic_ns": 1434241124555200,
+          "duration_ns": 68300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 23,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241140063700,
+          "finished_monotonic_ns": 1434241140154200,
+          "duration_ns": 90500,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 24,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241155588000,
+          "finished_monotonic_ns": 1434241155647100,
+          "duration_ns": 59100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 25,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241171093800,
+          "finished_monotonic_ns": 1434241171175100,
+          "duration_ns": 81300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 26,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241186246500,
+          "finished_monotonic_ns": 1434241186326600,
+          "duration_ns": 80100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 27,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241202136400,
+          "finished_monotonic_ns": 1434241202246500,
+          "duration_ns": 110100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 28,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241217745300,
+          "finished_monotonic_ns": 1434241217825200,
+          "duration_ns": 79900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 29,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241233247400,
+          "finished_monotonic_ns": 1434241233347800,
+          "duration_ns": 100400,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 30,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241248224200,
+          "finished_monotonic_ns": 1434241248305300,
+          "duration_ns": 81100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 31,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241263695500,
+          "finished_monotonic_ns": 1434241263776800,
+          "duration_ns": 81300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 32,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241279173100,
+          "finished_monotonic_ns": 1434241279229300,
+          "duration_ns": 56200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "registry_publish",
+          "identity": "'motion_solve:7750509d244abcca0a9c073832137a783d3baa1f3f5279f6385b96f42b53aecf'",
+          "movement_tick": 0,
+          "monotonic_ns": 1434241657524400,
+          "status": "registered"
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 33,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434241294675200,
+          "finished_monotonic_ns": 1434241657543900,
+          "duration_ns": 362868700,
+          "result_count": 1
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v4",
+          "identity": "'motion_solve:7750509d244abcca0a9c073832137a783d3baa1f3f5279f6385b96f42b53aecf'",
+          "movement_tick": 0,
+          "monotonic_ns": 1434241662158800,
+          "access_kind": "prepared_ready_query",
+          "removes_result": false,
+          "event": "first_control_visible"
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v4",
+          "identity": "'motion_solve:7750509d244abcca0a9c073832137a783d3baa1f3f5279f6385b96f42b53aecf'",
+          "movement_tick": 0,
+          "monotonic_ns": 1434241662158800,
+          "access_kind": "prepared_ready_query",
+          "removes_result": false,
+          "event": "first_control_consume"
+        }
+      ],
+      "requested_window": [
+        27,
+        27
+      ],
+      "branches": [
+        "on_time"
+      ],
+      "counts": {
+        "nodes_scanned": 38,
+        "physics_steps": 253,
+        "stopping_tail_steps": 232,
+        "completed_candidates": 1
+      },
+      "feasibility_physics_steps": 21,
+      "parent_verification_physics_steps": 36,
+      "async_operations": [
+        "begin",
+        "apply",
+        "finish"
+      ],
+      "action_index": 0,
+      "successor_controller_activated": false,
+      "fallback_physically_applied": false
+    },
+    {
+      "direction_index": 3,
+      "sizes_bytes": {
+        "current_result_canonical": 324847,
+        "current_result_pickle5": 41626,
+        "prepared_job_canonical": 244582,
+        "prepared_job_pickle5": 94337,
+        "prepared_job_queue_sender": 94337,
+        "bundle_canonical": 471624,
+        "wire_protocol5_payload": 525753
+      },
+      "actual_process_transport": true,
+      "worker_jobs": 1,
+      "worker_results": 1,
+      "actual_current_worker_submission": false,
+      "current_result_boundary": "format-only; D120 fixed first proof wrapped by component",
+      "movement_clock": "frozen deterministic component clock; not full Runtime frames",
+      "worker_completed_tick": null,
+      "worker_completion_boundary": "prepared wire has no worker completion tick; not inferred",
+      "receiver_published_tick": 0,
+      "first_control_visible_ready_tick": 0,
+      "landing_tick": 26,
+      "preparation_margin_component_ticks": 26,
+      "wall_submit_to_visible_ms": 950.7525,
+      "receiver_diagnostics": [
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 1,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242105175300,
+          "finished_monotonic_ns": 1434242105226200,
+          "duration_ns": 50900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 2,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242118883800,
+          "finished_monotonic_ns": 1434242121660600,
+          "duration_ns": 2776800,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 3,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242121665700,
+          "finished_monotonic_ns": 1434242270285600,
+          "duration_ns": 148619900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v4",
+          "event": "worker_submit",
+          "identity": "'motion_solve:c6f8e296f78f22831d2d12b2fa33eacedf49be3f06cd6dde84b10f5ab28238fd'",
+          "movement_tick": 0,
+          "worker_submit_tick": 0,
+          "job_anchor_movement_tick": null,
+          "prepared_entry_state_movement_tick": 26,
+          "monotonic_ns": 1434242275267700
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 4,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242270289500,
+          "finished_monotonic_ns": 1434242275829900,
+          "duration_ns": 5540400,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 5,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242287841600,
+          "finished_monotonic_ns": 1434242287915400,
+          "duration_ns": 73800,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 6,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242303310100,
+          "finished_monotonic_ns": 1434242303377000,
+          "duration_ns": 66900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 7,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242318810400,
+          "finished_monotonic_ns": 1434242318898300,
+          "duration_ns": 87900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 8,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242334302200,
+          "finished_monotonic_ns": 1434242334376900,
+          "duration_ns": 74700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 9,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242349790700,
+          "finished_monotonic_ns": 1434242349871000,
+          "duration_ns": 80300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 10,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242365760900,
+          "finished_monotonic_ns": 1434242365871500,
+          "duration_ns": 110600,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 11,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242381239500,
+          "finished_monotonic_ns": 1434242381303900,
+          "duration_ns": 64400,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 12,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242397218800,
+          "finished_monotonic_ns": 1434242397317600,
+          "duration_ns": 98800,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 13,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242413178800,
+          "finished_monotonic_ns": 1434242413243300,
+          "duration_ns": 64500,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 14,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242429163700,
+          "finished_monotonic_ns": 1434242429239800,
+          "duration_ns": 76100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 15,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242445626300,
+          "finished_monotonic_ns": 1434242445699000,
+          "duration_ns": 72700,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 16,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242461140300,
+          "finished_monotonic_ns": 1434242461251900,
+          "duration_ns": 111600,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 17,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242476625400,
+          "finished_monotonic_ns": 1434242476700600,
+          "duration_ns": 75200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 18,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242492126700,
+          "finished_monotonic_ns": 1434242492201000,
+          "duration_ns": 74300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 19,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242507624300,
+          "finished_monotonic_ns": 1434242507680300,
+          "duration_ns": 56000,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 20,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242523112000,
+          "finished_monotonic_ns": 1434242523188400,
+          "duration_ns": 76400,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 21,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242538630900,
+          "finished_monotonic_ns": 1434242538704800,
+          "duration_ns": 73900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 22,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242554104200,
+          "finished_monotonic_ns": 1434242554180800,
+          "duration_ns": 76600,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 23,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242569285000,
+          "finished_monotonic_ns": 1434242569365200,
+          "duration_ns": 80200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 24,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242585816000,
+          "finished_monotonic_ns": 1434242585883100,
+          "duration_ns": 67100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 25,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242601825300,
+          "finished_monotonic_ns": 1434242601905600,
+          "duration_ns": 80300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 26,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242616809900,
+          "finished_monotonic_ns": 1434242616884500,
+          "duration_ns": 74600,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 27,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242632267900,
+          "finished_monotonic_ns": 1434242632338200,
+          "duration_ns": 70300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 28,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242647254600,
+          "finished_monotonic_ns": 1434242647353800,
+          "duration_ns": 99200,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 29,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242663246400,
+          "finished_monotonic_ns": 1434242663318700,
+          "duration_ns": 72300,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 30,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242679725600,
+          "finished_monotonic_ns": 1434242679823200,
+          "duration_ns": 97600,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 31,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242695716500,
+          "finished_monotonic_ns": 1434242695853400,
+          "duration_ns": 136900,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 32,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242711697900,
+          "finished_monotonic_ns": 1434242711791000,
+          "duration_ns": 93100,
+          "result_count": 0
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "registry_publish",
+          "identity": "'motion_solve:c6f8e296f78f22831d2d12b2fa33eacedf49be3f06cd6dde84b10f5ab28238fd'",
+          "movement_tick": 0,
+          "monotonic_ns": 1434243065957300,
+          "status": "registered"
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+          "event": "receiver_cycle",
+          "cycle": 33,
+          "movement_tick": 0,
+          "started_monotonic_ns": 1434242727156300,
+          "finished_monotonic_ns": 1434243065976500,
+          "duration_ns": 338820200,
+          "result_count": 1
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v4",
+          "identity": "'motion_solve:c6f8e296f78f22831d2d12b2fa33eacedf49be3f06cd6dde84b10f5ab28238fd'",
+          "movement_tick": 0,
+          "monotonic_ns": 1434243066036700,
+          "access_kind": "prepared_ready_query",
+          "removes_result": false,
+          "event": "first_control_visible"
+        },
+        {
+          "schema_version": "mc2p.motion-receiver-diagnostic.v4",
+          "identity": "'motion_solve:c6f8e296f78f22831d2d12b2fa33eacedf49be3f06cd6dde84b10f5ab28238fd'",
+          "movement_tick": 0,
+          "monotonic_ns": 1434243066036700,
+          "access_kind": "prepared_ready_query",
+          "removes_result": false,
+          "event": "first_control_consume"
+        }
+      ],
+      "requested_window": [
+        27,
+        27
+      ],
+      "branches": [
+        "on_time"
+      ],
+      "counts": {
+        "nodes_scanned": 38,
+        "physics_steps": 253,
+        "stopping_tail_steps": 232,
+        "completed_candidates": 1
+      },
+      "feasibility_physics_steps": 21,
+      "parent_verification_physics_steps": 36,
+      "async_operations": [
+        "begin",
+        "apply",
+        "finish"
+      ],
+      "action_index": 0,
+      "successor_controller_activated": false,
+      "fallback_physically_applied": false
+    }
+  ],
+  "historical_stop_sha256": "fb45e9c21e1bad9c54ea0a4f1aeedd680b5781f3bbe7cfad6ee1b10265bdf667"
+}

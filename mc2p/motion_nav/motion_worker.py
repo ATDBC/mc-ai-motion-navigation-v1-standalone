@@ -970,7 +970,8 @@ class MotionResultInbox:
             return ActivationResult._from_native_references(mismatch, ActivationRejectReason.PROOF)
         entry = next((branch.trajectory[0] for branch in record.handle.hot_view.branches
                       if branch.trajectory[0].movement_tick_id == binding.submitted_movement_tick), None)
-        if entry is None or current.current_state != entry:
+        from mc2p.motion_nav.motion_candidate import verified_start_state_matches
+        if entry is None or not verified_start_state_matches(current.current_state, entry):
             return ActivationResult._from_native_references(mismatch, ActivationRejectReason.PROOF)
         final_yaw = entry.yaw_radians + math.radians(binding.compound_action.look.yaw_delta_degrees)
         projected = project_movement_command(entry, binding.compound_action.movement, movement_yaw_radians=final_yaw)

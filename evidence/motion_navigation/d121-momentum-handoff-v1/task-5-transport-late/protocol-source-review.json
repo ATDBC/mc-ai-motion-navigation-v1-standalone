@@ -1,0 +1,97 @@
+{
+  "schema": "mc2p.d121-transport-protocol-source-review.v1",
+  "baseline_commit": "c4f353868e1976bad4c94fd0ed5df43bf12c9f4d",
+  "method": "Python dataclass/signature/wire diagnostic plus manual Java source audit; no Java or Fabric run",
+  "sites": [
+    {
+      "file": "mc2p/contracts/action_v1.py",
+      "line": 164,
+      "anchor": "class ActionIntentV1:",
+      "conclusion": "ActionIntentV1 有 movement_tick_window；ActionSnapshotV1 无 window、prepared generation 或自动撤销 token。",
+      "sha256": "587e0f2bd3afba606ca8971388ce541c7cc69ed27db95aeae4a404432f575725",
+      "baseline_bytes_unchanged": true
+    },
+    {
+      "file": "mc2p/runtime/arbiter_v1.py",
+      "line": 252,
+      "anchor": "movement.movement_tick_window if movement is not None else None",
+      "conclusion": "window 留在 ArbitrationDecisionV1，不进入 ActionSnapshotV1。",
+      "sha256": "3816760434283653ea762626d6cf8b030fff2d9878201e2c5d7ee23894258909",
+      "baseline_bytes_unchanged": true
+    },
+    {
+      "file": "mc2p/backends/client_behavior_payload.py",
+      "line": 53,
+      "anchor": "wire = asdict(action)",
+      "conclusion": "wire 从 snapshot 编码；monotonic deadline 转成预算，没有另行加入 movement tick window。",
+      "sha256": "0fc757dbcf4ec9fa124e65af2f8803be196b6b89b4c44dc3f4aebb707860b60e",
+      "baseline_bytes_unchanged": true
+    },
+    {
+      "file": "mc2p/runtime/backend_v1.py",
+      "line": 41,
+      "anchor": "def step(self, action: ActionSnapshotV1",
+      "conclusion": "backend 接收 snapshot、墙钟 deadline 和 observation request，没有单独的 window/generation/cancel 调度参数。",
+      "sha256": "cae436f84e3b852653f3b782e29e58050b4cbd98b60dd1dbd5235d9c61d10843",
+      "baseline_bytes_unchanged": true
+    },
+    {
+      "file": "mc2p/backends/runtime_overlays/mc121_actions/ClientActionRequest.java",
+      "line": 36,
+      "anchor": "keys(root, \"schema_version\"",
+      "conclusion": "decoder 严格枚举既有字段；无 exact movement window 或 prepared generation。",
+      "sha256": "bde63db27a00d2ed0769f3c739227077f310bd88c48a1a2da5ba5d07b17c2160",
+      "baseline_bytes_unchanged": true
+    },
+    {
+      "file": "mc2p/backends/runtime_overlays/mc121_actions/ClientRequestGate.java",
+      "line": 35,
+      "anchor": "public String validate(",
+      "conclusion": "sequence 防重放，observation 仅等于 latestObservation；都不编码唯一 movement tick。",
+      "sha256": "fa1da4fd036c9943c9f70dfce048fca31921f9cc16e1403ba238569c92b727bd",
+      "baseline_bytes_unchanged": true
+    },
+    {
+      "file": "mc2p/backends/runtime_overlays/mc121_actions/ClientRequestGate.java",
+      "line": 52,
+      "anchor": "public boolean leaseActive(",
+      "conclusion": "采样前只按剩余次数和墙钟租约判断；晚到后才开始的单次租约仍可使用。",
+      "sha256": "fa1da4fd036c9943c9f70dfce048fca31921f9cc16e1403ba238569c92b727bd",
+      "baseline_bytes_unchanged": true
+    },
+    {
+      "file": "mc2p/backends/runtime_overlays/mc121_actions/ClientRequestGate.java",
+      "line": 68,
+      "anchor": "public boolean cancel(",
+      "conclusion": "后续取消命令只能取消当前 leaseOwner，不是旧命令自身按 tick 自动过期。",
+      "sha256": "fa1da4fd036c9943c9f70dfce048fca31921f9cc16e1403ba238569c92b727bd",
+      "baseline_bytes_unchanged": true
+    },
+    {
+      "file": "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java",
+      "line": 143,
+      "anchor": "public void tick(boolean slowDown",
+      "conclusion": "Input.tick 检查 allowed 和 leaseActive 后设置 jump、消耗租约，再生成 Sample；无 exact tick 核验。",
+      "sha256": "76c7ebf40d143837498058975d0dd35d547f14794d9de5fcb98223b25be2afc5",
+      "baseline_bytes_unchanged": true
+    },
+    {
+      "file": "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java",
+      "line": 117,
+      "anchor": "String denied = action.cancel() == null",
+      "conclusion": "admit 使用 episode、sequence、observation、budget、ticks；没有 movement tick window。",
+      "sha256": "86f333bf904374a6d5bde4b21eb1b6ef08a68aabedfc3064189f5ad1325476d1",
+      "baseline_bytes_unchanged": true
+    },
+    {
+      "file": "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java",
+      "line": 430,
+      "anchor": "applied.addProperty(\"movement_tick_id\"",
+      "conclusion": "receipt 序列化已经发生的采样，Python 账本由这些事实事后分类。",
+      "sha256": "86f333bf904374a6d5bde4b21eb1b6ef08a68aabedfc3064189f5ad1325476d1",
+      "baseline_bytes_unchanged": true
+    }
+  ],
+  "transport_scope": "Component CalculatorBackend models FIFO arrival: successor at 28, following neutral at 29. It does not emulate every Java runtime guard or certify a Fabric execution.",
+  "conclusion": "A valid wall deadline, sequence and one-sample lease cannot encode the Python-only [27,27] movement window. This FIFO counterexample is not excluded by the current action protocol."
+}

@@ -1,0 +1,15 @@
+{
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "scripts/navigation_design_metrics.py",
+    "--output",
+    "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\evidence\\motion_navigation\\d121-momentum-handoff-v1\\task-5-transport-late\\design-metrics.json"
+  ],
+  "cwd": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree",
+  "exit_code": 0,
+  "wall_seconds": 2.091459200019017,
+  "tests_run": null,
+  "unittest_seconds": null,
+  "stdout": "{\"action_branch_count\": 43, \"branches_by_action\": {\"JumpGapSegment\": 5, \"JumpUpSegment\": 6, \"StepSegment\": 2, \"WalkSegment\": 30}, \"production_lines\": 47691}\nsession: 5085 unclassified: 0\n",
+  "stderr": ""
+}

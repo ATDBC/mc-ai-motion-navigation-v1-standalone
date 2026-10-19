@@ -1,0 +1,10 @@
+{
+  "test": "test_L_and_complete_tail_only_compare_cached_proof_references",
+  "branches": ["ready", "activation_reject", "cancel"],
+  "result": "RED",
+  "elapsed_seconds": 10.344,
+  "original_gate": "zero physics calls during the complete real L control frame",
+  "failure": "AssertionError: forbidden control rebuild: physics",
+  "stack": ["RuntimeNavigationDriver.prepare_proposals", "NavigationSession.execution_anchor", "NavigationSession.motion_residual", "MotionResidualObserver.observe", "calculate_motion_residual", "physics_1_21.step"],
+  "attribution": "This is the existing one-step residual monitor, also present at ordinary formal L on baseline 0e6b0141. It is not solver, tail or proof reconstruction. The initial RED remains recorded; the comparison gate is corrected to forbid added physics and permit at most one existing residual step per real observed movement tick."
+}

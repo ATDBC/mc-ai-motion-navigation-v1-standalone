@@ -1,5 +1,7 @@
 # AGENTS.md
 
+2026-10-19，[D121](docs/motion_navigation/decisions/0121-prove-fallback-backed-momentum-handoff.md) 在同一阶段获授权继续修订，状态为 **AUTHORIZED REVISION／IN PROGRESS**。S0、S1 保持完成；历史 S2 direct-copy 超过 2 MiB 的失败和 `s2/stop.json` 保留。修订方案不用联合证明消息：当前证明保留精确出口 fallback，只增加紧凑后继可行性绑定，完整后继证明继续走 D117 prepared 消息和生命周期。`L` 决定 `L+1`，默认 sneak fallback；后继只允许在 `L+1` 首次生效，错过后不得 `L+2` 补跳。2 MiB 上限不变，代表场景每条正式消息须不超过其 50%。修订 S2—S4 与当前完整发布矩阵尚未完成，下面 D120 的全绿结果仅属于历史基线。见[计划](docs/motion_navigation/stages/d121-fallback-backed-momentum-handoff-plan.md)和[验收](docs/motion_navigation/acceptance/d121-fallback-backed-momentum-handoff.md)。本轮不授权规划、生产四格 profile、Session 状态、Java、Fabric、新 owner／账本／worker 管线或放宽安全规则。
+
 2026-10-19，[D120](docs/motion_navigation/decisions/0120-resume-momentum-entry-calibration.md) 已完成有限入口与实机校准：四方向 972 个联合入口、2916 个后缀通过，Windows Fabric south 3/3、full 36/36，1476 条 full 命令身份对应、离散物理差异 0、真实健康零下降、来源释放和关闭尾迹通过。JDK 预检、reset 健康观察误拒和北向 ±π 角差误拒的历史失败不回写。Windows 源码树正逆各 197 模块／2534 项，独立公开快照正逆各 196 模块／2510 项全绿，失败、错误、超时、跳过和清理失败均为 0；Java 各 3/3，矩阵快照 verify 2634 文件。连续 `sound_envelope` 仍 unverified，D118 历史 FAILED／STOPPED 不改，生产接入和 D118-1—D118-5 未授权。见[计划](docs/motion_navigation/stages/d120-momentum-entry-calibration-plan.md)、[验收](docs/motion_navigation/acceptance/d120-momentum-entry-calibration.md)和 `evidence/motion_navigation/d120-momentum-entry-v1/`。
 
 2026-10-19，[D119](docs/motion_navigation/decisions/0119-repair-zero-height-step-candidate.md) 已完成。`physics_1_21` 现在按原版 Java `float` 规则处理 0 高度 step 候选。D118 raw 只读重放的 7 个 trial、273 个 tick 离散差异为 0。Windows 源码树正逆各 196 模块、2507 项，独立公开快照正逆各 195 模块、2483 项，全部通过且零跳过。D118-PHYSICS-01 已关闭；D118-0 仍保持历史 FAILED／STOPPED，full matrix、连续两跳和后续阶段仍未授权。见[计划](docs/motion_navigation/stages/d119-zero-height-step-candidate-repair-plan.md)和[验收](docs/motion_navigation/acceptance/d119-zero-height-step-candidate-repair.md)。
@@ -76,7 +78,7 @@ Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于�
 
 历史 F1 按“功能通过、结构未通过”保存；R28 按“时间盒结束，部分交付通过”保存。历史 S0-R、v1—v7、R27 和连续高度 M3 的结果与边界均保留在各自验收及 `evidence/motion_navigation/` 中，不用 F2 的新结果覆盖。历史入口见 [F1 验收](docs/motion_navigation/acceptance/F1-known-world-following.md)、[R28 验收](docs/motion_navigation/acceptance/navigation-coordination-convergence.md)和 [S0-R 验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)。
 
-本仓库是主项目生成的源码快照。先读 D107 阶段和对应验收，再按任务读取相关架构与决定；F2REC 及后续正式修复作为生产主线的历史依据保留。
+本仓库是主项目生成的源码快照。先读修订后的 D121 阶段和对应验收，再按任务读取相关架构与决定；D120、F2REC 及后续正式修复作为各自范围的历史依据保留。
 
 项目方只通过默认分支 `main` 发布由固定导出清单生成、校验通过的公开快照。不得把主项目的完整开发分支或提交历史直接推入本仓库。三方审查分支可以保留，但只保存审查者自己的报告和复现材料，不代表正式发布状态。
 

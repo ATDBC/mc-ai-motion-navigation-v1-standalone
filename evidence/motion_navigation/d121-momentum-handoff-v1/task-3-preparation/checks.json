@@ -1,0 +1,35 @@
+{
+  "platform": "Windows",
+  "python": "D:/My_project/mc_ai/.venv/python.exe",
+  "base_commit": "c33e9ba1ca19bc8bd1b763323eff31a38aac2fa0",
+  "scope": "Task 3 preparation only",
+  "red": [
+    {"group": "initial interface", "tests": 3, "failures": 3, "exit_code": 1},
+    {"group": "D120 fixed replay behavior", "tests": 2, "errors": 2, "reason": "missing fixed_successor_spec field", "exit_code": 1},
+    {"group": "real preparation behavior", "tests": 1, "errors": 1, "reason": "same missing field", "exit_code": 1},
+    {"group": "prepared widened window", "tests": 1, "failures": 1, "exit_code": 1},
+    {"group": "pending selection cleanup", "tests": 2, "failures": 1, "exit_code": 1},
+    {"group": "fixed input digest mutation", "tests": 2, "failures": 1, "exit_code": 1},
+    {"group": "independent parent exit/recovery/damage declarations", "tests": 1, "failures": 3, "exit_code": 1}
+  ],
+  "final_checks": [
+    {"modules": ["test_d121_successor_binding"], "tests": 27, "exit_code": 0, "seconds": 26.874},
+    {"modules": ["test_d121_momentum_handoff"], "tests": 40, "exit_code": 0, "boundary": "unchanged original module passed in final 63-test combined run before three later new-module-only cases"},
+    {"modules": ["test_d102_contracts", "test_d102_prepared_proof", "test_d102_receiver", "test_d102_registry_lifecycle"], "tests": 130, "exit_code": 0, "boundary": "all passed in initial 245-test combined run; only error was in separately repaired action-handoff fixture"},
+    {"modules": ["test_d102_action_handoff"], "tests": 55, "exit_code": 0, "seconds": 72.506},
+    {"modules": ["test_d116_handoff_timeline", "test_d116_semantic_dependency_handoff", "test_d117_prepared_liveness_monitor", "test_b10_motion_candidate"], "tests": 68, "exit_code": 0, "seconds": 39.954},
+    {"modules": ["test_b10_gap_solver", "test_air_transition_solver", "test_motion_continuation_quality"], "tests": 38, "exit_code": 0, "seconds": 28.784},
+    {"modules": ["test_navigation_design_metrics"], "tests": 35, "exit_code": 0},
+    {"modules": ["test_standalone_export"], "tests": 24, "exit_code": 0, "boundary": "passed in 27-test combined run"},
+    {"modules": ["test_d121_joint_worker_stop"], "tests": 3, "exit_code": 0, "boundary": "final history and stored formal message gates passed in 38-test combined run with design metrics"},
+    {"command": "git diff --check", "exit_code": 0}
+  ],
+  "repair_history": [
+    "Runtime type-hint import cycle in new typed declarations was repaired before GREEN.",
+    "An early real-process check exceeded the ordinary one-second wall deadline; preparation tests now explicitly use a frozen component clock, without claiming real Runtime margin.",
+    "Stamp-only test initially invalidated its cached D120 source view for later tests; test cleanup now discards that cache.",
+    "Initial standalone check omitted unchanged Task 2 motion_candidate.py semantic hash. Provisional record is retained in history; final record includes it.",
+    "Initial 245-test combined run had one existing D102 fixture error: neutral command manually asserted sprint=True. Fixture now changes a real sneak input and rebuilds the complete primary/delayed proof with existing replay; targeted and full 55-test module pass."
+  ],
+  "not_run": ["full source shard matrix", "independent exported snapshot test matrix", "Fabric", "physical 1-1-4 handoff", "committed tail execution", "L+2 client transport rejection"]
+}

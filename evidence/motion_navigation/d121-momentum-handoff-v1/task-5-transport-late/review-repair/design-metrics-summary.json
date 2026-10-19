@@ -1,0 +1,11 @@
+{
+  "action_branch_count": 43,
+  "branches_by_action": {
+    "JumpGapSegment": 5,
+    "JumpUpSegment": 6,
+    "StepSegment": 2,
+    "WalkSegment": 30
+  },
+  "production_lines": 47691,
+  "unclassified": []
+}

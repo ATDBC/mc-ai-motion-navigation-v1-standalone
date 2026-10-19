@@ -1,0 +1,351 @@
+{
+  "baseline_commit": "c4f353868e1976bad4c94fd0ed5df43bf12c9f4d",
+  "all_baseline_d120_d121_evidence_bytes_unchanged": true,
+  "files_verified": 86,
+  "files": {
+    "evidence/motion_navigation/d120-momentum-entry-v1/README.md": {
+      "baseline_git_blob_oid": "2148e62ef504cc191f2e4c987afa5e9eb5ae4a51",
+      "sha256": "d160825bdce6114a28af3dcba866d4f910f7dba42573071c0d6ab1606e92f687"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/full/analysis.json": {
+      "baseline_git_blob_oid": "2ef95825e6829ae9697074a3e7aa689a2d1b4b7f",
+      "sha256": "3f06108edb7588388b54c57a1f4a7cb4c6d068f2ac7c0838c2a4bd897b7d2ff1"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/full/command.json": {
+      "baseline_git_blob_oid": "db36a367341381e540ceb89824c84eca5c63bf0f",
+      "sha256": "20c0e1ea2767d1903bff2adc17079d4a80bddb95881064b741df2670055ad72e"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/full/runtime-summary.json": {
+      "baseline_git_blob_oid": "d280cfb3975e85ac45e3cec71f339c27d2fd1f4e",
+      "sha256": "2ac2a3f095e43e7d649b05e866afd80867e24a03df9de41ca8779a55f030bc00"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/full/source-index.json": {
+      "baseline_git_blob_oid": "6ff0f8db220c7f057c7109be039e63c9db873bda",
+      "sha256": "d7a6a0c5228400b02c4df4244312fb9351b9f8e19b3a03c68f5c5dcb0a887175"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/full/summary.json": {
+      "baseline_git_blob_oid": "a519ed815a03f3163547d7a5149a744492ecbb86",
+      "sha256": "c5fb285d14c1290b67fc77db128935de7e16af2ca70968f1edd62ec615933228"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/history/full-yaw/analysis.json": {
+      "baseline_git_blob_oid": "c82e81450098e30ce089ca3684118df9db14ce88",
+      "sha256": "22b70dda712f097aac71ce909ecfb0f90db1ad68c0e3ee56aa775de6a29ef17e"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/history/full-yaw/command.json": {
+      "baseline_git_blob_oid": "db36a367341381e540ceb89824c84eca5c63bf0f",
+      "sha256": "20c0e1ea2767d1903bff2adc17079d4a80bddb95881064b741df2670055ad72e"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/history/full-yaw/probe-stderr.txt": {
+      "baseline_git_blob_oid": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/history/full-yaw/probe-stdout.txt": {
+      "baseline_git_blob_oid": "7c2807df1a8e6270feeef045949667960fdf0c3c",
+      "sha256": "2a55373b09a9912bdf4039b92790ad34c5d7a45ffd3d902cad8b05cce8c7006f"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/history/full-yaw/summary.json": {
+      "baseline_git_blob_oid": "a6332808c523e8bf792c6cf7574474932e57278f",
+      "sha256": "94eddc3feba235b43631fafd84ce0f19a319b2720444b488ba1a1dfcf6e145c3"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/history/jdk-preflight/command.json": {
+      "baseline_git_blob_oid": "ea4da582a8835e7aaaf73a881ef07be96e75eb95",
+      "sha256": "ac4054748b3643b4e22801eaafb533020fadecaa5a39c6c9b3ba20d2ce1e2873"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/history/jdk-preflight/probe-stderr.txt": {
+      "baseline_git_blob_oid": "ca226013d04b68d58f8681ead1027c88252d5163",
+      "sha256": "43bbe7af67782e1610972fe78d7afb7190f173d0bb7ef6ea507721e7ff438d6f"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/history/jdk-preflight/probe-stdout.txt": {
+      "baseline_git_blob_oid": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/history/jdk-preflight/summary.json": {
+      "baseline_git_blob_oid": "35abd820385d8ae3e04731298b34cee6f0f8ccd4",
+      "sha256": "950776a0f1d6650111a5012ee856a9d67eef52c3726e6a5b9bb608d1ae15b774"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/history/south-health/command.json": {
+      "baseline_git_blob_oid": "ea4da582a8835e7aaaf73a881ef07be96e75eb95",
+      "sha256": "ac4054748b3643b4e22801eaafb533020fadecaa5a39c6c9b3ba20d2ce1e2873"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/history/south-health/probe-stderr.txt": {
+      "baseline_git_blob_oid": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/history/south-health/probe-stdout.txt": {
+      "baseline_git_blob_oid": "2878cd0de2002938a3a661301e51a5be19c39934",
+      "sha256": "a27537890f192b4145f6df3ad1661ab1a459bb00caf8b2ce1f75e67ad1c5d90e"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/history/south-health/summary.json": {
+      "baseline_git_blob_oid": "9a939c2e3b584de481e110e2be1ac6e3561ba98f",
+      "sha256": "ec79f80793095db1a003dfab8123cc562b22eb977292dee7201e4d3799b61ff0"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/index.json": {
+      "baseline_git_blob_oid": "84ed1b31b9b45ce099b8e379ca0b9a403807d4d7",
+      "sha256": "c27e75bf067d45209ac88bd37745d2c37b4c2ef25cecb2363f0196bcf99d7de6"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/offline/coverage-summary.json": {
+      "baseline_git_blob_oid": "8172fd9562fe693dbfcde5cf2aee425fdff22445",
+      "sha256": "994a0f52cff1467e3a8a3183d0c23a962ac4b3f6e7ff85260aff61c6c756f2a8"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/offline/manifest.json": {
+      "baseline_git_blob_oid": "dc6c92131410d33e887fe7481df0c20fed36fa50",
+      "sha256": "46d238de148f4fc9369c01d84c50ea277ab5c1c3210412c5b7f979cfb30e08e4"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/offline/old-raw-gate.json": {
+      "baseline_git_blob_oid": "07ec8d68dca462b7d5fec9fa6fdfa00fc4106aff",
+      "sha256": "2858ea3992b912db4684eb3a6dac16893b1550fbe9d1c878876358f54929c646"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/offline/source-index.json": {
+      "baseline_git_blob_oid": "37ba8ffab0002086c14d8380b6cd9336246a1277",
+      "sha256": "d4bf9646adf76031d8f9c2bb9c3de39437ec0aa7ef5b455ba63a87aa1ba1e3e9"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/offline/summary.json": {
+      "baseline_git_blob_oid": "ca2bdecdffe209192d1444d17bde857b494bd2f2",
+      "sha256": "8935400f0083682df6061844a9b4aa9760f3086a378fd2b83f43040dc494ee53"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/south/analysis.json": {
+      "baseline_git_blob_oid": "eda8663318ab996c67325956695927206085e573",
+      "sha256": "cb882d38eb035189350d0c899cf985ed77c99799bbd29e2a415499d350d91997"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/south/command.json": {
+      "baseline_git_blob_oid": "ea4da582a8835e7aaaf73a881ef07be96e75eb95",
+      "sha256": "ac4054748b3643b4e22801eaafb533020fadecaa5a39c6c9b3ba20d2ce1e2873"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/south/runtime-summary.json": {
+      "baseline_git_blob_oid": "33c12298f402f751aaeac652e833e8e17d29ad98",
+      "sha256": "751d802d806c26fc46195dd0bebc66465b332a15ae79fa1c33da9454369b5178"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/south/source-index.json": {
+      "baseline_git_blob_oid": "862b827d145faec34dc358476a2e4edbec51c3fb",
+      "sha256": "8a15797f2c6472ca319a5187718063d4f77c48a1769cb98f41a66057dd0df77c"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/south/summary.json": {
+      "baseline_git_blob_oid": "709fe4ebd7baaba0d167d11688bcf616537a759c",
+      "sha256": "e767b9b03bd4cc78c69a4aafa3e94881ac256bca17cb93f8d42ab7a40dfd8947"
+    },
+    "evidence/motion_navigation/d120-momentum-entry-v1/windows-regression/summary.json": {
+      "baseline_git_blob_oid": "743da7cd2d1b5dcc9500ac3ebed73d043721b277",
+      "sha256": "a4c58a38f1ad1418ccad5ce566f3714663f33c59323e617a9c2c7d2b70732a82"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/published-production-semantic-hashes.json": {
+      "baseline_git_blob_oid": "5b4d405fd86124189e1d8e77d37b9fcfc186dd20",
+      "sha256": "01235a49e63f7659f7d96e302154b5d4f746eb3d693f82c30e119e6c4dec2b4b"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/s0/diagnostic.json": {
+      "baseline_git_blob_oid": "084d75c322be88eecb6a8d67cce8f3af3a17a134",
+      "sha256": "a3edd30d23d16a107f26e01c5cbe4c0debbd03bc16d962a6bd115ccd706e012e"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/s0/final.json": {
+      "baseline_git_blob_oid": "2ea3edb36c76be75a3587bfdc750cb31fd9ba25d",
+      "sha256": "200814d33bb161e4ea39727ec8994acbd565ae651c3b4902e0cdd6dd78fa22ea"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/s0/history/pre-receipt-gate/final.json": {
+      "baseline_git_blob_oid": "5a4dcd951269feb8ff1ef3053663194209756b77",
+      "sha256": "41c5536aa8595a943d914d2fe0305b107f6dd559f9531cc6756535aed4f68810"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/s2/stop.json": {
+      "baseline_git_blob_oid": "71910dcbda6121a6effaa1c23ec76395c2d1bc5a",
+      "sha256": "fb45e9c21e1bad9c54ea0a4f1aeedd680b5781f3bbe7cfad6ee1b10265bdf667"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/checks.json": {
+      "baseline_git_blob_oid": "a3b6cbbd79a0b238a49f6cbacc25fd1247355963",
+      "sha256": "5f972f1eb675123cb54ebd1aea13ae3f2a6d92d6d3e86ec1d1b646a3c420eec6"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/history/provisional-semantic-hashes-before-export-check.json": {
+      "baseline_git_blob_oid": "0625b4f3b5d9c2d1d5e71ec0c87b8973ad7db931",
+      "sha256": "b229d21ee5b724e41813b273b5c07c9fec9ccfe123ebf7e2843a98721055d1bf"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/history/semantic-hashes-before-parent-request-check.json": {
+      "baseline_git_blob_oid": "b2d281fae50d7c40304f45b3472214979e6e5e1c",
+      "sha256": "4086800661491ae84f5dfb95507ac8070a64bf8dc6e43d75528f1fb89cccda18"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/production-semantic-hashes.json": {
+      "baseline_git_blob_oid": "b4951979b79c48fe169d960b9fa153ea7cf29b70",
+      "sha256": "4f2a8cb8d79612b57914ed71e4b04cf485ffb3e540119d87628c06650f721569"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/repair/checks.json": {
+      "baseline_git_blob_oid": "1af2d69248db347b641df78e2e153368d09b6183",
+      "sha256": "ed7b2d563c0536afd48808bf631fad35084b71480f890221c64a84af6c0e7109"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/repair/production-semantic-hashes.json": {
+      "baseline_git_blob_oid": "7ec1eb02b7f8f13478a487edc9dce07ba0dc303e",
+      "sha256": "5ef5dead8eab0d2a879a6c8d82c9a4e7e36c2751bee082c917ae1e28ff2b54a0"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/repair/red.json": {
+      "baseline_git_blob_oid": "a1541af8fce53cbba51b763347eb0779e3b75301",
+      "sha256": "3332350f31c95596b5f0a0095c352cdee51ecde53ff9ac03cd5024795601fb91"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/repair/summary.json": {
+      "baseline_git_blob_oid": "be6d4967e5c65546b8dfcb7bdeb574fd9bfe2b99",
+      "sha256": "24dd5705abf3273c820af4507f1c749985a615d19e007c0bc3ea5d46a6d14eca"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/summary.json": {
+      "baseline_git_blob_oid": "47f751016bb30a7b54b3a8dc101581b1f6504c79",
+      "sha256": "1cdf6b2630b4e4be0dddbbd2773fdb1282e65ae8ec217349e831536fb27c2944"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/checks-command-correction.json": {
+      "baseline_git_blob_oid": "5dabbd169bd7e1f360d6f36527d1ee1ae4d538fc",
+      "sha256": "76feebb695792b04fadcabecce39eaf7b18906ea5240bde2e9a6dd79e354d403"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/checks-export-command-correction.json": {
+      "baseline_git_blob_oid": "127065ce5e71d8bf13e9368fe8e37b4e5069fbda",
+      "sha256": "e2badcac8cdf417ce65f76de28d9abbc9078c3a370380c5144fcae52a1763aa1"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/checks-final.json": {
+      "baseline_git_blob_oid": "fa20b8cb92d529648033bae359d95c6e0ef4e189",
+      "sha256": "0e282417cdc58750288e113ec36d4487f885916c43bde2b73c647d9a759d5f54"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/checks-initial.json": {
+      "baseline_git_blob_oid": "573cb207013eb43f9c3ce5c69c9bc68125a45a96",
+      "sha256": "80563b3b38d705298f2078d0bd57bbf3695d9858effefba2c1d41e684d263968"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/checks-restart.json": {
+      "baseline_git_blob_oid": "ea523ee135401f6850f1b258389bb8aae4db18d6",
+      "sha256": "2e4205e3a626bfc8e4a19d8756232647f8f1183ead36adb0c34ef5798e57bea0"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/formatting-normalization.json": {
+      "baseline_git_blob_oid": "f9130ede2014c45af02974bacdca5758a47dc9c1",
+      "sha256": "1dc34ddd88ebc6e4066d45fdf99a443f76bf11f59471d67723be17a22120e7a0"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/hotpath-baseline.json": {
+      "baseline_git_blob_oid": "01dea44b960ee266fb94ba08df590b2b2f8e0d1c",
+      "sha256": "1c4c9003606714d272205780593db8f8a25235d4788a89490e8d3f78610833ea"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/hotpath-current-final.json": {
+      "baseline_git_blob_oid": "d080921eaafebf7c79116912c04d96eddd167043",
+      "sha256": "4e354b20682f0fa09571e0de363b21dd117d97d38f79fc02157dc660c9450c69"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/hotpath-current.json": {
+      "baseline_git_blob_oid": "966f4eb273693fd120e4b1aae2acf5c43992c9e6",
+      "sha256": "5720f2465faff7638a3ab7170293359340f51a56c2263f4e197af5b6803cffcf"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/matrix-directions-first-1.json": {
+      "baseline_git_blob_oid": "773d6bb0c89e177096491a5ea99469813bc2a0e0",
+      "sha256": "fbcb927b28c3548cc33bd1630ac2f3d0b481774ba07ff3b35b8d236f741861aa"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/matrix-directions-first-2.json": {
+      "baseline_git_blob_oid": "153a2b0938d836c7b7a0258bc18deebd7b0e32e4",
+      "sha256": "ef1b0acefc778a366d6c3f2d283dc7fa96801e92c8ab099067048703c8f9bebb"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/matrix-probe-1.json": {
+      "baseline_git_blob_oid": "3eb1a1e7b8c062c0e6bcaf841225bb93b62151e3",
+      "sha256": "b442baeaca5728c4228a4c60edaf93a57eecd49bdff0095f39c4bcadb6acb2e5"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/matrix-probe-2.json": {
+      "baseline_git_blob_oid": "e697f86b08343b83c5daf43870363cd31e713c8e",
+      "sha256": "4d9443cfcecdb45c905c6ceeee9dc51acde1b65ffacea7eab8b21ba3d1d96216"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/matrix-required-1.json": {
+      "baseline_git_blob_oid": "761cde9731ac6a0d353aa79f4a14d6196a7ee126",
+      "sha256": "811a89329c8bc7e0fba36fa0c8a5fe8ce03c83d60577cdc0cc95bbcb000578cf"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/matrix-south-rejections-1.json": {
+      "baseline_git_blob_oid": "05ca664bf96a19856c415883da3d690891ba0ee9",
+      "sha256": "20c521e17f5558a7598afc7c62a95eeb715b1d3219b79538f3d50e8e498629dc"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/matrix-south-rejections-2.json": {
+      "baseline_git_blob_oid": "8d13056cc9d4f65e2a7ffea29124c3d2cee9ae61",
+      "sha256": "d0c5f69295b4c24a84e70870aa37c0676a3cb45d67b3e24006e8178f8a48977c"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/matrix-south-rejections-3.json": {
+      "baseline_git_blob_oid": "3cce217ea79995d4311ff140622b5f9258b12a45",
+      "sha256": "72a42f8c75422c2d34657520758186f2c7e5ff047a0e1b8585184a7f82295635"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/matrix-south-rejections-4.json": {
+      "baseline_git_blob_oid": "79f85b8a282d39963c8521fd778a795d0042437b",
+      "sha256": "27327214a9c4f5266355330bde159b7235db4c71f81a3ce6da674abf4a09a6e6"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/matrix-south-worker-1.json": {
+      "baseline_git_blob_oid": "8646d7c2b8508157e46b5b933835fcf4123c2c5a",
+      "sha256": "be90ebdd81a54f75ced915b296e0511d68651e8e976ec530bb1344cdadcd2ac6"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/matrix-south-worker-2.json": {
+      "baseline_git_blob_oid": "3cc6ac35e89904fdf2d62a5da0a0a8e49b901f9b",
+      "sha256": "bca140a88c015a08d214eab14fa67a65cc1308546cb9522cae50d9106c0383b6"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/matrix-south-worker-3.json": {
+      "baseline_git_blob_oid": "b18089a1eb1d7112973cb954ca9eb4fb91dba316",
+      "sha256": "b9c2a66e96c7573ec57a7ccddaa86bcb09e2c34ce9a33091a918639df1726831"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/matrix-summary.json": {
+      "baseline_git_blob_oid": "43329948b2fd6e3f415e3e7132e4587de81c4dae",
+      "sha256": "8b240416ce8f1307a048bef5ac1c2d9de116319ada8993b79419d9e40e6f1f87"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/production-semantic-hashes.json": {
+      "baseline_git_blob_oid": "6060848476d616ef7e8cdb1f90358b27eb2354c2",
+      "sha256": "dc51d00c08380047f1f2c1a18520a1eef6f4afab4834b66deaf96faf7d16c5ce"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/red-cancel.json": {
+      "baseline_git_blob_oid": "2482feb3e7ac988daf216caeda58084a4597b33b",
+      "sha256": "38690bb9774306745e0f9f888e4b42a41f11a493110c64121c76f0d6b12d65ae"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/red-default-L.json": {
+      "baseline_git_blob_oid": "cdbec44870f3054b4bdd9f980f18fd949fa1d3f3",
+      "sha256": "e3dca8122c623720116abd78f1a0992ca5e95a2b6324e58ec990f0b8e14104e0"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/red-design-metrics.json": {
+      "baseline_git_blob_oid": "730565721f8e5ab65f3b63dac143aa7dedd297a0",
+      "sha256": "3810653652124d64d02b1cb3615a6a1fa99e7a395d0eca2fb449b9301e106f8b"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/red-east-activation.json": {
+      "baseline_git_blob_oid": "9cd4ae196078d3b63016df7e7e2575ae811455a6",
+      "sha256": "52e61bac11815a42a8a23835a00c1da509d69ff94b23f155ecfc0743e0b49690"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/red-hotpath.json": {
+      "baseline_git_blob_oid": "6c1c510c26017e580e9b6abc9107f746388d8e84",
+      "sha256": "d522c51fc62a809dd7a43ace477b3519cec80b1e5053a558a649000872c99333"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/red-input-projection.json": {
+      "baseline_git_blob_oid": "729e6d9659cdeda29823b5cf3f6edcb4d4b764af",
+      "sha256": "5197d03691176d1dddda846efd51d8f325c491986bc97e9357c5afe0ab0d9c36"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/red-registry-completion.json": {
+      "baseline_git_blob_oid": "12ea7ade162ae5e15e1fbbeb9d474329cc7e4566",
+      "sha256": "550441e2e61fc906ce208be0ea77696837663a9699f41367c5a29bff89cc0af5"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/red-runtime-activation.json": {
+      "baseline_git_blob_oid": "e28b8cebadf6daea37db03f4ee4f6ba72e2617ce",
+      "sha256": "46d757630e18a566eddc5ecc4c1acaa5c10541dd77d28ad8d638cb8abd22be6f"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/red-single-executor.json": {
+      "baseline_git_blob_oid": "f1271259e5f6e88d09d4627c4917ac98f0a362ea",
+      "sha256": "1a19aa86be4bfe4300f9d66f33dfd9e16af6c6e81637342c862b27e18943c7d4"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/red-tiny-support-release.json": {
+      "baseline_git_blob_oid": "c529a5c8f1cd9c4b5ab3fd39d4263d46d7795e1f",
+      "sha256": "46864f3ecf1a7c50ff31b70f6e3557a2dddcac678de05c32d4249fb5bb72d1f7"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/review-repair/README.md": {
+      "baseline_git_blob_oid": "54556904052468388f2549d48d4b2a2cf606a5f7",
+      "sha256": "533861f8154e3f89f8dbcae9576d74b2005d986de78a6fbc0df2cc0d646cf4a0"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/review-repair/checks.json": {
+      "baseline_git_blob_oid": "b897b460d1feed1560eb18a7172d9d03562a6eae",
+      "sha256": "e21b7ddb13652d9445788d24232cf29453ee7518f78e95bbc831760d5541d6a6"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/review-repair/focused-green.json": {
+      "baseline_git_blob_oid": "088138ca2d7144f8fb0b41bf7be2ded03f759463",
+      "sha256": "56fe421f17f2b3568a10743c9a12bf1e99133a89102eb496703941204d384e74"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/review-repair/independent-export.json": {
+      "baseline_git_blob_oid": "b5287fd1f638dbda074ef465f8855566997c808b",
+      "sha256": "ff9f62cd21f1640d4f60e0925684a047845546cad82e0243eacde66172c2641e"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/review-repair/production-semantic-hashes.json": {
+      "baseline_git_blob_oid": "e527cbffdd431e20f66860fddb54396bb28211b2",
+      "sha256": "124bc9c680abc267812e6108176913fc0fc5831b3067b307ed6126f13ebc1a3c"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/review-repair/reason-mutation-red-valid-identifiers.json": {
+      "baseline_git_blob_oid": "7dfb424a92c9d4fd6ec9fff5082964aa1e06d048",
+      "sha256": "67bffe5509bc00be38e525bae12c90c7573e48bfecaac2f16a8f8428871c02a8"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/review-repair/reason-mutation-red.json": {
+      "baseline_git_blob_oid": "f7e427c1cb8b729130543b769264203054e77ab6",
+      "sha256": "00e0b2c0d05bfdde9ede0c44009eef6bdc4a33abc1e5282b0f70659c56e16451"
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/review-repair/regression.json": {
+      "baseline_git_blob_oid": "662b9ef21106f6846e4f98bcf87a1e7c2902c8d4",
+      "sha256": "b87edeebad97540bc0a47fbf5a477324c7a43a5f177de45fac572544e54aebed"
+    }
+  }
+}

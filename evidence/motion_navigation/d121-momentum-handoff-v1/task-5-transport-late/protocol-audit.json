@@ -1,0 +1,39 @@
+{
+  "action_intent_has_movement_tick_window": true,
+  "action_snapshot_has_movement_tick_window": false,
+  "action_snapshot_has_prepared_generation": false,
+  "action_snapshot_fields": [
+    "episode_id",
+    "request_sequence_id",
+    "observation_sequence_id",
+    "deadline_monotonic_ns",
+    "movement",
+    "look",
+    "operation",
+    "valid_for_ticks",
+    "cancel_request_sequence_id",
+    "schema_version"
+  ],
+  "client_preapplication_exact_tick_guard": false,
+  "client_sequence_guard_is_tick_window": false,
+  "client_wall_deadline_is_tick_window": false,
+  "client_cancel_is_self_expiry": false,
+  "conclusion": "the exact movement window remains Python-local; the current wire can report an outside-window application after sampling but cannot reject that application by exact movement tick before physics",
+  "wire_fields": [
+    "cancel_request_sequence_id",
+    "episode_id",
+    "look",
+    "movement",
+    "observation_budget_ns",
+    "observation_sequence_id",
+    "operation",
+    "remaining_budget_ns",
+    "request_sequence_id",
+    "schema_version",
+    "valid_for_ticks"
+  ],
+  "wire_has_movement_tick_window": false,
+  "wire_has_prepared_generation": false,
+  "wire_cancel_request_sequence_id": null,
+  "wire_valid_for_ticks": 1
+}

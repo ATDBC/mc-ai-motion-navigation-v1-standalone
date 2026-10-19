@@ -1,0 +1,74 @@
+{
+  "schema": "mc2p.d121-task5-review-repair-manifest.v1",
+  "previous_task5_manifest_sha256": "982036c7cb049e918600e2b49056006ed76f251886cbf31b4a1c6cce8c96a85f",
+  "files": {
+    "checks.json": {
+      "bytes": 965,
+      "sha256": "e1c7e7423da2abc66d667b2833f20606ae521a8686f34796d8a61aa014f7b23b"
+    },
+    "design-metrics-summary.json": {
+      "bytes": 207,
+      "sha256": "638e52161a6e5ea6037f8c2f5b027da8b21562a538c131f2484b6b0e30ef9b67"
+    },
+    "design-metrics.json": {
+      "bytes": 195760,
+      "sha256": "b78643a8a1e191cff2f335b07659364c8ca6d00470f6c09a75b4827c4dd0af01"
+    },
+    "export-tests.json": {
+      "bytes": 547,
+      "sha256": "4aefe38ba110325ef2526f8359ba1a691fca1b70034ca7aea7f202822054a4bc"
+    },
+    "export-verify.json": {
+      "bytes": 479,
+      "sha256": "7360bb1d84b4859ac247b79c8c32e1f1c3b29f0ee8c590e750dd80e2d0f327b3"
+    },
+    "export.json": {
+      "bytes": 556,
+      "sha256": "748c138d0c713561729567850cf01139c1660593ee5e5a39308b95e94fc85617"
+    },
+    "focused.json": {
+      "bytes": 2679,
+      "sha256": "75917f459db7b0eeaa53d4425f039cbd8f26a1fc0758545bf5f95fb0e69dadeb"
+    },
+    "history-integrity.json": {
+      "bytes": 143,
+      "sha256": "619840fb4cabe941815be0beba5d3d828d0059e3143273396fe8d3052deb6dd3"
+    },
+    "hygiene.json": {
+      "bytes": 900,
+      "sha256": "ed7c704317e8f0873cf37910746c4acbc683de818c276f06905875714af1b716"
+    },
+    "initial-diagnostics.json": {
+      "bytes": 503,
+      "sha256": "8ce22aab33c7d163f364feab21ef4322a5f5b980e52afd2ca299d1e983c554f0"
+    },
+    "matrix-final-command.json": {
+      "bytes": 880,
+      "sha256": "de758cb9488e15a9f41ffdd1767de8dbd87fabb1d1a1a03d5dc7ee4b6e821753"
+    },
+    "matrix-final.json": {
+      "bytes": 508496,
+      "sha256": "38828d4f2c683015756ca526b5db47a217c59428dd56d5009f0f042f0f24c346"
+    },
+    "matrix.json": {
+      "bytes": 507538,
+      "sha256": "96063f6057603c855e82c78468994d140b1e45a10c1c1153fddd53d3821e8406"
+    },
+    "metrics-export-tests.json": {
+      "bytes": 510,
+      "sha256": "5917ed68bf0eddc290e18f74438289595122ae7546ff2877e6b565f56eca1df9"
+    },
+    "report.md": {
+      "bytes": 2405,
+      "sha256": "e7adc0195dae459dcd234c3ea713abf575e3a97f700df050ba846e73da9fad1b"
+    },
+    "semantic-comparison.json": {
+      "bytes": 33947,
+      "sha256": "1df0adaa9b36dc8b56828987791ec20ae7240184ed826d5c63b8a077586e701f"
+    },
+    "source-hashes.json": {
+      "bytes": 1462,
+      "sha256": "bd45d262a3c2061d50aa3461495ba708dec608795b493b27a7f643c7e6f5ae46"
+    }
+  }
+}

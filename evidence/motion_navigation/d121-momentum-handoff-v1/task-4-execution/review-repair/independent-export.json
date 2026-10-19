@@ -1,0 +1,18 @@
+{
+  "schema": "mc2p.d121-task4-review-repair-independent-export.v1",
+  "root": ".tmp/task4-review-repair-export",
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-X",
+    "utf8",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d121_handoff_execution",
+    "tests.motion_nav.test_navigation_design_metrics",
+    "-q"
+  ],
+  "elapsed_seconds": 72.75708230002783,
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "----------------------------------------------------------------------\nRan 59 tests in 71.762s\n\nOK\n"
+}

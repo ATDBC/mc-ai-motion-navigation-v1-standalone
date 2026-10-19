@@ -1,0 +1,6 @@
+{
+  "first_projection_setup_error": "TypeError: Object of type frozenset is not JSON serializable; 0 tests, 1 setup error; repaired test-only projection to retain sorted set values",
+  "first_matrix": "matrix.json",
+  "first_matrix_same_control_semantics": false,
+  "first_matrix_cause": "Stream/request identities, snapshot local revision and ordered source UUIDs were initially compared as semantic content. They are now retained separately as runtime identity values. Physical outcomes unchanged."
+}

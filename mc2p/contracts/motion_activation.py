@@ -534,6 +534,25 @@ class PreparedStreamActivationPort(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
+class IncumbentFallbackDispatch:
+    """Local reference to this call's unsent incumbent input, never a proof."""
+    action: ActionSnapshotV1
+    window: MovementTickWindowV1
+    command_index: int
+    owner_id: str
+    controller: object
+
+    def __reduce_ex__(self, protocol):
+        raise TypeError("incumbent fallback is a local borrowed command")
+
+
+@runtime_checkable
+class IncumbentFallbackPort(Protocol):
+    def incumbent_fallback(self, action, observation, ledger) -> IncumbentFallbackDispatch | None: ...
+    def register_incumbent_fallback(self, fallback: IncumbentFallbackDispatch, ledger) -> bool: ...
+
+
+@dataclass(frozen=True, slots=True)
 class PreparedStreamDispatch:
     """A local, borrowed port; deliberately never serializable preparation data."""
     proposal: StreamActivationProposal

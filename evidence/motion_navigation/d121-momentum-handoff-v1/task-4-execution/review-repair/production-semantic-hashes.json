@@ -1,0 +1,25 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D121 Task4 independent-review repair: release lifecycle independent of report reason",
+  "normalization": "CRLF_TO_LF",
+  "status": "current",
+  "source_base_commit": "a0a4645aa9d51f37a42a5781869605b0c6be1c0f",
+  "historical_s1_record_sha256": "01235a49e63f7659f7d96e302154b5d4f746eb3d693f82c30e119e6c4dec2b4b",
+  "previous_task3_record_sha256": "5ef5dead8eab0d2a879a6c8d82c9a4e7e36c2751bee082c917ae1e28ff2b54a0",
+  "historical_stop_sha256": "fb45e9c21e1bad9c54ea0a4f1aeedd680b5781f3bbe7cfad6ee1b10265bdf667",
+  "files": {
+    "mc2p/contracts/motion_activation.py": "1528e0bf595325473b1e8cc8efea0df4b95ddafa98dc229834e2be41096e18a2",
+    "mc2p/motion_nav/action_route_executor.py": "8cb0fc6ae6d0b2c270c131c28f019d046e473737b40300888c9e0026e72dda85",
+    "mc2p/motion_nav/execution_supervisor.py": "9b4f2667f2d3bee3eeab85061c864e6b3fa2a72304b67ec525108287709c6baa",
+    "mc2p/motion_nav/motion_candidate.py": "16924a3f3c42dd5b27585c42117b6c7321ab615a022eae4002b548cbb62eadcd",
+    "mc2p/motion_nav/motion_chain.py": "af3f111d6560d4e1cf1861f42e92ec220fc36b4eead0bd374f82890b2c16e822",
+    "mc2p/motion_nav/motion_coordination.py": "fcd760c2a1a9815a292135b8ee59732cd340c88a1448db7ac6e12359e40fdf72",
+    "mc2p/motion_nav/motion_solver.py": "615d5455f0fdc540548c4f31ea988aca77b7ff69f57d8e15dd8a879cf3ecc998",
+    "mc2p/motion_nav/motion_worker.py": "f0532679e97351722e158d9098dc202b01cca6231761914c568f0454590eb5c2",
+    "mc2p/motion_nav/prepared_motion.py": "bf1c233e7ad0aa58b140b34dbc3a146dfd7ea25cd3e22c208d14c76b7ac492e2",
+    "mc2p/motion_nav/prepared_motion_proof.py": "fd1fb0929f5de35c1e5d587aea1bcb16160b1544a54a8e2c4be2c227905908ab",
+    "mc2p/motion_nav/route_body_controller.py": "69ea346f452ef0bb2c77d10a0fca052444ff0693a059ca8a03f72381efa33fb0",
+    "mc2p/runtime/player_runtime_v1.py": "1ff08c28669ec5ff258eccdf8245846667ac450998eebdf8782f2ec7b8666c87"
+  },
+  "previous_task4_record_sha256": "dc51d00c08380047f1f2c1a18520a1eef6f4afab4834b66deaf96faf7d16c5ce"
+}

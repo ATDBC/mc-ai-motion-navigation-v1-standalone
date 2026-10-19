@@ -1,0 +1,41 @@
+{
+  "schema": "mc2p.d121-transport-late-manifest.v1",
+  "files": {
+    "checks-final.json": {
+      "bytes": 564,
+      "sha256": "42ec6abc1419d5ef632a4deabec2b722697ad967520f53e74100d8a306168b4b"
+    },
+    "checks-initial.json": {
+      "bytes": 537,
+      "sha256": "612933430ab2610757072c1fd92686c000963f1a5527d460cb293b62e21a70da"
+    },
+    "matrix-final.json": {
+      "bytes": 176711,
+      "sha256": "440ba293692c6af9357c8c10e9e31ef2900298149fa3c867dcd97274ade8eb16"
+    },
+    "matrix.json": {
+      "bytes": 176711,
+      "sha256": "440ba293692c6af9357c8c10e9e31ef2900298149fa3c867dcd97274ade8eb16"
+    },
+    "protocol-audit.json": {
+      "bytes": 1257,
+      "sha256": "5c3286fea0ed2d3fd294c0191c0d6813d45ec065b66399c96ac386b497a598b7"
+    },
+    "protocol-source-hashes.json": {
+      "bytes": 867,
+      "sha256": "cedfbef71a5421d50060c1024bccac7cdbc9c75e9c8dade15a5c78442071fd8b"
+    },
+    "scope.json": {
+      "bytes": 327,
+      "sha256": "31777045f0921c6faf862e4709c7df851cd40aa84925dd4ea35ee285668e9f62"
+    },
+    "summary.json": {
+      "bytes": 1419,
+      "sha256": "84cd0b06b5bfd912de3e0b1734e0de515546556d741aa0c6726b48d931dbc1ba"
+    },
+    "tests.txt": {
+      "bytes": 1080,
+      "sha256": "1254d86ae7b7196a9be0e3f1482095e759a657b831d761de8edd831f1619c364"
+    }
+  }
+}

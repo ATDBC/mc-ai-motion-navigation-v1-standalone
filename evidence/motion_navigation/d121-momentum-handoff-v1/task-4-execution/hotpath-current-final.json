@@ -1,0 +1,364 @@
+{
+  "mode": "current",
+  "frames": [
+    {
+      "branch": "ready",
+      "source_tick": 26,
+      "elapsed_ms": 5.725,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 26,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "activation_reject",
+      "source_tick": 26,
+      "elapsed_ms": 5.0491,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 26,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "activation_reject",
+      "source_tick": 27,
+      "elapsed_ms": 1.281,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 27,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "activation_reject",
+      "source_tick": 28,
+      "elapsed_ms": 1.4011,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 28,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "activation_reject",
+      "source_tick": 29,
+      "elapsed_ms": 1.2401,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 29,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "activation_reject",
+      "source_tick": 30,
+      "elapsed_ms": 1.2601,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 30,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "activation_reject",
+      "source_tick": 31,
+      "elapsed_ms": 1.2015,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 31,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "activation_reject",
+      "source_tick": 32,
+      "elapsed_ms": 1.2706,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 32,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "activation_reject",
+      "source_tick": 33,
+      "elapsed_ms": 1.2027,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 33,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "activation_reject",
+      "source_tick": 34,
+      "elapsed_ms": 1.2343,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 34,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "activation_reject",
+      "source_tick": 35,
+      "elapsed_ms": 1.2309,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 35,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "activation_reject",
+      "source_tick": 36,
+      "elapsed_ms": 1.745,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 36,
+          "calls": 1
+        },
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 37,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "cancel",
+      "source_tick": 26,
+      "elapsed_ms": 1.4439,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 26,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "cancel",
+      "source_tick": 27,
+      "elapsed_ms": 1.2699,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 27,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "cancel",
+      "source_tick": 28,
+      "elapsed_ms": 1.3081,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 28,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "cancel",
+      "source_tick": 29,
+      "elapsed_ms": 1.2248,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 29,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "cancel",
+      "source_tick": 30,
+      "elapsed_ms": 1.2567,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 30,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "cancel",
+      "source_tick": 31,
+      "elapsed_ms": 1.2764,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 31,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "cancel",
+      "source_tick": 32,
+      "elapsed_ms": 1.2918,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 32,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "cancel",
+      "source_tick": 33,
+      "elapsed_ms": 1.2138,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 33,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "cancel",
+      "source_tick": 34,
+      "elapsed_ms": 1.3559,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 34,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "cancel",
+      "source_tick": 35,
+      "elapsed_ms": 1.2735,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 35,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    },
+    {
+      "branch": "cancel",
+      "source_tick": 36,
+      "elapsed_ms": 1.9162,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 36,
+          "calls": 1
+        },
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "observed_tick": 37,
+          "calls": 1
+        }
+      ],
+      "failure": null
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "result": "INTERRUPTED_FOR_FROZEN_SOURCE_RESTART",
+  "affected_collection": "Initial 406-test modules plus added focused input/receipt cases",
+  "reason": "The in-flight process had imported metrics before ReferenceRejectReason's required lifecycle classification was added. It was stopped before completion and not counted as final validation. A fresh complete 411-test run follows after code freeze.",
+  "fresh_metrics_after_both_classifications": {"tests": 35, "passed": 35, "elapsed_seconds": 6.210},
+  "prior_59_test_run": {"elapsed_seconds": 34.641, "standalone_export_passed": 24, "metrics_failures_before_existing_reference_reason_registration": 2},
+  "newly_registered_lifecycle_roles": ["CommittedExecutionPhase", "ReferenceRejectReason"],
+  "no_semantic_exception": "Unknown enums remain visible; no naming-based exemption or action/controller selector was added."
+}

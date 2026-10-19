@@ -6,14 +6,51 @@ import unittest
 from scripts.navigation_design_metrics import (
     NON_IMPLEMENTATION_ENUMS,
     TYPED_LIFECYCLE_CLASSIFICATIONS,
+    TYPED_PROOF_CLASSIFICATIONS,
     measure,
 )
 
 
 class NavigationDesignMetricsTests(unittest.TestCase):
+    def test_fallback_types_have_reviewed_proof_roles(self):
+        expected = {'FallbackTerminalMode', 'FallbackYawMode'}
+        self.assertEqual(set(TYPED_PROOF_CLASSIFICATIONS), expected)
+        self.assertTrue(expected.issubset(NON_IMPLEMENTATION_ENUMS))
+        self.assertTrue(expected.isdisjoint(TYPED_LIFECYCLE_CLASSIFICATIONS))
+        self.assertTrue(all(TYPED_PROOF_CLASSIFICATIONS[name] for name in expected))
+
+    def test_fallback_proof_semantics_do_not_hide_unknown_enum_sources(self):
+        report = self.report({'proof.py': '''
+from enum import StrEnum
+class FallbackTerminalMode(StrEnum):
+    SNEAK_EDGE_STABLE = "sneak_edge_stable"
+class FallbackYawMode(StrEnum):
+    PRESERVE_CURRENT = "preserve_current"
+class FallbackDispatchMode(StrEnum):
+    FLY = "fly"
+''', 'motion_coordination.py': '''
+from .proof import FallbackTerminalMode, FallbackYawMode as Yaw, FallbackDispatchMode
+def validate(mode):
+    if mode is FallbackTerminalMode.SNEAK_EDGE_STABLE: check_terminal()
+    if mode is Yaw.PRESERVE_CURRENT: check_yaw()
+    safe = getattr(Yaw, "PRESERVE_CURRENT")
+    if mode is safe: check_yaw()
+    if mode is FallbackDispatchMode.FLY: create()
+    mixed = [Yaw.PRESERVE_CURRENT, FallbackDispatchMode.FLY][0]
+    if mode is mixed: create()
+'''})
+        self.assertEqual(report['direct_action_dispatch'], [])
+        self.assertEqual(len(report['proxy_implementation_dispatch']), 2)
+        self.assertEqual({row['classification'] for row in report['unclassified']},
+                         {'FallbackDispatchMode', 'UNKNOWN_ENUM_DERIVED'})
+        self.assertEqual(len(report['unclassified']), 2)
+        self.assertEqual([row['safe_only'] for row in report['derived_checks']],
+                         [True, False])
+
     def test_prepared_pipeline_types_have_reviewed_non_dispatch_roles(self):
         expected = {
             'ActivationStatus',
+            'CommittedExecutionPhase',
             'DependencyStatus',
             'PreparedAdmissionStatus',
             'PreparedComputeStatus',
@@ -24,6 +61,7 @@ class NavigationDesignMetricsTests(unittest.TestCase):
             'PreparedSubmitStatus',
             'ProofUse',
             'ReferenceStatus',
+            'ReferenceRejectReason',
             'SnapshotBorrowStatus',
             'SnapshotLeaseStatus',
             'SnapshotPublishStatus',

@@ -1,0 +1,14 @@
+{
+  "direction_index": 1,
+  "result": "RED",
+  "observed_L": 26,
+  "real_fallback_effect_tick": 27,
+  "activation_status": "activation_mismatch",
+  "activation_reason": "proof",
+  "phase": "MotionResultInbox.accept_activation",
+  "dependencies_equal": true,
+  "rules_equal": true,
+  "damage_balance_equal": true,
+  "only_entry_difference": {"field": "body_width", "proof": 0.5999999999999996, "observed": 0.5999999999999999},
+  "cause": "The registry uses strict dataclass equality while the existing D117 comparator already accepts equivalent observed box arithmetic. Task 4 brief permits this one existing boundary to reuse that comparator."
+}

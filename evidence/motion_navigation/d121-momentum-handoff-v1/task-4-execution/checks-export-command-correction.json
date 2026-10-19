@@ -1,0 +1,7 @@
+{
+  "initial_export_attempt": {"target": "D:/My_project/mc_ai/.tmp/d121-task4-independent-export", "result": "STANDALONE_EXPORT_ERROR: export target must be inside the workspace .tmp directory"},
+  "correction": "Use the selected worktree's own .tmp/task4-independent-export, preserving the existing exporter boundary.",
+  "premature_verify": "The first verify ran before export had completed and reported missing SHA256SUMS.txt. It was not counted as validation.",
+  "after_export_completion": {"result": "STANDALONE_EXPORT_OK", "files": 2692},
+  "no_contract_changes": true
+}

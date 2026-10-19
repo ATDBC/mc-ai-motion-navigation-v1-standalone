@@ -11,6 +11,7 @@ from mc2p.motion_nav.motion_solver import (
 from mc2p.motion_nav.segment_entry import MotionContinuationRequirement, SegmentEntryWindow
 from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.online_motion import CandidateExecutionWindow
+from mc2p.motion_nav.physics_types import TickInput
 from tests.motion_nav import test_b10_gap_solver as gap_fixtures
 
 from tests.motion_nav import test_action_continuity_formal as formal
@@ -119,24 +120,26 @@ class MotionContinuationContractTests(unittest.TestCase):
         anchor, world, target, gap = gap_fixtures.fixture()
         unsupported = replace(anchor.physics_state,
             position=(gap[0] + .5, 64., gap[2] + .5))
-        safe, _, _, status, _, reasons = _release_recovery_evidence(
+        evidence = _release_recovery_evidence(
             (anchor.physics_state, unsupported), world,
             self.request(target, continuation()),
+            tick_inputs=(TickInput(0., 0., False, False, False, 0.),),
         )
-        self.assertIs(status, SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
-        self.assertIn("final_exit_stop_tail_not_safe", reasons)
+        self.assertIs(evidence.status, SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
+        self.assertIn("final_exit_stop_tail_not_safe", evidence.reasons)
 
     def test_zero_damage_request_cannot_recover_on_a_lower_floor(self):
         anchor, world, target, _ = gap_fixtures.fixture()
         # Actual known floor is y=64; a fabricated grounded flag above it must
         # be stepped and checked, rather than immediately labelled safe.
         state = replace(anchor.physics_state, position=(.5, 68., 2.5))
-        safe, _, _, status, _, _ = _release_recovery_evidence(
+        evidence = _release_recovery_evidence(
             (state, state), world, replace(self.request(target, continuation()),
                                           landing=LandingRegion(.3, .7, 2.3, 2.7, 68.)),
+            tick_inputs=(TickInput(0., 0., False, False, False, 0.),),
         )
-        self.assertIs(status, SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
-        self.assertEqual(safe, ())
+        self.assertIs(evidence.status, SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
+        self.assertEqual(evidence.safe_indices, ())
 
     def test_low_velocity_edge_contact_is_not_a_complete_safe_stop(self):
         anchor, world, target, _ = gap_fixtures.fixture()
@@ -153,10 +156,11 @@ class MotionContinuationContractTests(unittest.TestCase):
         world = PhysicsWorldView(knowledge.view(), JAVA_1_21_RULESET)
         state = replace(anchor.physics_state, position=(.5, 64., 3.28),
                         velocity_blocks_per_tick=(0., -.0784, .015))
-        safe, _, _, status, _, _ = _release_recovery_evidence((state, state), world,
-            self.request(target, continuation()))
-        self.assertIs(status, SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
-        self.assertEqual(safe, ())
+        evidence = _release_recovery_evidence((state, state), world,
+            self.request(target, continuation()),
+            tick_inputs=(TickInput(0., 0., False, False, False, 0.),))
+        self.assertIs(evidence.status, SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
+        self.assertEqual(evidence.safe_indices, ())
 
     def test_interrupted_landing_uses_current_support_not_the_normal_exit_box(self):
         from mc2p.motion_nav.action_route_executor import ActionRouteExecutor

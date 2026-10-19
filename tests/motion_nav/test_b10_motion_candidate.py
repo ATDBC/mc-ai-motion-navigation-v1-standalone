@@ -648,16 +648,38 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         self.assertEqual(completed.reason, "verified_motion_complete")
 
     def test_observed_neutral_sample_can_confirm_a_missed_neutral_command(self):
+        from mc2p.motion_nav.motion_solver import (
+            GapSolveRequest, _prove_delayed_starts, _replay_verified_commands,
+        )
         anchor, candidate = self.admitted()
         commands = list(candidate.proof.commands)
         commands[3] = replace(
             commands[3], movement=MovementV1(forward=1),
         )
+        # Changing a fixed command requires replaying its inputs and states;
+        # keep this receipt fixture a complete, internally consistent proof.
+        _, world, _, _ = fixture()
+        request = GapSolveRequest(candidate.proof.direction, candidate.proof.landing,
+                                  candidate.proof.execution_window).as_air_transition()
+        primary, failure = _replay_verified_commands(
+            anchor.physics_state, tuple(commands), world, request, start_tick=11)
+        self.assertIsNone(failure)
+        delayed, dependencies, resources, failure = _prove_delayed_starts(
+            anchor, tuple(commands), world, request)
+        self.assertIsNone(failure)
+        proof = replace(candidate.proof, commands=tuple(commands),
+            tick_inputs=primary.tick_inputs, trajectory=primary.trajectory,
+            step_events=primary.step_events, exit_state=primary.exit_state,
+            release_safe_command_indices=primary.release_safe_command_indices,
+            fallback_tails=primary.fallback_tails, delayed_start_variants=delayed,
+            world_dependencies=tuple(sorted(set(primary.world_dependencies) | set(dependencies))),
+            resource_incomplete_reasons=tuple(sorted(
+                set(primary.resource_incomplete_reasons) | set(resources))))
         candidate = replace(
             candidate,
             candidate=replace(
                 candidate.candidate,
-                proof=replace(candidate.proof, commands=tuple(commands)),
+                proof=proof,
             ),
         )
         executor = VerifiedMotionExecutor()

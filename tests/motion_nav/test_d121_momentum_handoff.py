@@ -2,6 +2,7 @@
 from dataclasses import FrozenInstanceError, replace
 import hashlib
 import math
+import pickle
 from types import SimpleNamespace
 import unittest
 from unittest import mock
@@ -15,8 +16,10 @@ from mc2p.motion_nav.motion_chain import (
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.motion_solver import (
-    GapSolveRequest, LandingRegion, MotionCommandTick, SolveStatus,
-    _release_recovery_evidence,
+    AirTransitionSolveRequest, DEFAULT_AIR_TRANSITION_POLICIES,
+    GapSolveRequest, LandingRegion, MotionCommandTick, MotionSolveKind, SolveResult,
+    SolveStatus, VerifiedMotionResult, _release_recovery_evidence,
+    _replay_verified_commands,
 )
 from mc2p.motion_nav.online_motion import CandidateExecutionWindow
 from mc2p.motion_nav.physics_1_21 import step
@@ -25,7 +28,9 @@ from mc2p.motion_nav.physics_types import CalculationStatus, JAVA_1_21_RULESET, 
 from mc2p.motion_nav.prepared_motion import (
     PreparedComputeStatus, PreparedMotionRequest, PreparedScanBudget, StreamGeneration,
 )
-from mc2p.motion_nav.prepared_motion_proof import canonical_motion_digest, prepare_fixed_motion
+from mc2p.motion_nav.prepared_motion_proof import (
+    canonical_motion_bytes, canonical_motion_digest, prepare_fixed_motion,
+)
 from mc2p.motion_nav.world_model import UNKNOWN_CELL
 from mc2p.motion_nav.world_snapshot import SealedSnapshot, canonical_snapshot_bytes, seal_snapshot_version
 from scripts import d121_momentum_handoff_probe as probe
@@ -88,6 +93,292 @@ def _d120_fallback_request(*, controls=("sneak",), snapshot=None, remaining=0.0)
     return request, snapshot
 
 
+def _d120_first_jump_proof(*, allow_committed_main_suffix=True, direction_index=0):
+    """Exact fixed replay only; existing templates cannot express 14 RUN ticks."""
+    from tests.motion_nav.test_motion_continuation_quality import continuation
+    fixture = calibration.build_fixture(direction_index)
+    entry = probe.initial_state(fixture)
+    if direction_index:
+        x, z = calibration.frozen._local_to_world(fixture.context.origin, direction_index,
+            fixture.trial.start_local[0], fixture.trial.start_local[2])
+        entry = replace(entry, position=(x, entry.position[1], z))
+    direction = calibration.DIRECTIONS[direction_index]
+    corners = tuple(calibration.frozen._local_to_world(fixture.context.origin, direction_index, x, z)
+                    for x in (.3, .7) for z in (1., 2.))
+    landing = LandingRegion(min(x for x, _ in corners), max(x for x, _ in corners),
+                            min(z for _, z in corners), max(z for _, z in corners), 64.)
+    commands = tuple(MotionCommandTick(MovementV1(
+        value.forward, value.strafe, value.jump, value.sneak, value.sprint),
+        entry.yaw_radians) for value in fixture.trial.commands[:26])
+    policy = replace(DEFAULT_AIR_TRANSITION_POLICIES[MotionSolveKind.JUMP_GAP],
+                     solver_id="test-d121-exact-d120-first-jump")
+    fallbacks = D121OnlineSolverFallbackTests._request(
+        entry, ("neutral", "back", "sneak")).fallback_candidates
+    requirement = continuation(speed=6.)
+    requirement = replace(requirement, entry_window=replace(
+        requirement.entry_window,
+        reference_point=calibration.nominal_entry(fixture).position,
+        horizontal_approach_direction=tuple(float(v) for v in direction),
+        minimum_longitudinal_offset_blocks=0., maximum_longitudinal_offset_blocks=0.,
+        maximum_lateral_offset_blocks=0.))
+    request = AirTransitionSolveRequest(
+        MotionSolveKind.JUMP_GAP, direction, landing,
+        CandidateExecutionWindow(1, 1), max_candidates=1, max_ticks=26,
+        policy=policy, recovery_horizon_ticks=40,
+        continuation=requirement, fallback_candidates=fallbacks,
+        allow_committed_main_suffix=allow_committed_main_suffix)
+    primary, failure = _replay_verified_commands(
+        entry, commands, fixture.context.world, request, start_tick=1)
+    if failure is not None:
+        return request, fixture, failure
+    proof = VerifiedMotionResult(
+        policy.solver_id, policy, entry.ruleset_id, "mc2p.input-projection.v1",
+        0, 0, entry, commands, primary.tick_inputs, primary.trajectory,
+        primary.step_events, primary.exit_state, request.landing,
+        primary.release_safe_command_indices, primary.world_dependencies,
+        primary.resource_incomplete_reasons, request.execution_window,
+        request.direction, None, 0, recovery_horizon_ticks=40,
+        continuation=request.continuation, fallback_candidates=fallbacks,
+        fallback_tails=primary.fallback_tails,
+        allow_committed_main_suffix=allow_committed_main_suffix)
+    return request, fixture, SolveResult(SolveStatus.SOLVED, proof)
+
+
+class D121CommittedMainSuffixTests(unittest.TestCase):
+    @staticmethod
+    def _narrow_landing_request():
+        from tests.motion_nav.test_b10_gap_solver import fixture
+        from mc2p.motion_nav.world_model import (
+            BlockGeometry, ObservationStamp, WorldKnowledge,
+        )
+        anchor, _, target, _ = fixture()
+        anchor = replace(anchor, physics_state=replace(
+            anchor.physics_state, position=(.5, 64., 1.1),
+            velocity_blocks_per_tick=(0., -.0784000015258789, .1)))
+        knowledge = WorldKnowledge(anchor.session)
+        stamp = ObservationStamp(anchor.session, 0, 0, "d121-default-regression", 0)
+        knowledge.confirm_air(stamp, tuple(
+            (x, y, z) for x in range(-4, 5) for y in range(40, 71)
+            for z in range(-4, 6)))
+        blocks = {(x, 63, z): BlockGeometry.full_cube("minecraft:stone")
+                  for x in range(-4, 5) for z in range(-4, 1)}
+        blocks[(0, 63, 2)] = BlockGeometry.full_cube("minecraft:stone")
+        knowledge.observe_blocks(stamp, blocks)
+        return anchor, PhysicsWorldView(knowledge.view(), JAVA_1_21_RULESET), GapSolveRequest(
+            (0, 1), LandingRegion(*target), CandidateExecutionWindow(11, 12))
+
+    def test_default_gap_and_air_requests_reject_a_required_committed_suffix(self):
+        from mc2p.motion_nav.motion_solver import solve_air_transition, solve_one_cell_gap
+        anchor, world, request = self._narrow_landing_request()
+        for value, solve in ((request, solve_one_cell_gap),
+                             (request.as_air_transition(), solve_air_transition)):
+            with self.subTest(kind=type(value).__name__):
+                result = solve(anchor, world, value)
+                self.assertIs(result.status, SolveStatus.NO_SOLUTION_WITHIN_SEARCH,
+                              (result.status, result.reasons))
+                self.assertIn("release_recovery_not_safe", result.reasons)
+
+    def test_deferred_boundaries_are_never_reported_as_release_safe(self):
+        _, _, result = _d120_first_jump_proof()
+        self.assertIs(result.status, SolveStatus.SOLVED, result)
+        proof = result.proof
+        self.assertEqual(proof.release_safe_command_indices, tuple(range(15)))
+        self.assertEqual(proof.start_variant(1).release_safe_command_indices,
+                         tuple(range(15)))
+        for boundary in range(15, 26):
+            self.assertNotIn(boundary, proof.release_safe_command_indices)
+
+    def test_only_strict_explicit_permission_can_build_the_d121_proof(self):
+        _, _, denied = _d120_first_jump_proof(allow_committed_main_suffix=False)
+        self.assertIs(denied.status, SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
+        request, _, permitted = _d120_first_jump_proof()
+        self.assertIs(permitted.status, SolveStatus.SOLVED)
+        self.assertTrue(request.allow_committed_main_suffix)
+        self.assertTrue(permitted.proof.allow_committed_main_suffix)
+        _, _, ordinary = self._narrow_landing_request()
+        self.assertFalse(ordinary.allow_committed_main_suffix)
+        self.assertFalse(ordinary.as_air_transition().allow_committed_main_suffix)
+        self.assertTrue(replace(ordinary, allow_committed_main_suffix=True)
+                        .as_air_transition().allow_committed_main_suffix)
+        for invalid in (None, 0, 1, "true"):
+            for value in (ordinary, request, permitted.proof):
+                with self.subTest(invalid=invalid, kind=type(value).__name__):
+                    with self.assertRaises(ContractViolation):
+                        replace(value, allow_committed_main_suffix=invalid)
+        with self.assertRaises(ContractViolation):
+            replace(permitted.proof, allow_committed_main_suffix=False)
+        for value in (permitted.proof, permitted.proof.start_variant(1)):
+            with self.subTest(kind=type(value).__name__):
+                with self.assertRaises(ContractViolation):
+                    replace(value, release_safe_command_indices=tuple(range(26)))
+
+    def test_explicit_component_proof_cannot_enter_the_ordinary_executor(self):
+        from mc2p.motion_nav.motion_candidate import (
+            MotionCandidateStatus, VerifiedMotionCandidate,
+        )
+        from mc2p.motion_nav.motion_solver import solve_one_cell_gap
+        from tests.motion_nav.test_b10_motion_candidate import (
+            MotionCandidateAdmissionTests, solved_candidate,
+        )
+        anchor, world, request = self._narrow_landing_request()
+        result = solve_one_cell_gap(
+            anchor, world, replace(request, allow_committed_main_suffix=True))
+        self.assertIs(result.status, SolveStatus.SOLVED,
+                      (result.status, result.reasons))
+        proof = result.proof
+        self.assertTrue(all(tail.recovery_boundary_index == 12
+                            for tail in proof.fallback_tails[:12]))
+        self.assertEqual(proof.release_safe_command_indices, (12, 13, 14))
+        _, ordinary_candidate = solved_candidate()
+        candidate = VerifiedMotionCandidate(proof, ordinary_candidate.context)
+        admitted = MotionCandidateAdmissionTests().admit(anchor, candidate)
+        self.assertIs(admitted.status, MotionCandidateStatus.REJECTED)
+        self.assertEqual(admitted.reason, "committed_main_suffix_execution_not_enabled")
+        self.assertIsNone(admitted.candidate)
+
+    def test_fixed_revalidation_retains_explicit_proof_permission(self):
+        from mc2p.motion_nav.motion_solver import revalidate_air_transition
+        from mc2p.motion_nav.online_motion import MotionTickPhase, StateAnchor
+        request, fixture, result = _d120_first_jump_proof()
+        entry = result.proof.entry_state
+        anchor = StateAnchor(entry.session, 0, 0, MotionTickPhase.AFTER_MOVEMENT,
+            None, None, entry.ruleset_id, entry.state_schema,
+            "mc2p.input-projection.v1", entry)
+        refreshed = revalidate_air_transition(
+            result.proof, anchor, fixture.context.world, request.execution_window)
+        self.assertIs(refreshed.status, SolveStatus.SOLVED,
+                      (refreshed.status, refreshed.reasons))
+        self.assertTrue(refreshed.proof.allow_committed_main_suffix)
+        self.assertEqual(refreshed.proof.release_safe_command_indices, tuple(range(15)))
+
+    def test_exact_d120_first_jump_has_a_compact_safe_tail_at_every_boundary(self):
+        request, fixture, result = _d120_first_jump_proof()
+        self.assertIs(result.status, SolveStatus.SOLVED, result)
+        proof = result.proof
+        self.assertEqual(len(proof.commands), 26)
+        self.assertEqual(proof.exit_state, calibration.nominal_entry(fixture))
+        self.assertEqual(len(proof.fallback_tails), 27)
+        for boundary, tail in enumerate(proof.fallback_tails):
+            self.assertEqual(tail.boundary_index, boundary)
+            self.assertEqual(tail.trajectory[0],
+                             proof.trajectory[tail.recovery_boundary_index])
+        for boundary in (15, 23, 24, 25):
+            tail = proof.fallback_tails[boundary]
+            self.assertEqual(tail.recovery_boundary_index, 26)
+            self.assertIs(tail.candidate.terminal_mode,
+                          FallbackTerminalMode.SNEAK_EDGE_STABLE)
+            self.assertEqual(tail.inputs, proof.fallback_tails[26].inputs)
+            self.assertIs(tail.trajectory, proof.fallback_tails[26].trajectory)
+            self.assertEqual(tail.trajectory[0].movement_tick_id, 26)
+            self.assertEqual(tail.trajectory[1].movement_tick_id, 27)
+        # Neutral can settle from some later airborne boundaries. That must
+        # not close the one open risk interval before supported landing.
+        self.assertTrue(all(tail.recovery_boundary_index == 26
+                            for tail in proof.fallback_tails[15:26]))
+        self.assertEqual(proof.fallback_tails[0].recovery_boundary_index, 0)
+        self.assertEqual(proof.start_variant(1).fallback_tails,
+                         proof.fallback_tails)
+
+    def test_committed_tail_and_parent_mutations_are_rejected(self):
+        _, _, result = _d120_first_jump_proof()
+        self.assertIs(result.status, SolveStatus.SOLVED, result)
+        proof, boundary = result.proof, 23
+        tail = proof.fallback_tails[boundary]
+        mutations = (
+            lambda: replace(tail, boundary_index=22),
+            lambda: replace(tail, recovery_boundary_index=25),
+            lambda: replace(tail, recovery_boundary_index=27),
+            lambda: replace(tail, candidate=replace(tail.candidate, candidate_id="other")),
+            lambda: replace(tail, inputs=(replace(tail.inputs[0], sneak=False),) + tail.inputs[1:]),
+            lambda: replace(tail, dependencies=tail.dependencies[1:]),
+            lambda: replace(tail, resource_incomplete_reasons=("invented",)),
+            lambda: replace(tail, expected_damage_points=1.),
+            lambda: replace(tail, release_witness_state=None),
+            lambda: replace(tail, trajectory=tail.trajectory[:-1] + (
+                replace(tail.trajectory[-1], on_ground=False),)),
+        )
+        for mutation in mutations:
+            with self.subTest(mutation=mutation), self.assertRaises(ContractViolation):
+                changed = mutation()
+                replace(proof, fallback_tails=proof.fallback_tails[:boundary]
+                        + (changed,) + proof.fallback_tails[boundary + 1:])
+        for field, changed in (
+            ("commands", proof.commands[:24] + (replace(proof.commands[24],
+                movement=MovementV1()),) + proof.commands[25:]),
+            ("tick_inputs", proof.tick_inputs[:24] + (replace(proof.tick_inputs[24],
+                forward=0.),) + proof.tick_inputs[25:]),
+            ("trajectory", proof.trajectory[:24] + (replace(proof.trajectory[24],
+                position=(.51, *proof.trajectory[24].position[1:])),) + proof.trajectory[25:]),
+        ):
+            with self.subTest(field=field), self.assertRaises(ContractViolation):
+                replace(proof, **{field: changed})
+
+    def test_legacy_immediate_tails_stay_immediate(self):
+        from tests.motion_nav.test_b10_gap_solver import fixture
+        from mc2p.motion_nav.motion_solver import solve_one_cell_gap
+        anchor, world, target, _ = fixture()
+        proof = solve_one_cell_gap(anchor, world, GapSolveRequest(
+            (0, 1), LandingRegion(*target), CandidateExecutionWindow(11, 12))).proof
+        self.assertTrue(all(tail.boundary_index == tail.recovery_boundary_index
+                            for tail in proof.fallback_tails))
+        self.assertTrue(all(tail.boundary_index == tail.recovery_boundary_index
+                            for variant in proof.delayed_start_variants
+                            for tail in variant.fallback_tails))
+
+    def test_recovery_still_requires_standard_support_and_complete_world(self):
+        import mc2p.motion_nav.motion_solver as solver
+        request, fixture, result = _d120_first_jump_proof()
+        proof = result.proof
+        original = solver._fallback_support_fraction
+        for outcome in ("thin", "unknown", "unsupported"):
+            def changed_support(state, world, dependencies):
+                if state.movement_tick_id == 26:
+                    if outcome == "thin":
+                        # Enough for edge fallback, below .15 recovery support.
+                        return .149, None
+                    return None, solver._FallbackAttempt(
+                        None, SolveStatus.NEEDS_WORLD if outcome == "unknown"
+                        else SolveStatus.UNSUPPORTED,
+                        ((0, 63, 1),) if outcome == "unknown" else (), (outcome,))
+                return original(state, world, dependencies)
+            with self.subTest(outcome=outcome), mock.patch.object(
+                    solver, "_fallback_support_fraction", side_effect=changed_support):
+                evidence = solver._release_recovery_evidence(
+                    proof.trajectory, fixture.context.world, request,
+                    tick_inputs=proof.tick_inputs)
+                expected = {"thin": SolveStatus.NO_SOLUTION_WITHIN_SEARCH,
+                            "unknown": SolveStatus.NEEDS_WORLD,
+                            "unsupported": SolveStatus.UNSUPPORTED}[outcome]
+                self.assertIs(evidence.status, expected)
+
+    def test_two_separate_risk_intervals_remain_blocked(self):
+        import mc2p.motion_nav.motion_solver as solver
+        request, fixture, result = _d120_first_jump_proof()
+        proof = result.proof
+        original = solver._prove_fallback_candidate
+        def two_risks(boundary, *args):
+            if boundary in (2, 4):
+                return solver._FallbackAttempt(
+                    None, SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
+            return original(boundary, *args)
+        with mock.patch.object(solver, "_prove_fallback_candidate", side_effect=two_risks):
+            evidence = solver._release_recovery_evidence(
+                proof.trajectory[:7], fixture.context.world, request,
+                tick_inputs=proof.tick_inputs[:6])
+        self.assertIs(evidence.status, SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
+
+    def test_incumbent_result_message_stays_below_half_the_existing_limit(self):
+        from mc2p.motion_nav.motion_worker import GapMotionSolveResult
+        _, _, result = _d120_first_jump_proof()
+        self.assertIs(result.status, SolveStatus.SOLVED, result)
+        message = GapMotionSolveResult("d121-incumbent", 1, result, 0)
+        self.assertLessEqual(len(canonical_motion_bytes(message)), 1_048_576)
+        self.assertLessEqual(len(pickle.dumps(message, protocol=5)), 1_048_576)
+        restored = pickle.loads(pickle.dumps(message, protocol=5))
+        self.assertEqual(restored, message)
+        restored.solve_result.proof.__post_init__()
+
+
 class D121S0Tests(unittest.TestCase):
     def test_independent_exit_cannot_feed_frozen_successor(self):
         result = probe.independent_exit_fact()
@@ -123,10 +414,9 @@ class D121S0Tests(unittest.TestCase):
             with self.subTest(values=values), self.assertRaises(ValueError):
                 probe.single_branch_input(values)
 
-    def test_missing_joint_authority_is_a_frozen_gap_not_a_fake_success(self):
+    def test_s0_gap_records_are_immutable_historical_diagnostics(self):
         facts = probe.unimplemented_facts()
         self.assertEqual({f.kind for f in facts}, set(probe.GapKind))
-        self.assertTrue(all(f.status == "unimplemented" for f in facts))
         with self.assertRaises(FrozenInstanceError):
             facts[0].status = "passed"
 
@@ -184,7 +474,6 @@ class D121S0Tests(unittest.TestCase):
         self.assertEqual(result["physics_steps_per_decision"], [28] * 3)
         self.assertEqual(len(result["elapsed_ms"]), 3)
         self.assertIsNone(result["background_ready_margin_ticks"])
-        self.assertEqual(result["background_ready_status"], "joint_worker_not_implemented")
 
 
 class D121S1Tests(unittest.TestCase):
@@ -393,7 +682,7 @@ class D121OnlineSolverFallbackTests(unittest.TestCase):
     def test_online_release_uses_declared_sneak_and_keeps_complete_tail(self):
         entry, world = self._entry_world()
         evidence = _release_recovery_evidence(
-            (entry,), world, self._request(entry, ("sneak",)))
+            (entry,), world, self._request(entry, ("sneak",)), tick_inputs=())
 
         self.assertIsNone(evidence.status)
         self.assertEqual(len(evidence.fallback_tails), 1)
@@ -415,7 +704,7 @@ class D121OnlineSolverFallbackTests(unittest.TestCase):
         for control in ("neutral", "back"):
             with self.subTest(control=control):
                 evidence = _release_recovery_evidence(
-                    (entry,), world, self._request(entry, (control,)))
+                    (entry,), world, self._request(entry, (control,)), tick_inputs=())
                 self.assertIs(evidence.status,
                               SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
                 self.assertEqual(evidence.fallback_tails, ())
@@ -435,7 +724,7 @@ class D121OnlineSolverFallbackTests(unittest.TestCase):
             with self.subTest(status=status), mock.patch.object(
                     solver, "_prove_fallback_candidate", side_effect=injected):
                 evidence = solver._release_recovery_evidence(
-                    (entry,), world, request)
+                    (entry,), world, request, tick_inputs=())
                 self.assertIsNone(evidence.status)
                 self.assertEqual(
                     evidence.fallback_tails[0].candidate.candidate_id, "sneak")
@@ -471,7 +760,7 @@ class D121OnlineSolverFallbackTests(unittest.TestCase):
     def test_online_fallback_tail_rejects_detached_input_or_release_witness(self):
         entry, world = self._entry_world()
         evidence = _release_recovery_evidence(
-            (entry,), world, self._request(entry, ("sneak",)))
+            (entry,), world, self._request(entry, ("sneak",)), tick_inputs=())
         tail = evidence.fallback_tails[0]
         wrong = TickInput(0., 0., False, False, False, entry.yaw_radians)
         with self.assertRaises(ContractViolation):
@@ -519,14 +808,14 @@ class D121OnlineSolverFallbackTests(unittest.TestCase):
         entry = prepared_request.entry_state
         request = self._request(entry, ("sneak",))
         initial = _release_recovery_evidence(
-            (entry,), PhysicsWorldView.from_snapshot(snapshot), request)
+            (entry,), PhysicsWorldView.from_snapshot(snapshot), request, tick_inputs=())
         support = next(
             position for position in initial.fallback_tails[0].dependencies
             if dict(snapshot.facts)[position].block is not None)
         changed = _snapshot_with_change(snapshot, support, UNKNOWN_CELL)
 
         evidence = _release_recovery_evidence(
-            (entry,), PhysicsWorldView.from_snapshot(changed), request)
+            (entry,), PhysicsWorldView.from_snapshot(changed), request, tick_inputs=())
 
         self.assertIs(evidence.status, SolveStatus.NEEDS_WORLD)
         self.assertIn(support, evidence.missing_cells)
@@ -545,7 +834,7 @@ class D121OnlineSolverFallbackTests(unittest.TestCase):
                 solver, "_fallback_support_fraction",
                 side_effect=unsupported_boundary):
             evidence = solver._release_recovery_evidence(
-                (entry,), world, self._request(entry, ("sneak",)))
+                (entry,), world, self._request(entry, ("sneak",)), tick_inputs=())
 
         self.assertIs(evidence.status,
                       SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
@@ -557,15 +846,15 @@ class D121OnlineSolverFallbackTests(unittest.TestCase):
         proof = solve_one_cell_gap(anchor, world, GapSolveRequest(
             (0, 1), LandingRegion(*target), CandidateExecutionWindow(11, 12))).proof
         primary = proof.fallback_tails
-        moved = (replace(primary[1], boundary_index=0),
-                 replace(primary[0], boundary_index=1), *primary[2:])
+        moved = (replace(primary[1], boundary_index=0, recovery_boundary_index=0),
+                 replace(primary[0], boundary_index=1, recovery_boundary_index=1), *primary[2:])
         with self.assertRaises(ContractViolation):
             replace(proof, fallback_tails=moved)
 
         delayed = proof.delayed_start_variants[0]
         tails = delayed.fallback_tails
-        moved = (replace(tails[1], boundary_index=0),
-                 replace(tails[0], boundary_index=1), *tails[2:])
+        moved = (replace(tails[1], boundary_index=0, recovery_boundary_index=0),
+                 replace(tails[0], boundary_index=1, recovery_boundary_index=1), *tails[2:])
         with self.assertRaises(ContractViolation):
             replace(delayed, fallback_tails=moved)
 

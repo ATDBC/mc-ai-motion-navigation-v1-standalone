@@ -1,0 +1,9 @@
+{
+  "command": "D:\\My_project\\mc_ai\\.venv\\python.exe -m unittest tests.motion_nav.test_d121_handoff_execution.RouteTailTests -v",
+  "failures": [
+    {"test": "test_L_publishes_prepared_boundary_with_submittable_default_fallback", "actual": "committed_exit_choice", "expected": "prepared_action_boundary"},
+    {"test": "test_installed_fixed_candidate_outlives_worker_wait_but_not_exact_window", "tick": 26, "actual_expired": true, "expected_expired": false}
+  ],
+  "lifecycle": "The candidate was registered, installed through apply and finish, with no pending worker identity. The previous 20-tick worker waiting expiry still cleared it before L=26.",
+  "scope": "Repair the installed-candidate lifecycle condition, preserving the worker waiting limit and exact proof expiry."
+}

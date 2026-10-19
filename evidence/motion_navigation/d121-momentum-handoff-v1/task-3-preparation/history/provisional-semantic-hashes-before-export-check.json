@@ -1,0 +1,15 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D121 Task 3 fixed successor preparation only",
+  "normalization": "CRLF_TO_LF",
+  "status": "current",
+  "source_base_commit": "c33e9ba1ca19bc8bd1b763323eff31a38aac2fa0",
+  "historical_s1_record_sha256": "01235a49e63f7659f7d96e302154b5d4f746eb3d693f82c30e119e6c4dec2b4b",
+  "files": {
+    "mc2p/motion_nav/motion_chain.py": "2e02fbf64029f3211a855a1d4632886953adcb5dad8881ee5aacfab847c1ddea",
+    "mc2p/motion_nav/motion_coordination.py": "1372ecb5528fb9c7b655d41a24ac901da418b431c235791e013f075030d62d97",
+    "mc2p/motion_nav/motion_solver.py": "c447b3a26e744e5da2ac5a624b858fd03d5ca39b10a5522ea2e3ae05b029d0e8",
+    "mc2p/motion_nav/prepared_motion.py": "bf1c233e7ad0aa58b140b34dbc3a146dfd7ea25cd3e22c208d14c76b7ac492e2",
+    "mc2p/motion_nav/prepared_motion_proof.py": "fd1fb0929f5de35c1e5d587aea1bcb16160b1544a54a8e2c4be2c227905908ab"
+  }
+}

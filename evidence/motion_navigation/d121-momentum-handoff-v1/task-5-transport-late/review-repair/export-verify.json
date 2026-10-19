@@ -1,0 +1,16 @@
+{
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "scripts/export_motion_navigation_standalone.py",
+    "verify",
+    "--root",
+    "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\task5-review-repair-export"
+  ],
+  "cwd": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree",
+  "exit_code": 0,
+  "wall_seconds": 0.7594572999514639,
+  "tests_run": null,
+  "unittest_seconds": null,
+  "stdout": "STANDALONE_EXPORT_OK files=2745\n",
+  "stderr": ""
+}

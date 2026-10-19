@@ -1,0 +1,9 @@
+{
+  "baseline": "0e6b014176915496bbd6402962e798ae9e09c0fb",
+  "command": "D:\\My_project\\mc_ai\\.venv\\python.exe -m unittest tests.motion_nav.test_d121_handoff_execution.CommittedExecutorTests -v",
+  "result": "FAILED (errors=1)",
+  "passing": "test_default_admission_stays_closed",
+  "failing": "test_single_executor_consumes_main_fallback_and_actual_witness",
+  "error": "AttributeError: 'MotionCandidateAdmitter' object has no attribute 'admit_committed'",
+  "scope": "Before Task4 production edits; actual receipt-driven execution is required."
+}

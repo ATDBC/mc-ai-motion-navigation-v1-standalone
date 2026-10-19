@@ -1,0 +1,112 @@
+{
+  "result": "PASS",
+  "runs": 88,
+  "valid_matrix_files": [
+    "matrix-directions-first-2.json",
+    "matrix-required-1.json"
+  ],
+  "directions": 4,
+  "scenario_counts": {
+    "accept_activation": 4,
+    "cancel15": 4,
+    "cancel23": 4,
+    "cancel24": 4,
+    "cancel25": 4,
+    "cancel26": 4,
+    "cancel29": 4,
+    "commit_activation": 4,
+    "deliver_activation": 4,
+    "expired_dispatch": 4,
+    "late10": 4,
+    "late2": 4,
+    "late5": 4,
+    "never": 4,
+    "old_generation": 4,
+    "prepare_activation": 4,
+    "process_ready": 4,
+    "ready": 4,
+    "replace_goal": 4,
+    "stamp_only": 4,
+    "successor_dependency": 4,
+    "worker_dead": 4
+  },
+  "L_wall_ms": {
+    "samples": 88,
+    "p50": 1.5077,
+    "p95": 5.7828,
+    "p99": 6.2512,
+    "max": 6.2512
+  },
+  "tail_wall_ms": {
+    "samples": 684,
+    "p50": 1.2071,
+    "p95": 1.3601,
+    "p99": 1.5167,
+    "max": 9.4263
+  },
+  "max_message_bytes": 530709,
+  "process_ready": [
+    {
+      "direction": 0,
+      "first_installed_tick": 14,
+      "ready_margin_ticks": 12,
+      "messages": {
+        "current_result_canonical": 321959,
+        "current_result_pickle5": 41687,
+        "prepared_job_canonical": 236460,
+        "prepared_job_queue_sender": 91592,
+        "bundle_canonical": 461552,
+        "wire_protocol5_payload": 515900
+      },
+      "wall_submit_to_end_ms": 2544.8396
+    },
+    {
+      "direction": 1,
+      "first_installed_tick": 14,
+      "ready_margin_ticks": 12,
+      "messages": {
+        "current_result_canonical": 333951,
+        "current_result_pickle5": 41981,
+        "prepared_job_canonical": 238337,
+        "prepared_job_queue_sender": 91885,
+        "bundle_canonical": 475389,
+        "wire_protocol5_payload": 529738
+      },
+      "wall_submit_to_end_ms": 2555.2141
+    },
+    {
+      "direction": 2,
+      "first_installed_tick": 14,
+      "ready_margin_ticks": 12,
+      "messages": {
+        "current_result_canonical": 332943,
+        "current_result_pickle5": 42032,
+        "prepared_job_canonical": 239578,
+        "prepared_job_queue_sender": 93324,
+        "bundle_canonical": 475578,
+        "wire_protocol5_payload": 530709
+      },
+      "wall_submit_to_end_ms": 2556.3085
+    },
+    {
+      "direction": 3,
+      "first_installed_tick": 14,
+      "ready_margin_ticks": 12,
+      "messages": {
+        "current_result_canonical": 332869,
+        "current_result_pickle5": 41588,
+        "prepared_job_canonical": 239027,
+        "prepared_job_queue_sender": 92447,
+        "bundle_canonical": 474817,
+        "wire_protocol5_payload": 529007
+      },
+      "wall_submit_to_end_ms": 2547.2784
+    }
+  ],
+  "source_release_ticks": [
+    37,
+    48
+  ],
+  "max_damage": 0.0,
+  "max_registry_after_source_release": 0
+}

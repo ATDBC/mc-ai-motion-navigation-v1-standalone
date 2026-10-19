@@ -1,0 +1,6 @@
+{
+  "schema": "mc2p.d121-task4-execution.v1",
+  "runs": [],
+  "result": "FAILED",
+  "failure": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\scripts\\d121_handoff_execution_matrix.py\", line 180, in main\n    row = run_case(direction, scenario)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\scripts\\d121_handoff_execution_matrix.py\", line 162, in run_case\n    \"successor_binding\": case.proof.successor_binding.commands_digest,\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'SuccessorFeasibilityBinding' object has no attribute 'commands_digest'\n"
+}

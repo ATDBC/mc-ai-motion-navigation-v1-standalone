@@ -72,6 +72,7 @@ NEUTRAL_VALUE_SYMBOLS = {'mc2p.motion_nav.physics_types.JAVA_1_21_RULESET', 'mat
 # selector from this ruler.
 TYPED_LIFECYCLE_CLASSIFICATIONS = {
     'ActivationStatus': 'Runtime 激活结果，不选择动作或控制器',
+    'CommittedExecutionPhase': '同一执行器消费主后缀、尾段和释放见证的阶段，不选择动作或控制器',
     'DependencyStatus': '已绑定世界依赖的复核结果',
     'PreparedAdmissionStatus': '准备结果的登记状态',
     'PreparedComputeStatus': '后台准备计算结果',
@@ -82,6 +83,7 @@ TYPED_LIFECYCLE_CLASSIFICATIONS = {
     'PreparedSubmitStatus': '准备作业提交结果',
     'ProofUse': '同一证明的候选、执行和安全收尾用途',
     'ReferenceStatus': '准备证明引用的保留和释放结果',
+    'ReferenceRejectReason': '既有证明引用释放失败的原因，不选择动作或控制器',
     'SnapshotBorrowStatus': '局部世界快照借用的就绪、锁忙和容量结果',
     'SnapshotLeaseStatus': '局部世界快照租约结果',
     'SnapshotPublishStatus': '局部世界快照发布的就绪、容量和校验结果',
@@ -91,6 +93,16 @@ TYPED_LIFECYCLE_CLASSIFICATIONS = {
 }
 NON_IMPLEMENTATION_ENUMS.update(TYPED_LIFECYCLE_CLASSIFICATIONS)
 CLASSIFICATION_NOTES.update(TYPED_LIFECYCLE_CLASSIFICATIONS)
+
+# These enums specify what a fallback proof must establish.  They do not
+# select an action implementation or controller; unknown proof enums still
+# require an explicit review rather than a naming-based exemption.
+TYPED_PROOF_CLASSIFICATIONS = {
+    'FallbackTerminalMode': '安全尾段的终态证明条件，不选择动作实现或控制器',
+    'FallbackYawMode': '安全尾段输入的朝向语义，不选择动作实现或控制器',
+}
+NON_IMPLEMENTATION_ENUMS.update(TYPED_PROOF_CLASSIFICATIONS)
+CLASSIFICATION_NOTES.update(TYPED_PROOF_CLASSIFICATIONS)
 NEUTRAL_VALUE_SYMBOLS.add('errno.EPIPE')
 CLASSIFICATION_NOTES['errno.EPIPE'] = '操作系统管道关闭错误码，不选择运动实现'
 

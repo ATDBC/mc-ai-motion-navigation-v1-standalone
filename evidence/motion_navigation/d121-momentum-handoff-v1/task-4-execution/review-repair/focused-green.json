@@ -1,0 +1,18 @@
+{
+  "schema": "mc2p.d121-task4-review-repair-green.v1",
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-X",
+    "utf8",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d121_handoff_execution.FormalDefaultTests.test_retired_fallback_release_is_independent_of_report_reason",
+    "tests.motion_nav.test_d121_handoff_execution.FormalDefaultTests.test_tiny_support_uses_actual_witness_and_releases_without_generic_rollout",
+    "tests.motion_nav.test_d121_handoff_execution.FormalDefaultTests.test_L_and_complete_tail_only_compare_cached_proof_references",
+    "-v"
+  ],
+  "elapsed_seconds": 15.68010240001604,
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "test_retired_fallback_release_is_independent_of_report_reason (tests.motion_nav.test_d121_handoff_execution.FormalDefaultTests.test_retired_fallback_release_is_independent_of_report_reason) ... ok\ntest_tiny_support_uses_actual_witness_and_releases_without_generic_rollout (tests.motion_nav.test_d121_handoff_execution.FormalDefaultTests.test_tiny_support_uses_actual_witness_and_releases_without_generic_rollout) ... ok\ntest_L_and_complete_tail_only_compare_cached_proof_references (tests.motion_nav.test_d121_handoff_execution.FormalDefaultTests.test_L_and_complete_tail_only_compare_cached_proof_references) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 15.237s\n\nOK\n"
+}

@@ -1,0 +1,132 @@
+{
+  "schema": "mc2p.d121-transport-late-summary.v2",
+  "matrix": "matrix-audited.json",
+  "result": "FAILED_STOPPED",
+  "d121_status": "PARTIAL_STOPPED",
+  "same_full_action_and_window": true,
+  "runs": [
+    {
+      "policy": "timely_l1",
+      "target_sequence": 26,
+      "target_window": [
+        27,
+        27
+      ],
+      "actual_effect_tick": 27,
+      "outcome": "TIMELY_SUCCESS",
+      "final_target_ledger": {
+        "status": "applied",
+        "requested_first_tick": 27,
+        "latest_allowed_first_tick": 27,
+        "applied_ticks": [
+          27
+        ],
+        "resolved_at_tick": 27
+      },
+      "terminal_failure": null,
+      "final_body": {
+        "position": [
+          0.5,
+          64.0,
+          6.812656160928958
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "damage": 0.0
+      },
+      "final_driver_state": "success",
+      "source_released": true
+    },
+    {
+      "policy": "late_l2",
+      "target_sequence": 26,
+      "target_window": [
+        27,
+        27
+      ],
+      "actual_effect_tick": 28,
+      "outcome": "RED_EXPIRED_JUMP_PHYSICALLY_APPLIED",
+      "final_target_ledger": {
+        "status": "applied_outside_window",
+        "requested_first_tick": 27,
+        "latest_allowed_first_tick": 27,
+        "applied_ticks": [
+          28
+        ],
+        "resolved_at_tick": 28
+      },
+      "terminal_failure": {
+        "code": "backend_io",
+        "message": "calculator stopped: needs_world ()",
+        "source": "runtime"
+      },
+      "final_body": {
+        "position": [
+          0.5,
+          61.215894526631075,
+          4.932339390913378
+        ],
+        "velocity": [
+          0.0,
+          -0.7787179680492816,
+          0.062226637935621304
+        ],
+        "on_ground": false,
+        "damage": 0.0
+      },
+      "final_driver_state": "stopping",
+      "source_released": false
+    },
+    {
+      "policy": "never_applied",
+      "target_sequence": 26,
+      "target_window": [
+        27,
+        27
+      ],
+      "actual_effect_tick": null,
+      "outcome": "RED_LOST_SUCCESSOR_BODY_UNRESOLVED",
+      "final_target_ledger": {
+        "status": "superseded",
+        "requested_first_tick": 27,
+        "latest_allowed_first_tick": 27,
+        "applied_ticks": [],
+        "resolved_at_tick": 28
+      },
+      "terminal_failure": {
+        "code": "backend_io",
+        "message": "calculator stopped: needs_world ()",
+        "source": "runtime"
+      },
+      "final_body": {
+        "position": [
+          0.5,
+          61.305438451751215,
+          2.866235343038194
+        ],
+        "velocity": [
+          0.0,
+          -0.6517088341626173,
+          0.03994959399893555
+        ],
+        "on_ground": false,
+        "damage": 0.0
+      },
+      "final_driver_state": "stopping",
+      "source_released": false
+    }
+  ],
+  "diagnostic_tests": 6,
+  "previous_manifest_sha256": "4f4fce77b8f01c4d6b7c2af26aa14dc0a79426524a92d64a79f258302cbdecfb",
+  "not_claimed": [
+    "late/never safe termination",
+    "Java dynamic validation",
+    "Fabric",
+    "full source/snapshot release matrix",
+    "D121 PASS"
+  ]
+}

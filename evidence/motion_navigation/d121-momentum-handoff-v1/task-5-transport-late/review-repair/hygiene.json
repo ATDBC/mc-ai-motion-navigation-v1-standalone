@@ -1,0 +1,35 @@
+{
+  "new_source_and_text_lf_only": [
+    ".gitattributes",
+    "scripts/d121_transport_late_probe.py",
+    "tests/motion_nav/test_d121_transport_late.py",
+    "docs/motion_navigation/stages/d121-fallback-backed-momentum-handoff-plan.md",
+    "docs/motion_navigation/acceptance/d121-fallback-backed-momentum-handoff.md"
+  ],
+  "all_new_review_evidence_lf_only": true,
+  "default_whitespace_checks": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "c4f353868e1976bad4c94fd0ed5df43bf12c9f4d"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "historical_crlf_handling": "Existing evidence attributes pattern applied to Task5; old data bytes untouched",
+  "production_changes": []
+}

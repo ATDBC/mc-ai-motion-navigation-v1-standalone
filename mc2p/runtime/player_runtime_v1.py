@@ -15,7 +15,8 @@ from mc2p.contracts.common import ContractViolation, require_nonnegative_int
 from mc2p.contracts.motion_activation import (
     ActivationRejectReason, ActivationResult, ActivationStatus, FirstStreamApplication,
     PreparedActivationTransaction, PreparedActivationAcceptance, PreparedActivationDelivery,
-    PreparedStreamDispatch, StreamActivationBinding,
+    PreparedStreamDispatch, StreamActivationBinding, IncumbentFallbackDispatch,
+    IncumbentFallbackPort,
 )
 from mc2p.contracts.intent_source import (
     ControlFrameProposalV1, IntentSourceV1, OrderedIntentV1,
@@ -449,15 +450,28 @@ class PlayerRuntimeV1:
                     )
                 )
                 action = decision.action
+                fallback, fallback_port = self._incumbent_fallback(decision, prepared_streams)
+                activation, selected_stream = self._activate_prepared_stream(
+                    decision, prepared_streams, incumbent_fallback=fallback)
+                if (activation is not None and activation.status in {
+                        ActivationStatus.ACTIVATION_MISMATCH, ActivationStatus.STALE_GENERATION}):
+                    if fallback is None:
+                        report = self._report(task, decision, ExecutionStatusV0.RUNNING,
+                                              "prepared_activation_rejected", None, obs)
+                        return RuntimeStepResultV1(obs, decision, report, stream_activation=activation)
+                    if not fallback_port.register_incumbent_fallback(fallback, self._input_ledger):
+                        raise ContractViolation("incumbent fallback authority changed before submission")
+                    action = fallback.action
+                    selected_execution_window = CandidateExecutionWindow(
+                        fallback.window.earliest_tick, fallback.window.latest_tick)
+                    selected_stream = None
+                    decision = replace(decision, action=action, movement_tick_window=fallback.window,
+                        suppressed_intents=decision.suppressed_intents + ((
+                            dict(decision.selected_intents)["movement"],
+                            "prepared_activation_rejected_incumbent_fallback"),))
                 phase_code = FailureCodeV0.TRACE_IO
                 self._trace.write("dispatch", {"decision": decision, "task": task, "profile": profile,
                                                 "observation_request": request})
-                activation, selected_stream = self._activate_prepared_stream(decision, prepared_streams)
-                if (activation is not None and activation.status in {
-                        ActivationStatus.ACTIVATION_MISMATCH, ActivationStatus.STALE_GENERATION}):
-                    report = self._report(task, decision, ExecutionStatusV0.RUNNING,
-                                          "prepared_activation_rejected", None, obs)
-                    return RuntimeStepResultV1(obs, decision, report, stream_activation=activation)
                 self._request_sequence += 1
                 phase_code = FailureCodeV0.BACKEND_IO
                 self._submit_input_record(action, selected_execution_window)
@@ -543,7 +557,26 @@ class PlayerRuntimeV1:
                 self._seal()
                 raise
 
-    def _activate_prepared_stream(self, decision, dispatches):
+    def _incumbent_fallback(self, decision, dispatches):
+        selected = dict(decision.selected_intents).get("movement")
+        matching = tuple(item for item in dispatches
+                         if item.proposal.movement_intent_id == selected)
+        if len(matching) != 1 or not isinstance(matching[0].port, IncumbentFallbackPort):
+            return None, None
+        port = matching[0].port
+        fallback = port.incumbent_fallback(decision.action, self._observation, self._input_ledger)
+        if fallback is None:
+            return None, None
+        if type(fallback) is not IncumbentFallbackDispatch:
+            raise ContractViolation("incumbent fallback requires the typed local port")
+        old, new = fallback.action, decision.action
+        if ((old.episode_id, old.request_sequence_id, old.observation_sequence_id, old.deadline_monotonic_ns)
+                != (new.episode_id, new.request_sequence_id, new.observation_sequence_id, new.deadline_monotonic_ns)
+                or old.valid_for_ticks != 1):
+            raise ContractViolation("incumbent fallback must use this call's unsent sequence")
+        return fallback, port
+
+    def _activate_prepared_stream(self, decision, dispatches, *, incumbent_fallback=None):
         if not dispatches:
             return None, None
         selected = dict(decision.selected_intents).get("movement")
@@ -599,6 +632,8 @@ class PlayerRuntimeV1:
         if type(transaction) is ActivationResult:
             return transaction, None
         if type(transaction) is not PreparedActivationTransaction:
+            return mismatch(ActivationRejectReason.TRANSACTION)
+        if incumbent_fallback is not None and transaction.old_action is not incumbent_fallback.action:
             return mismatch(ActivationRejectReason.TRANSACTION)
         accepted = dispatch.port.accept_activation(transaction)
         if type(accepted) is ActivationResult:

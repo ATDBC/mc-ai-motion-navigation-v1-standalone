@@ -1,0 +1,10 @@
+{
+  "command": "D:\\My_project\\mc_ai\\.venv\\python.exe -m unittest tests.motion_nav.test_d121_handoff_execution.FormalDefaultTests.test_runtime_prepare_rejection_sends_incumbent_fallback_once -v",
+  "result": "FAILED (failures=1)",
+  "actual_backend_actions": 26,
+  "expected_backend_actions": 27,
+  "boundary_tick": 26,
+  "actual": "prepare_activation typed rejection returned without advancing CalculatorBackend",
+  "expected": "one exact incumbent sneak at L+1, registered to the current executor",
+  "path": ["RuntimeNavigationDriver", "NavigationSession", "ExecutionSupervisor", "ActionRouteExecutor", "MotionRouteCoordinator", "PlayerRuntimeV1", "CalculatorBackend"]
+}

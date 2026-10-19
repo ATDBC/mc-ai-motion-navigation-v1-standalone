@@ -1,0 +1,20 @@
+{
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d121_transport_late",
+    "tests.motion_nav.test_d121_handoff_execution",
+    "tests.motion_nav.test_d102_runtime_activation",
+    "tests.motion_nav.test_navigation_design_metrics",
+    "tests.motion_nav.test_standalone_export",
+    "-q"
+  ],
+  "cwd": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree",
+  "exit_code": 0,
+  "wall_seconds": 222.75719609996304,
+  "tests_run": 126,
+  "unittest_seconds": 222.177,
+  "stdout": "",
+  "stderr": "----------------------------------------------------------------------\nRan 126 tests in 222.177s\n\nOK\n"
+}

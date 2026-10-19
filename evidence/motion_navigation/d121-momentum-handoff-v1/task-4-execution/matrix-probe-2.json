@@ -1,0 +1,6 @@
+{
+  "schema": "mc2p.d121-task4-execution.v1",
+  "runs": [],
+  "result": "FAILED",
+  "failure": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\scripts\\d121_handoff_execution_matrix.py\", line 179, in main\n    row = run_case(direction, scenario)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\scripts\\d121_handoff_execution_matrix.py\", line 129, in run_case\n    assert not case.session._motion_result_inbox.registered_handles\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+}

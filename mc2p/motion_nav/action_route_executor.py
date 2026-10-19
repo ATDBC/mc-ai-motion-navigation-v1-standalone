@@ -515,7 +515,10 @@ class ActionRouteExecutor:
         hot = None if handle is None else handle.hot_view
         status = PreparedQueryStatus.NOT_READY
         if hot is not None:
-            if anchor.movement_tick_id > hot.deadline_tick:
+            if (getattr(self._controller, "committed_execution", False)
+                    and not self._controller.matches_successor_handle(handle)):
+                status = PreparedQueryStatus.ENTRY_MISMATCH
+            elif anchor.movement_tick_id > hot.deadline_tick:
                 status = PreparedQueryStatus.OVERDUE
             elif (frame.session != anchor.session or frame.body.sequence_id != anchor.observation_sequence_id
                     or frame.body.movement_tick_id != anchor.movement_tick_id
@@ -800,7 +803,7 @@ class ActionRouteExecutor:
         elif type(action) is JumpUpSegment:
             admitted = self._verified_motion.get(self.action_index)
             if admitted is not None:
-                controller = VerifiedMotionExecutor()
+                controller = admitted.committed_executor or VerifiedMotionExecutor()
                 controller.start(admitted)
                 self._controller = controller
                 return
@@ -814,7 +817,7 @@ class ActionRouteExecutor:
         elif action_spec(action).controller_adapter is not None:
             admitted = self._verified_motion.get(self.action_index)
             if admitted is not None:
-                controller = VerifiedMotionExecutor()
+                controller = admitted.committed_executor or VerifiedMotionExecutor()
                 controller.start(admitted)
                 self._controller = controller
                 return
@@ -969,7 +972,7 @@ class ActionRouteExecutor:
         self.discard_prepared_candidates(action_index=index)
         self._verified_motion[index] = candidate
         if activating_current:
-            controller = VerifiedMotionExecutor()
+            controller = candidate.committed_executor or VerifiedMotionExecutor()
             controller.start(candidate)
             self._controller = controller
 
@@ -1096,6 +1099,24 @@ class ActionRouteExecutor:
             requested_latest_movement_tick=requested_latest_movement_tick,
         )
 
+    @property
+    def has_committed_execution(self) -> bool:
+        return getattr(self._controller, "committed_execution", False)
+
+    def exact_verified_release_ready(self, frame, anchor, ledger) -> bool:
+        if (not self.has_committed_execution or anchor is None or ledger is None
+                or anchor.observation_sequence_id != frame.body.sequence_id
+                or anchor.session != frame.session or self.route is None
+                or frame.world._owner is None
+                or self._controller._candidate.context.route_id != self.route.route_id
+                or self._controller._candidate.context.action_index != self.action_index):
+            return False
+        source = frame.world._owner
+        versions = self._controller._candidate.proof.world_dependency_versions
+        return (source.dependency_changes(versions).status is DependencyStatus.UNCHANGED
+                and self._controller.exact_release_ready(anchor, ledger,
+                    changed_cells=frame.changed_cells))
+
     def request_stop(self, cause: StopCause) -> None:
         if type(cause) is not StopCause:
             raise ContractViolation("action route stop cause must be typed")
@@ -1157,6 +1178,8 @@ class ActionRouteExecutor:
             was_running = controller.state is VerifiedMotionExecutorState.RUNNING
             controller.cancel(state_anchor,
                 preserve_verified_remainder=self._stop_cause is not StopCause.DEPENDENCY_CHANGED)
+            if controller.committed_execution:
+                return replace(previous, state=self.state, body_phase=None)
             if not was_running:
                 return replace(previous, state=self.state, body_phase=None)
             self.state = ActionRouteState.CANCELLING
@@ -1191,6 +1214,8 @@ class ActionRouteExecutor:
         state_anchor: StateAnchor | None,
         movement_yaw_radians: float | None = None,
     ) -> ActionRouteDecision:
+        if self.has_committed_execution:
+            return self._result(started, MovementV1(), 1, self.state.value, submit_input=False)
         # A business terminal does not release a body perched on an edge.
         if (state_anchor is not None
                 and state_anchor.observation_sequence_id == frame.body.sequence_id
@@ -1421,6 +1446,10 @@ class ActionRouteExecutor:
                 # Even an unchanged route yaw must win arbitration. Otherwise
                 # a simultaneous combat/safety look can invalidate this input.
                 look = LookV1(math.degrees(delta), 0.0)
+            if (self._controller.committed_exit_choice
+                    and self.prepared_successor_required):
+                self._pending_action_boundary_index = self.action_index + 1
+                verified = replace(verified, reason="prepared_action_boundary")
             return self._result(
                 started, verified.movement or MovementV1(),
                 max(1, verified.input_lease_ticks), verified.reason,

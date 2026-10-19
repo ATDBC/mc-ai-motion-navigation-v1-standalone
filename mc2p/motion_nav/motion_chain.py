@@ -6,14 +6,190 @@ authority.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import asdict, dataclass, replace
 from enum import StrEnum
+import hashlib
+import json
 import math
+from typing import TYPE_CHECKING
 from mc2p.contracts.common import ContractViolation, require_identifier, require_nonnegative_int
 from mc2p.contracts.motion_activation import validate_frozen_value
 from mc2p.motion_nav.online_motion import CandidateExecutionWindow
 from mc2p.motion_nav.physics_types import PhysicsState, TickInput
 from mc2p.motion_nav.world_model import BlockPos
+
+if TYPE_CHECKING:
+    from mc2p.motion_nav.motion_solver import LandingRegion, MotionCommandTick, MotionSolveKind
+    from mc2p.motion_nav.prepared_motion import PreparedScanBudget
+    from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds
+    from mc2p.motion_nav.physics_types import PhysicsRuleset
+else:
+    # Solver/prepared import this module. Constructors below enforce the exact
+    # native types lazily, while frozen graph validation can resolve hints
+    # during either module's import order.
+    MotionCommandTick = MotionSolveKind = LandingRegion = PreparedScanBudget = object
+    PhysicsWorldBounds = PhysicsRuleset = object
+
+
+@dataclass(frozen=True, slots=True)
+class FixedSuccessorSpec:
+    """A bounded caller choice; no candidate search or execution authority."""
+
+    commands: tuple[MotionCommandTick, ...]
+    kind: MotionSolveKind
+    direction: tuple[int, int]
+    landing: LandingRegion
+    fallback_candidates: tuple[FallbackCandidate, ...]
+    maximum_replay_steps: int
+    scan_budget: PreparedScanBudget
+
+    def __post_init__(self) -> None:
+        from mc2p.motion_nav.motion_solver import LandingRegion, MotionCommandTick, MotionSolveKind
+        from mc2p.motion_nav.prepared_motion import PreparedScanBudget
+        validate_frozen_value(self)
+        if (type(self.commands) is not tuple or not 1 <= len(self.commands) <= 40
+                or any(type(command) is not MotionCommandTick for command in self.commands)
+                or type(self.kind) is not MotionSolveKind or type(self.landing) is not LandingRegion
+                or self.direction not in ((0, 1), (1, 0), (0, -1), (-1, 0))
+                or type(self.scan_budget) is not PreparedScanBudget
+                or type(self.maximum_replay_steps) is not int
+                or not 1 <= self.maximum_replay_steps <= 40):
+            raise ContractViolation("fixed successor requires bounded native inputs and budgets")
+        validate_fallback_candidates(self.fallback_candidates)
+
+
+@dataclass(frozen=True, slots=True)
+class SuccessorFeasibilityBinding:
+    """Fixed-input feasibility only; all lifecycle identities stay outside."""
+
+    spec: FixedSuccessorSpec
+    parent_request_digest: str
+    parent_main_digest: str
+    exit_fallback_digest: str
+    first_start_tick: int
+    exit_boundary_index: int
+    entry_state: PhysicsState
+    expected_inputs: tuple[TickInput, ...]
+    input_digest: str
+    exit_state: PhysicsState
+    requested_window: CandidateExecutionWindow
+    ruleset: PhysicsRuleset
+    input_projection_version: str
+    dependency_digest: str
+    dependency_versions: tuple[tuple[BlockPos, int], ...]
+    parent_dependency_versions: tuple[tuple[BlockPos, int], ...]
+    resource_incomplete_reasons: tuple[str, ...]
+    expected_damage_points: float
+    damage_remaining_points: float
+    physics_steps: int
+    parent_verification_steps: int
+    preparation_bounds: PhysicsWorldBounds
+
+    def __post_init__(self) -> None:
+        from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds
+        from mc2p.motion_nav.physics_types import PhysicsRuleset
+        validate_frozen_value(self)
+        if (type(self.spec) is not FixedSuccessorSpec
+                or type(self.entry_state) is not PhysicsState
+                or type(self.exit_state) is not PhysicsState
+                or type(self.ruleset) is not PhysicsRuleset
+                or type(self.preparation_bounds) is not PhysicsWorldBounds
+                or type(self.requested_window) is not CandidateExecutionWindow
+                or type(self.expected_inputs) is not tuple
+                or len(self.expected_inputs) != len(self.spec.commands)
+                or any(type(value) is not TickInput for value in self.expected_inputs)):
+            raise ContractViolation("successor feasibility requires exact native replay values")
+        for name in ("parent_request_digest", "parent_main_digest", "exit_fallback_digest",
+                     "input_digest", "dependency_digest"):
+            value = getattr(self, name)
+            if type(value) is not str or len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+                raise ContractViolation("successor feasibility requires sealed SHA-256 digests")
+        for name in ("first_start_tick", "exit_boundary_index", "physics_steps", "parent_verification_steps"):
+            require_nonnegative_int(getattr(self, name), name)
+        if (self.physics_steps != len(self.spec.commands)
+                or self.physics_steps > self.spec.maximum_replay_steps
+                or self.requested_window != CandidateExecutionWindow(
+                    self.entry_state.movement_tick_id + 1, self.entry_state.movement_tick_id + 1)
+                or self.exit_state.movement_tick_id != self.entry_state.movement_tick_id + self.physics_steps
+                or self.exit_state.session != self.entry_state.session
+                or self.ruleset.ruleset_id != self.entry_state.ruleset_id
+                or self.ruleset.state_schema != self.entry_state.state_schema):
+            raise ContractViolation("successor feasibility timing, rules or replay budget differs")
+        require_identifier(self.input_projection_version, "successor input projection")
+        for versions in (self.dependency_versions, self.parent_dependency_versions):
+            positions = tuple(pos for pos, _ in versions)
+            if positions != tuple(sorted(set(positions))):
+                raise ContractViolation("successor dependencies must be ordered and unique")
+            for _, version in versions:
+                require_nonnegative_int(version, "successor semantic dependency version")
+        for amount in (self.expected_damage_points, self.damage_remaining_points):
+            if type(amount) not in (int, float) or not math.isfinite(amount) or amount < 0:
+                raise ContractViolation("successor damage must be finite and nonnegative")
+        if self.expected_damage_points > self.damage_remaining_points:
+            raise ContractViolation("successor exceeds its remaining damage balance")
+        from mc2p.motion_nav.prepared_motion_proof import canonical_motion_digest
+        from mc2p.motion_nav.online_motion import project_movement_command, ProjectionStatus
+        if (self.input_digest != canonical_motion_digest(self.expected_inputs)
+                or self.dependency_digest != canonical_motion_digest(self.dependency_versions)
+                or not self.exit_state.on_ground or not self.spec.landing.contains(self.exit_state)):
+            raise ContractViolation("successor inputs, dependencies or terminal state differ from feasibility")
+        for command, expected in zip(self.spec.commands, self.expected_inputs):
+            projected = project_movement_command(self.entry_state, command.movement,
+                movement_yaw_radians=command.required_movement_yaw_radians)
+            if projected.status is not ProjectionStatus.READY or projected.tick_input != expected:
+                raise ContractViolation("successor commands differ from the bound fixed inputs")
+
+    @property
+    def suffix_identity(self) -> tuple[object, ...]:
+        """Only bounded digests cross into the existing prepared stream."""
+        from mc2p.motion_nav.prepared_motion_proof import canonical_motion_digest
+        return (SuccessorPreparationReference(self.parent_request_digest,
+            self.parent_main_digest, self.exit_fallback_digest, self.input_digest,
+            canonical_motion_digest(self.spec.commands),
+            canonical_motion_digest(self.spec.fallback_candidates), self.entry_state,
+            self.exit_state, self.requested_window, self.ruleset, self.input_projection_version,
+            self.dependency_versions,
+            self.parent_dependency_versions,
+            self.damage_remaining_points, self.spec.scan_budget),)
+
+
+@dataclass(frozen=True, slots=True)
+class SuccessorPreparationReference:
+    """Bounded reference in the existing stream; no complete proof graph."""
+
+    parent_request_digest: str
+    parent_main_digest: str
+    exit_fallback_digest: str
+    input_digest: str
+    commands_digest: str
+    fallbacks_digest: str
+    entry_state: PhysicsState
+    exit_state: PhysicsState
+    requested_window: CandidateExecutionWindow
+    ruleset: PhysicsRuleset
+    input_projection_version: str
+    dependency_versions: tuple[tuple[BlockPos, int], ...]
+    parent_dependency_versions: tuple[tuple[BlockPos, int], ...]
+    damage_remaining_points: float
+    scan_budget: PreparedScanBudget
+
+    def __post_init__(self) -> None:
+        from mc2p.motion_nav.physics_types import PhysicsRuleset
+        from mc2p.motion_nav.prepared_motion import PreparedScanBudget
+        validate_frozen_value(self)
+        if (type(self.entry_state) is not PhysicsState or type(self.exit_state) is not PhysicsState
+                or type(self.requested_window) is not CandidateExecutionWindow
+                or type(self.ruleset) is not PhysicsRuleset or type(self.scan_budget) is not PreparedScanBudget):
+            raise ContractViolation("successor reference requires exact native contracts")
+        require_identifier(self.input_projection_version, "successor reference input projection")
+        for name in ("parent_request_digest", "parent_main_digest", "exit_fallback_digest",
+                     "input_digest", "commands_digest", "fallbacks_digest"):
+            value = getattr(self, name)
+            if type(value) is not str or len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+                raise ContractViolation("successor preparation requires sealed digests")
+        if self.requested_window != CandidateExecutionWindow(
+                self.entry_state.movement_tick_id + 1, self.entry_state.movement_tick_id + 1):
+            raise ContractViolation("fixed successor reference requires its unique next tick")
 
 
 class FallbackTerminalMode(StrEnum):
@@ -133,9 +309,14 @@ def fallback_release_witness_body_ready(
 
 @dataclass(frozen=True, slots=True)
 class FallbackTailProof:
-    """One selected, completely replayed fallback from one command boundary."""
+    """A parent boundary's main-suffix reference and exact fallback segment.
+
+    Only the fallback states are stored here. A committed boundary continues
+    the parent's inputs up to recovery_boundary_index before using this segment.
+    """
 
     boundary_index: int
+    recovery_boundary_index: int
     candidate: FallbackCandidate
     inputs: tuple[TickInput, ...]
     trajectory: tuple[PhysicsState, ...]
@@ -144,10 +325,22 @@ class FallbackTailProof:
     expected_damage_points: float
     release_witness_input: TickInput | None = None
     release_witness_state: PhysicsState | None = None
+    main_suffix_digest: str | None = None
 
     def __post_init__(self) -> None:
         validate_frozen_value(self)
         require_nonnegative_int(self.boundary_index, "fallback boundary index")
+        require_nonnegative_int(self.recovery_boundary_index, "fallback recovery boundary index")
+        deferred = self.recovery_boundary_index > self.boundary_index
+        if self.recovery_boundary_index < self.boundary_index:
+            raise ContractViolation("fallback recovery cannot precede its boundary")
+        if deferred:
+            if (type(self.main_suffix_digest) is not str
+                    or len(self.main_suffix_digest) != 64
+                    or any(value not in "0123456789abcdef" for value in self.main_suffix_digest)):
+                raise ContractViolation("committed fallback requires its exact main suffix digest")
+        elif self.main_suffix_digest is not None:
+            raise ContractViolation("immediate fallback cannot carry a main suffix digest")
         if (type(self.candidate) is not FallbackCandidate
                 or type(self.inputs) is not tuple
                 or not 1 <= len(self.inputs) <= self.candidate.maximum_ticks
@@ -193,6 +386,16 @@ class FallbackTailProof:
                 raise ContractViolation("sneak-edge fallback witness is detached")
         elif witnessed:
             raise ContractViolation("standard fallback cannot carry a release witness")
+
+
+def main_suffix_digest(inputs: tuple[TickInput, ...],
+                       trajectory: tuple[PhysicsState, ...]) -> str:
+    """Bind a compact reference to exact parent values during proof creation."""
+    value = (tuple(asdict(item) for item in inputs),
+             tuple(asdict(state) for state in trajectory))
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"),
+                         allow_nan=False, ensure_ascii=True).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 @dataclass(frozen=True, slots=True)

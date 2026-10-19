@@ -1,0 +1,20 @@
+{
+  "base_commit": "ec280f7bfd71afd4471c3b3965e1ce139476bd86",
+  "platform": "Windows / Python 3.11",
+  "boundary": "before any repair production change",
+  "tests": 12,
+  "failures_including_subtests": 16,
+  "exit_code": 1,
+  "seconds": 12.955,
+  "red_cases": [
+    "parent versions empty/missing/extra/changed pass both parent constructor and direct check (8 failures)",
+    "unused snapshot_digest remains in feasibility contract (1 failure)",
+    "complete-tail-only changed or UNKNOWN dependency still reports READY (2 failures)",
+    "wrong outer anchor projection/ruleset/schema/session and wrong world ruleset still report READY (5 failures)"
+  ],
+  "already_passing_boundaries": [
+    "tail-only stamp refresh stays READY",
+    "ordinary complete parent-only dependency change rejects before PREPARE",
+    "worker death does not invalidate an already installed complete local proof"
+  ]
+}

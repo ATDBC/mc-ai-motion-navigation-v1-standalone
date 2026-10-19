@@ -1,0 +1,16 @@
+{
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "scripts/export_motion_navigation_standalone.py",
+    "export",
+    "--root",
+    "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\task5-transport-final-gates-export"
+  ],
+  "cwd": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree",
+  "exit_code": 0,
+  "wall_seconds": 18.248846099944785,
+  "tests_run": null,
+  "unittest_seconds": null,
+  "stdout": "STANDALONE_EXPORT_ROOT=D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\task5-transport-final-gates-export\n",
+  "stderr": ""
+}

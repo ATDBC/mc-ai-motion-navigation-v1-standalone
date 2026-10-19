@@ -1,0 +1,64 @@
+{
+  "schema": "mc2p.d121-task4-review-repair-checks.v1",
+  "platform": "Windows",
+  "completed_local_date": "2026-10-20",
+  "source_base_commit": "a0a4645aa9d51f37a42a5781869605b0c6be1c0f",
+  "review_finding": "P1: HandoffEvidence.reason controlled retired fallback release witness consumption",
+  "production_change": "Remove the report-reason gate only; existing typed controller/disposition/RELEASED and actual receipt/state/dependency/owner/ledger guards unchanged",
+  "red": {
+    "record": "reason-mutation-red-valid-identifiers.json",
+    "tests": 1,
+    "failing_subtests": 3,
+    "exit_code": 1
+  },
+  "focused": {
+    "record": "focused-green.json",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "unittest_elapsed_seconds": 15.237,
+    "exit_code": 0
+  },
+  "full_affected_and_adjacent": {
+    "record": "regression.json",
+    "tests": 412,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "unittest_elapsed_seconds": 480.24,
+    "exit_code": 0
+  },
+  "independent_export": {
+    "record": "independent-export.json",
+    "root": ".tmp/task4-review-repair-export",
+    "verified_files": 2699,
+    "tests": 59,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "unittest_elapsed_seconds": 71.762,
+    "exit_code": 0
+  },
+  "previous_task4_record_sha256": "dc51d00c08380047f1f2c1a18520a1eef6f4afab4834b66deaf96faf7d16c5ce",
+  "production_semantics_changed": [
+    "mc2p/motion_nav/execution_supervisor.py"
+  ],
+  "protected_history_and_other_production_diff": "ZERO",
+  "git_diff_check": "PASS",
+  "not_rerun_or_claimed": [
+    "Original Task4 four-direction 88-case matrix",
+    "Fabric",
+    "Real transport L+2 physical sampling RED",
+    "Full source/snapshot publication matrix",
+    "30 idle/load performance signing"
+  ],
+  "conclusion": "Task4及时输入组件执行PASS",
+  "final_export_verify": {
+    "root": ".tmp/task4-review-repair-final-export",
+    "result": "STANDALONE_EXPORT_OK",
+    "verified_files": 2703,
+    "exit_code": 0,
+    "production_semantics_match": "All 12 source/independent/final-export files match the repair manifest"
+  }
+}

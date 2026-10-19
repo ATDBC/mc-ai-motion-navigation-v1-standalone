@@ -20,7 +20,7 @@ from mc2p.motion_nav.async_work import AsyncComputationScope, AsyncWorkIdentity,
 from mc2p.motion_nav.body_control import HandoffEvidence
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.motion_chain import (
-    FallbackCandidate, FallbackTerminalMode, ProvenFallbackSelection,
+    FallbackCandidate, FallbackTerminalMode, ProvenFallbackSelection, SuccessorPreparationReference,
     preserve_current_neutral_fallback, validate_fallback_candidates,
 )
 from mc2p.motion_nav.motion_solver import MotionCommandTick
@@ -466,6 +466,22 @@ class PreparedMotionRequest:
         _amount(self.damage_remaining_points, "damage balance")
         if self.damage_remaining_points > self.damage_budget.maximum_expected_damage_points:
             raise ContractViolation("damage balance exceeds the task's authorized budget")
+        if any(type(value) is SuccessorPreparationReference for value in self.safety_tail_requirement):
+            from mc2p.motion_nav.prepared_motion_proof import canonical_motion_digest
+            if len(self.safety_tail_requirement) != 1:
+                raise ContractViolation("fixed successor requires its single compact reference")
+            reference = self.safety_tail_requirement[0]
+            reference.__post_init__()
+            if (self.entry_state != reference.entry_state or self.exit_state != reference.exit_state
+                    or self.requested_window != reference.requested_window
+                    or self.ruleset != reference.ruleset
+                    or self.inherited_dependencies != reference.dependency_versions
+                    or self.damage_remaining_points != reference.damage_remaining_points
+                    or self.scan_budget != reference.scan_budget
+                    or self.expected_input_digest != reference.input_digest
+                    or canonical_motion_digest(self.commands) != reference.commands_digest
+                    or canonical_motion_digest(self.fallback_candidates) != reference.fallbacks_digest):
+                raise ContractViolation("fixed successor request differs from its compact feasibility reference")
 
 
 @dataclass(frozen=True, slots=True)

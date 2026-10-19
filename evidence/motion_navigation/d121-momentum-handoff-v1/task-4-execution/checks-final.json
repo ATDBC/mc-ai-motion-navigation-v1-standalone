@@ -1,0 +1,59 @@
+{
+  "schema": "mc2p.d121-task4-checks.v1",
+  "platform": "Windows",
+  "completed_local_date": "2026-10-20",
+  "source_base_commit": "0e6b014176915496bbd6402962e798ae9e09c0fb",
+  "python": "D:/My_project/mc_ai/.venv/python.exe",
+  "full_affected_and_adjacent": {
+    "command": "python -m unittest tests.motion_nav.test_d121_momentum_handoff tests.motion_nav.test_d121_successor_binding tests.motion_nav.test_d121_handoff_execution tests.motion_nav.test_d102_runtime_activation tests.motion_nav.test_d102_action_handoff tests.motion_nav.test_d102_registry_lifecycle tests.motion_nav.test_d102_receiver tests.motion_nav.test_d116_handoff_timeline tests.motion_nav.test_d116_semantic_dependency_handoff tests.motion_nav.test_d117_prepared_liveness_monitor tests.motion_nav.test_b10_motion_candidate tests.motion_nav.test_motion_continuation_quality tests.motion_nav.test_navigation_design_metrics tests.motion_nav.test_standalone_export -q",
+    "tests": 411,
+    "passed": 411,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "elapsed_seconds": 474.345,
+    "exit_code": 0,
+    "stdout": "Ran 411 tests in 474.345s; OK"
+  },
+  "independent_export": {
+    "root": ".tmp/task4-independent-export",
+    "verified_files": 2692,
+    "command": "python -m unittest tests.motion_nav.test_d121_handoff_execution tests.motion_nav.test_navigation_design_metrics -q",
+    "tests": 58,
+    "passed": 58,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "elapsed_seconds": 66.249,
+    "exit_code": 0
+  },
+  "matrix": {
+    "runs": 88,
+    "passed": 88,
+    "summary": "matrix-summary.json"
+  },
+  "hotpath": {
+    "baseline": "hotpath-baseline.json",
+    "current": "hotpath-current-final.json",
+    "new_physics": 0,
+    "solver_tail_proof_replay": 0,
+    "digest_canonical_pickle_variant": 0,
+    "existing_residual_steps_per_real_observed_tick_max": 1
+  },
+  "message_max_bytes": 530709,
+  "git_diff_check": "PASS",
+  "protected_history_and_forbidden_layers_diff": "ZERO",
+  "explicitly_not_run": [
+    "real transport L+2 physical sampling RED",
+    "Fabric",
+    "full source/snapshot publication matrix",
+    "30 idle/load performance signing"
+  ],
+  "final_export_verify": {
+    "root": ".tmp/task4-final-export",
+    "result": "STANDALONE_EXPORT_OK",
+    "files": 2695,
+    "exit_code": 0,
+    "scope": "Final production/docs/new evidence exported; no second full snapshot matrix claim"
+  }
+}

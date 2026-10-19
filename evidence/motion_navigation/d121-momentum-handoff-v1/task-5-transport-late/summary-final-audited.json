@@ -1,0 +1,162 @@
+{
+  "schema": "mc2p.d121-transport-late-final.v1",
+  "baseline_commit": "c4f353868e1976bad4c94fd0ed5df43bf12c9f4d",
+  "matrix": "matrix-final-audited.json",
+  "result": "FAILED_STOPPED",
+  "d121_status": "PARTIAL_STOPPED",
+  "same_full_action_and_window": true,
+  "runs": [
+    {
+      "policy": "timely_l1",
+      "target_sequence": 26,
+      "target_window": [
+        27,
+        27
+      ],
+      "actual_effect_tick": 27,
+      "outcome": "TIMELY_SUCCESS",
+      "final_target_ledger": {
+        "status": "applied",
+        "requested_first_tick": 27,
+        "latest_allowed_first_tick": 27,
+        "applied_ticks": [
+          27
+        ],
+        "resolved_at_tick": 27
+      },
+      "terminal_failure": null,
+      "final_body": {
+        "position": [
+          0.5,
+          64.0,
+          6.812656160928958
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "damage": 0.0
+      },
+      "final_driver_state": "success",
+      "source_released": true
+    },
+    {
+      "policy": "late_l2",
+      "target_sequence": 26,
+      "target_window": [
+        27,
+        27
+      ],
+      "actual_effect_tick": 28,
+      "outcome": "RED_EXPIRED_JUMP_PHYSICALLY_APPLIED",
+      "final_target_ledger": {
+        "status": "applied_outside_window",
+        "requested_first_tick": 27,
+        "latest_allowed_first_tick": 27,
+        "applied_ticks": [
+          28
+        ],
+        "resolved_at_tick": 28
+      },
+      "terminal_failure": {
+        "code": "backend_io",
+        "message": "calculator stopped: needs_world ()",
+        "source": "runtime"
+      },
+      "final_body": {
+        "position": [
+          0.5,
+          61.215894526631075,
+          4.932339390913378
+        ],
+        "velocity": [
+          0.0,
+          -0.7787179680492816,
+          0.062226637935621304
+        ],
+        "on_ground": false,
+        "damage": 0.0
+      },
+      "final_driver_state": "stopping",
+      "source_released": false
+    },
+    {
+      "policy": "never_applied",
+      "target_sequence": 26,
+      "target_window": [
+        27,
+        27
+      ],
+      "actual_effect_tick": null,
+      "outcome": "RED_LOST_SUCCESSOR_BODY_UNRESOLVED",
+      "final_target_ledger": {
+        "status": "superseded",
+        "requested_first_tick": 27,
+        "latest_allowed_first_tick": 27,
+        "applied_ticks": [],
+        "resolved_at_tick": 28
+      },
+      "terminal_failure": {
+        "code": "backend_io",
+        "message": "calculator stopped: needs_world ()",
+        "source": "runtime"
+      },
+      "final_body": {
+        "position": [
+          0.5,
+          61.305438451751215,
+          2.866235343038194
+        ],
+        "velocity": [
+          0.0,
+          -0.6517088341626173,
+          0.03994959399893555
+        ],
+        "on_ground": false,
+        "damage": 0.0
+      },
+      "final_driver_state": "stopping",
+      "source_released": false
+    }
+  ],
+  "checks": {
+    "checks-audited": {
+      "exit_code": 0,
+      "tests_run": 126,
+      "unittest_seconds": 222.177,
+      "wall_seconds": 222.75719609996304
+    },
+    "checks-final-gates": {
+      "exit_code": 0,
+      "tests_run": 8,
+      "unittest_seconds": 7.929,
+      "wall_seconds": 8.350839799968526
+    },
+    "export-tests-final-gates": {
+      "exit_code": 0,
+      "tests_run": 43,
+      "unittest_seconds": 14.208,
+      "wall_seconds": 15.095769800012931
+    },
+    "export-verify-final-gates": {
+      "exit_code": 0,
+      "tests_run": null,
+      "unittest_seconds": null,
+      "wall_seconds": 0.7581852998118848,
+      "verify_output": "STANDALONE_EXPORT_OK files=2728"
+    },
+    "design-metrics-check": {
+      "exit_code": 0,
+      "tests_run": null,
+      "unittest_seconds": null,
+      "wall_seconds": 2.091459200019017
+    }
+  },
+  "scope_note": "126 affected/adjacent tests preceded two aggregate-gate counterexamples; final 8 direct tests and 43 independent exported tests cover the final source. Production code unchanged.",
+  "historical_evidence_files_byte_verified": 86,
+  "production_or_java_changes": [],
+  "fabric_run": false,
+  "full_source_snapshot_release_matrix": false
+}

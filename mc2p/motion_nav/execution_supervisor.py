@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import math
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from uuid import uuid4
 
@@ -28,11 +28,13 @@ from mc2p.contracts.motion_activation import (
     PreparedActivationTransaction, StreamActivationBinding,
     PreparedActivationAcceptance, PreparedActivationDelivery, FirstStreamApplication,
     StreamApplicationResult, StreamApplicationStatus, StreamApplicationReason,
-    PreparedStreamDispatch,
+    PreparedStreamDispatch, IncumbentFallbackDispatch,
 )
 from mc2p.motion_nav.prepared_motion import (
     PreparedActionHandoff, PreparedHandoffApproval, PreparedHandoffRejectReason,
     PreparedHandoffStatus, PreparedQueryStatus,
+    ProofUse, ProofConsumerIdentity, ProofActionExitEvidence,
+    ProofSupervisorReleaseEvidence, ProofReleaseEvidence, ReferenceStatus, ReferenceRejectReason,
 )
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.async_work import AsyncComputationScope
@@ -86,8 +88,13 @@ def prepare_action_activation(control: RouteControl, approval: PreparedHandoffAp
     if (binding.compound_action.valid_for_ticks != 1 or handle is None
             or projected.tick_input != handle.hot_view.inputs[0]):
         return ActivationResult._from_native_references(mismatch, ActivationRejectReason.MOVEMENT)
+    controller = control.executor._controller
+    old_action = (controller.cached_incumbent_fallback(binding.compound_action)
+                  if getattr(controller, "committed_execution", False) else proposal.current_command)
+    if getattr(controller, "committed_execution", False) and old_action is None:
+        return ActivationResult._from_native_references(mismatch, ActivationRejectReason.HANDOFF)
     return PreparedActivationTransaction._from_native_references(
-        transaction_token="transaction-" + uuid4().hex, binding=binding, old_action=proposal.current_command,
+        transaction_token="transaction-" + uuid4().hex, binding=binding, old_action=old_action,
         new_action=binding.compound_action, permission_token=approval.approval_token, handoff_token=proposal.handoff_token)
 
 
@@ -221,6 +228,48 @@ class ExecutionSupervisor:
         if control is None or approval is None:
             return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.HANDOFF)
         return self.prepare_action_activation(control, approval, binding)
+
+    def incumbent_fallback(self, action, observation, ledger):
+        control = self._route
+        if control is None or self._probe is not None and self._probe.probe.owned:
+            return None
+        executor = control.executor
+        controller = executor._controller
+        anchor, frame = executor.preparation_anchor, executor._last_prepared_frame
+        own = None if observation is None else observation.self_state.value
+        if (not getattr(controller, "committed_execution", False)
+                or ledger is not executor.preparation_ledger
+                or anchor is None or frame is None or own is None
+                or observation.sequence_id != anchor.observation_sequence_id
+                or own.movement_tick_id != anchor.movement_tick_id
+                or observation.episode_id != action.episode_id
+                or frame.world._owner is None):
+            return None
+        from mc2p.motion_nav.world_snapshot import DependencyStatus
+        if frame.world._owner.dependency_changes(
+                controller._candidate.proof.world_dependency_versions).status is not DependencyStatus.UNCHANGED:
+            return None
+        return controller.incumbent_fallback(action, anchor, ledger,
+            owner_id=control.owner_id, changed_cells=frame.changed_cells)
+
+    def register_incumbent_fallback(self, fallback, ledger):
+        control = self._route
+        if (type(fallback) is not IncumbentFallbackDispatch or control is None
+                or fallback.owner_id != control.owner_id
+                or fallback.controller is not control.executor._controller
+                or ledger is not control.executor.preparation_ledger
+                or fallback is not fallback.controller._runtime_fallback
+                or fallback.controller._pending is not None):
+            return False
+        control.executor.register_verified_submission(fallback.command_index,
+            control_sequence=fallback.action.request_sequence_id,
+            requested_movement_tick=fallback.window.earliest_tick,
+            requested_latest_movement_tick=fallback.window.latest_tick)
+        control.executor.clear_pending_action_boundary()
+        fields = None if control.coordinator is None else control.coordinator._prepared_fields
+        if fields is not None:
+            control.coordinator._abandon_prepared_successor(fields, "runtime_selected_incumbent_fallback")
+        return True
 
     def _activation_is_current(self, transaction: PreparedActivationTransaction) -> bool:
         control, approval = self._prepared_approval_control, self._prepared_approval
@@ -797,8 +846,36 @@ class ExecutionSupervisor:
             evidence = route.safe_to_release(
                 frame, ledger, anchor, input_floor=self._route_input_floor,
             )
+            if (evidence.disposition is HandoffDisposition.QUIESCENT
+                    and not self._release_completed_prepared_uses(route, evidence, ledger)):
+                evidence = replace(evidence, disposition=HandoffDisposition.RETAIN,
+                    reason="prepared_command_terminal_evidence_incomplete")
             self._last_handoff = evidence
             self._last_handoff_controller = route
+            return evidence
+        retired = self._last_handoff_controller
+        previous = self._last_handoff
+        if (type(retired) is RouteControl and retired.executor.has_committed_execution
+                and previous is not None and previous.disposition is HandoffDisposition.QUIESCENT):
+            controller = retired.executor._controller
+            from mc2p.motion_nav.world_snapshot import DependencyStatus
+            valid = (self._pending_route is None and ledger is retired.executor.preparation_ledger
+                and anchor is not None and anchor.session == frame.session
+                and anchor.observation_sequence_id == frame.body.sequence_id
+                and previous.owner_id == retired.owner_id and previous.world_session == frame.session
+                and frame.world._owner is not None
+                and frame.world._owner.dependency_changes(
+                    controller._candidate.proof.world_dependency_versions).status is DependencyStatus.UNCHANGED
+                and controller.retired_release_still_current(anchor, ledger,
+                    confirmed_tick=previous.movement_tick_id))
+            evidence = HandoffEvidence(previous.owner_id, frame.session,
+                HandoffDisposition.QUIESCENT if valid else HandoffDisposition.RETAIN,
+                frame.body.sequence_id, None if ledger is None else ledger.latest_movement_tick_id,
+                MovementV1(), "consumed_exact_fallback_source_release" if valid
+                else "retired_fallback_release_fact_invalid")
+            if valid:
+                self._last_handoff_controller = None
+                self._last_handoff = evidence
             return evidence
         if (ledger is None or anchor is None
                 or anchor.session != frame.session
@@ -843,6 +920,54 @@ class ExecutionSupervisor:
         self._last_handoff = handoff
         self._last_handoff_controller = None
         return handoff
+
+    def _release_completed_prepared_uses(self, control, handoff, ledger):
+        """Release both body uses only after this owner's observed safe exit.
+
+        The same ordinary completion check serves existing D117 and explicit
+        D121 executions. Registry validation still owns command-terminal checks.
+        """
+        registry = control.activation_registry
+        if registry is None:
+            return True
+        controller = control.executor.prepared_controller
+        completed_handle = None if controller is None else controller.prepared_handle
+        for handle in registry.registered_handles:
+            if (handle is not completed_handle
+                    or handle.owner_id != control.owner_id
+                    or handle.route_id != control.route.route_id
+                    or not any(registry.usage_active(handle, use)
+                        for use in (ProofUse.EXECUTING, ProofUse.SAFE_TAIL))):
+                continue
+            if ledger is None or ledger.ledger_identity != handle.hot_view.ledger_id:
+                return False
+            terminals = tuple(record for record in ledger.snapshot()
+                if record.stream_command is not None
+                and record.stream_command.generation_id == handle.generation_id)
+            for use in (ProofUse.EXECUTING, ProofUse.SAFE_TAIL):
+                if not registry.usage_active(handle, use):
+                    continue
+                consumer = ProofConsumerIdentity.from_handle(handle, use)
+                exit_id = f"{handle.proof_token}/{use.value}/{handoff.movement_tick_id}"
+                evidence = ProofReleaseEvidence(consumer, terminals,
+                    ProofActionExitEvidence(consumer, exit_id, handoff),
+                    ProofSupervisorReleaseEvidence(consumer, exit_id, handoff))
+                released = control.executor.release_prepared_usage(handle, use=use, evidence=evidence)
+                if (released.status is ReferenceStatus.REJECTED
+                        and released.reason is ReferenceRejectReason.COMMAND_TERMINALS_MISSING
+                        and terminals):
+                    # Existing recovery may append a real ordinary neutral to
+                    # this proof use without calling it a successor stream.
+                    # Borrow the ledger interval; registry still requires exact
+                    # action identities/counts and rejects unrelated commands.
+                    complete = tuple(record for record in ledger.snapshot()
+                        if record.control_sequence >= terminals[0].control_sequence
+                        and record.requested_first_tick <= handoff.movement_tick_id)
+                    evidence = replace(evidence, command_terminals=complete)
+                    released = control.executor.release_prepared_usage(handle, use=use, evidence=evidence)
+                if released.status is not ReferenceStatus.RELEASED:
+                    return False
+        return True
 
     def incumbent_release_evidence(
         self, frame: NavigationFrame,

@@ -29,7 +29,8 @@ from mc2p.motion_nav.action_route_executor import (
 )
 from mc2p.motion_nav.body_control import BodyControlPhase
 from mc2p.motion_nav.motion_candidate import (
-    AdmittedMotionCandidate, MotionCandidateStatus,
+    AdmittedMotionCandidate, MotionCandidateContext, MotionCandidateStatus,
+    verified_start_state_matches,
 )
 from mc2p.motion_nav.motion_solver import (
     DEFAULT_AIR_TRANSITION_POLICIES, DEFAULT_GAP_SOLVER_POLICY,
@@ -37,6 +38,7 @@ from mc2p.motion_nav.motion_solver import (
     GapSolveRequest, GapSolverPolicy, LandingRegion, MotionSolveKind,
     MotionCommandTick, VerifiedMotionResult, SolveResult, SolveStatus, check_motion_entry,
     gap_entry_heading_delta_radians, gap_entry_heading_is_aligned,
+    validate_fixed_successor_parent,
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.retry_ledger import (
@@ -66,7 +68,7 @@ from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.fixed_route import GroundHandoffDisposition
 from mc2p.motion_nav.prepared_motion import (
     PreparedActionPreparation, PreparedAdmissionStatus, PreparedComputeStatus, PreparedScanBudget,
-    PreparedSubmitResult, PreparedSubmitStatus, StreamGeneration,
+    PreparedQueryStatus, PreparedSubmitResult, PreparedSubmitStatus, StreamGeneration,
 )
 
 
@@ -576,6 +578,132 @@ class MotionRouteCoordinator:
         require_nonnegative_int(action_index, "prepared stream action index")
         return self._prepared_streams.get(action_index)
 
+    def prepare_fixed_successor(self, result: GapMotionSolveResult, request,
+                                context: MotionCandidateContext, anchor: StateAnchor,
+                                world: PhysicsWorldView, *, ledger_identity: str,
+                                expected_work_identity: AsyncWorkIdentity) -> PreparedSubmitResult:
+        """Register explicitly selected fixed inputs without running the parent.
+
+        The caller keeps the independent current request/context/identity.
+        This preparation boundary never admits the parent's committed suffix.
+        """
+        from mc2p.motion_nav.world_snapshot import DependencyStatus
+        require_identifier(ledger_identity, "fixed successor ledger")
+        proof = None if type(result) is not GapMotionSolveResult else result.solve_result.proof
+        if (proof is None or type(context) is not MotionCandidateContext
+                or type(anchor) is not StateAnchor or type(world) is not PhysicsWorldView
+                or type(expected_work_identity) is not AsyncWorkIdentity
+                or result.work_identity != expected_work_identity
+                or expected_work_identity.scope != self.computation_scope
+                or expected_work_identity.owner_instance_id != self._owner_instance_id
+                or expected_work_identity.work_kind is not AsyncWorkKind.MOTION_SOLVE
+                or result.connection_id != expected_work_identity.subject_id
+                or result.candidate_revision != expected_work_identity.revision
+                or context.candidate_revision != result.candidate_revision
+                or context.candidate_revision <= self._candidate_revision
+                or context.planning_request_id != self.route.source_request_id
+                or context.planning_generation != self.route.planning_generation
+                or context.goal_id != self.route.goal_id or context.goal_revision != self.route.goal_revision
+                or context.route_id != self.route.route_id or context.route_revision != self.route.route_revision
+                or context.action_index != self.executor.action_index
+                or context.damage_budget != self.damage_budget
+                or proof.damage_budget != self.damage_budget
+                or anchor.physics_state != proof.entry_state
+                or anchor.session != world.session
+                or anchor.input_projection_version != proof.input_projection_version
+                or self._work_identity is not None):
+            raise ContractViolation("fixed successor selection differs from the current candidate context")
+        spec = request.fixed_successor_spec
+        validate_fixed_successor_parent(proof, request, spec)
+        binding = proof.successor_binding
+        source = world._world._owner
+        index = context.action_index + 1
+        if (source is None or index >= len(self.route.action_route.actions)
+                or action_spec(self.route.action_route.actions[index]).solve_kind is not spec.kind
+                or source.dependency_changes(binding.parent_dependency_versions).status is not DependencyStatus.UNCHANGED
+                or source.dependency_changes(binding.dependency_versions).status is not DependencyStatus.UNCHANGED
+                or binding.damage_remaining_points != max(0., self.damage_budget.maximum_expected_damage_points
+                    - self.executor.completed_movement_damage_points - proof.maximum_expected_damage_points)):
+            raise ContractViolation("fixed successor source, dependencies or remaining damage changed")
+        self.result_inbox.bind_world(source)
+        stream = StreamGeneration.from_selected_fields(generation_id="stream-" + uuid4().hex,
+            owner_id=f"route/{self.route.route_id}", request_id="motion-" + uuid4().hex,
+            route_id=self.route.route_id, action_index=index, expected_inputs=binding.expected_inputs,
+            entry_identity=(binding.entry_state,), requested_window=binding.requested_window,
+            suffix_identity=binding.suffix_identity,
+            late_start_hold_input=TickInput(0., 0., False, False, False, binding.entry_state.yaw_radians))
+        self._candidate_revision = context.candidate_revision + 1
+        identity = AsyncWorkIdentity(self.computation_scope, self._owner_instance_id,
+            AsyncWorkKind.MOTION_SOLVE, stream.request_id, self._candidate_revision)
+        fields = PreparedActionPreparation("job-" + uuid4().hex, identity, stream,
+            self.route.route_revision, self._candidate_revision, self.route.goal_revision,
+            spec.commands, binding.exit_state, ledger_identity, anchor.physics_state,
+            binding.dependency_versions, binding.ruleset, self.damage_budget,
+            binding.damage_remaining_points, spec.scan_budget, fallback_candidates=spec.fallback_candidates)
+        self._prepared_streams[index] = stream
+        return self._register_action_preparation(fields, binding.preparation_bounds,
+                                                 submitted_tick=anchor.movement_tick_id)
+
+    def apply_fixed_successor_preparation(self, *, movement_tick: int,
+                                          current_scope: AsyncComputationScope) -> bool:
+        """Install a registered candidate through the existing async apply."""
+        fields = self._prepared_fields
+        if fields is None or not self._is_fixed_preparation(fields):
+            return False
+        if (current_scope != self.computation_scope or not self.worker.is_alive()
+                or movement_tick >= fields.stream.requested_window.earliest_start_tick):
+            self._abandon_prepared_successor(fields, "fixed_successor_no_longer_eligible")
+            return False
+        query = self.result_inbox.query_prepared(fields.async_identity, movement_tick=movement_tick)
+        if query.handle is None:
+            return False
+        return self._apply_admitted_work(fields.async_identity, current_scope=current_scope,
+            install=lambda: self.executor.install_prepared_motion(query.handle),
+            retirement_cause="fixed_successor_preparation_installed")
+
+    @staticmethod
+    def _is_fixed_preparation(fields: PreparedActionPreparation) -> bool:
+        from mc2p.motion_nav.motion_chain import SuccessorPreparationReference
+        return (len(fields.stream.suffix_identity) == 1
+                and type(fields.stream.suffix_identity[0]) is SuccessorPreparationReference)
+
+    def fixed_successor_eligibility(self, anchor: StateAnchor, world: PhysicsWorldView, *,
+                                    current_scope: AsyncComputationScope,
+                                    ledger_identity: str, owner_id: str) -> PreparedQueryStatus:
+        """Compare already prepared values at L; this grants no permission."""
+        from mc2p.motion_nav.world_snapshot import DependencyStatus
+        fields = self._prepared_fields
+        if fields is None or not self._is_fixed_preparation(fields):
+            return PreparedQueryStatus.NOT_READY
+        binding = fields.stream.suffix_identity[0]
+        source = world._world._owner
+        if anchor.movement_tick_id != binding.entry_state.movement_tick_id:
+            if anchor.movement_tick_id > binding.entry_state.movement_tick_id:
+                self._abandon_prepared_successor(fields, "fixed_successor_missed_exact_tick")
+            return PreparedQueryStatus.TIMING_MISMATCH
+        valid = (current_scope == self.computation_scope and ledger_identity == fields.ledger_id
+            and owner_id == fields.stream.owner_id
+            and verified_start_state_matches(anchor.physics_state, binding.entry_state)
+            and anchor.session == binding.entry_state.session and world.session == binding.entry_state.session
+            and anchor.ruleset_id == binding.ruleset.ruleset_id
+            and anchor.state_schema == binding.ruleset.state_schema
+            and anchor.input_projection_version == binding.input_projection_version
+            and world.ruleset == binding.ruleset
+            and source is not None
+            and source.dependency_changes(binding.parent_dependency_versions).status is DependencyStatus.UNCHANGED
+            and source.dependency_changes(binding.dependency_versions).status is DependencyStatus.UNCHANGED)
+        if not valid:
+            self._abandon_prepared_successor(fields, "fixed_successor_basis_changed")
+            return PreparedQueryStatus.ENTRY_MISMATCH
+        query = self.result_inbox.query_prepared(fields.async_identity, movement_tick=anchor.movement_tick_id)
+        if query.handle is None or self._work_identity is not None:
+            self._abandon_prepared_successor(fields, "fixed_successor_not_ready_at_landing")
+            return PreparedQueryStatus.NOT_READY
+        if source.dependency_changes(query.handle.hot_view.dependency_versions).status is not DependencyStatus.UNCHANGED:
+            self._abandon_prepared_successor(fields, "fixed_successor_full_proof_dependency_changed")
+            return PreparedQueryStatus.DEPENDENCY_CHANGED
+        return query.status
+
     def prepare_upcoming_action(self, anchor: StateAnchor, world: PhysicsWorldView, *, ledger_identity: str):
         """Select a strict successor from the branch confirmed by a real receipt."""
         require_identifier(ledger_identity, "prepared ledger identity")
@@ -731,19 +859,26 @@ class MotionRouteCoordinator:
                 max(bounds.max_y, max(pos[1] for pos in positions)),
                 min(bounds.min_z, min(pos[2] for pos in positions)),
                 max(bounds.max_z, max(pos[2] for pos in positions)))
+        return self._register_action_preparation(fields, bounds,
+                                                 submitted_tick=real_anchor.movement_tick_id)
+
+    def _register_action_preparation(self, fields: PreparedActionPreparation,
+                                     bounds: PhysicsWorldBounds, *, submitted_tick: int) -> PreparedSubmitResult:
+        """Shared receiver registration and async lifecycle for both choices."""
+        identity, stream, action_index = fields.async_identity, fields.stream, fields.stream.action_index
         submitted = self.result_inbox.register_action_preparation(fields, bounds)
         self._prepared_fields, self._prepared_submission = fields, submitted
         if submitted.status is PreparedSubmitStatus.ACCEPTED:
             self.executor.require_prepared_action(
                 action_index,
-                ledger_identity=ledger_identity,
+                ledger_identity=fields.ledger_id,
             )
             now = self._clock()
-            window = AsyncWorkWindow(real_anchor.movement_tick_id, now, now + _MOTION_SOLVE_LIMIT_NS)
+            window = AsyncWorkWindow(submitted_tick, now, now + _MOTION_SOLVE_LIMIT_NS)
             self._work.begin(identity, window)
             self._remember_work_window(identity, window)
             self._pending_connection, self._pending_action_index = stream.request_id, action_index
-            self._pending_submitted_tick = real_anchor.movement_tick_id
+            self._pending_submitted_tick = submitted_tick
         elif action_index == self.executor.action_index + 1:
             self._abandon_prepared_successor(
                 fields,
@@ -1229,6 +1364,12 @@ class MotionRouteCoordinator:
                 "prepared requirement expiry needs exact typed state"
             )
         window = self._known_work_windows.get(fields.async_identity)
+        if (self._is_fixed_preparation(fields)
+                and self._work_identity != fields.async_identity):
+            # apply/finish ended the worker wait. The installed local proof
+            # retains only its exact first-input window and live dependencies.
+            return (anchor.movement_tick_id
+                    > fields.stream.requested_window.earliest_start_tick)
         return (
             anchor.movement_tick_id
                 > fields.stream.requested_window.earliest_start_tick
@@ -1666,6 +1807,14 @@ class MotionRouteCoordinator:
             state_anchor=anchor, input_ledger=ledger,
             movement_yaw_radians=movement_yaw_radians,
         )
+        controller = self.executor._controller
+        if (getattr(controller, "committed_exit_choice", False)
+                and self.executor.prepared_successor_required):
+            status = self.fixed_successor_eligibility(anchor, world,
+                current_scope=current_scope, ledger_identity=ledger.ledger_identity,
+                owner_id=f"route/{self.route.route_id}")
+            if status is not PreparedQueryStatus.READY_MATCH:
+                decision = replace(decision, reason_code="committed_default_fallback")
         self._sync_local_attempt_chain()
         if (decision.ground_handoff_disposition is GroundHandoffDisposition.REJECTED
                 and self._solve_basis_job is not None
@@ -1677,6 +1826,7 @@ class MotionRouteCoordinator:
             allow_grounded_reprepare
             and decision.state is ActionRouteState.INPUT_LOST
             and frame.body.is_on_ground
+            and not self.executor.has_committed_execution
         )
         if not grounded_recovery:
             self._end_grounded_recovery_wait()

@@ -1,0 +1,17 @@
+{
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_navigation_design_metrics",
+    "tests.motion_nav.test_standalone_export",
+    "-q"
+  ],
+  "cwd": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree",
+  "exit_code": 0,
+  "wall_seconds": 34.77575490018353,
+  "tests_run": 59,
+  "unittest_seconds": 34.68,
+  "stdout": "",
+  "stderr": "----------------------------------------------------------------------\nRan 59 tests in 34.680s\n\nOK\n"
+}

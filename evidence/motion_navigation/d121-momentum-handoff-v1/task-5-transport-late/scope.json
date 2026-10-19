@@ -1,0 +1,9 @@
+{
+  "schema": "mc2p.d121-transport-late-scope.v1",
+  "baseline_commit": "c4f353868e1976bad4c94fd0ed5df43bf12c9f4d",
+  "production_changes": [],
+  "java_changes": [],
+  "fabric_run": false,
+  "full_windows_run": false,
+  "stop_boundary": "ActionSnapshot/wire/Java exact movement-tick application gate requires a new decision"
+}

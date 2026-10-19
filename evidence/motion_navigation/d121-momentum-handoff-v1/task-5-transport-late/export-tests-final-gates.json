@@ -1,0 +1,17 @@
+{
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d121_transport_late",
+    "tests.motion_nav.test_navigation_design_metrics",
+    "-q"
+  ],
+  "cwd": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\task5-transport-final-gates-export",
+  "exit_code": 0,
+  "wall_seconds": 15.095769800012931,
+  "tests_run": 43,
+  "unittest_seconds": 14.208,
+  "stdout": "",
+  "stderr": "----------------------------------------------------------------------\nRan 43 tests in 14.208s\n\nOK\n"
+}

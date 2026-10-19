@@ -370,6 +370,10 @@ class RouteControl:
             frame.body.velocity_blocks_per_second[2],
         ) > .10:
             reason = "current_body_still_moving"
+        elif self.executor.has_committed_execution:
+            quiescent = self.executor.exact_verified_release_ready(frame, anchor, ledger)
+            reason = ("observed_exact_fallback_release_witness" if quiescent
+                      else "committed_release_witness_not_current")
         else:
             predicted = verified_ground_rollout(
                 frame, anchor.physics_state, MovementV1(),

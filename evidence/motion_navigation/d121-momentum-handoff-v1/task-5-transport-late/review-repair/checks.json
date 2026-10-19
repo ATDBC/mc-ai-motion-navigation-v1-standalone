@@ -1,0 +1,39 @@
+{
+  "baseline_commit": "071d9d5c108dcdea89443ae8c8657f3426a94e69",
+  "findings_closed": [
+    "P2",
+    "P3"
+  ],
+  "checks": {
+    "focused": {
+      "exit_code": 0,
+      "tests_run": 11,
+      "unittest_seconds": 9.811
+    },
+    "metrics-export-tests": {
+      "exit_code": 0,
+      "tests_run": 59,
+      "unittest_seconds": 34.68
+    },
+    "export-tests": {
+      "exit_code": 0,
+      "tests_run": 46,
+      "unittest_seconds": 15.983
+    },
+    "export-verify": {
+      "exit_code": 0,
+      "tests_run": null,
+      "unittest_seconds": null,
+      "verify_output": "STANDALONE_EXPORT_OK files=2745"
+    }
+  },
+  "semantic_comparison": "semantic-comparison.json",
+  "same_control_semantics": true,
+  "literal_proof_or_message_equality_claimed": false,
+  "historical_evidence_files_byte_verified": 116,
+  "production_changes": [],
+  "fabric_run": false,
+  "java_dynamic_run": false,
+  "business_gate": "FAILED_STOPPED",
+  "d121_status": "PARTIAL_STOPPED"
+}

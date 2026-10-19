@@ -1,0 +1,226 @@
+{
+  "mode": "baseline-0e6b0141",
+  "frames": [
+    {
+      "source_tick": 20,
+      "elapsed_ms": 10.6487,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "calls": 1
+        }
+      ]
+    },
+    {
+      "source_tick": 35,
+      "elapsed_ms": 4.1811,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "calls": 1
+        }
+      ]
+    },
+    {
+      "source_tick": 36,
+      "elapsed_ms": 4.1865,
+      "calls": [
+        {
+          "kind": "physics",
+          "file": "motion_residual.py",
+          "caller": "calculate_motion_residual",
+          "calls": 1
+        }
+      ]
+    }
+  ],
+  "timeline_boundary": [
+    {
+      "movement_tick": 20,
+      "event_order": [
+        "routes_validated",
+        "coordinator_decide_enter",
+        "current_verified_entry_checked",
+        "verified_controller_decide_enter",
+        "verified_controller_decide_exit",
+        "executor_advance_enter",
+        "executor_advance_exit",
+        "coordinator_decide_exit",
+        "session_proposal_enter",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "supervisor_approval",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "session_proposal_exit",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_action_staged",
+        "prepared_route_commit",
+        "runtime_selected"
+      ],
+      "route_cancel_before_validation": false,
+      "route_cancel_after_validation": false,
+      "route_stop_cause_after_validation": null,
+      "incumbent_validation": "unaffected",
+      "incumbent_validation_reason": "no_intersection",
+      "controller_state_at_coordinator_enter": "running",
+      "coordinator_scope_matches": true,
+      "coordinator_worker_alive": true,
+      "executor_cancel_requested": false,
+      "executor_stop_cause": null,
+      "current_verified_entry_result": null,
+      "current_verified_has_started": true,
+      "current_verified_command_index": 12,
+      "current_verified_state": "running",
+      "verified_state_before_decide": "running",
+      "verified_changed_cells": [],
+      "verified_state_after_decide": "complete",
+      "verified_decision_reason": "verified_motion_complete",
+      "controller_state_before": "complete",
+      "executor_advance_called": true,
+      "action_index_before_advance": 1,
+      "boundary_before_advance": null,
+      "action_index_after_advance": 1,
+      "boundary_after_advance": 2,
+      "executor_route_reason": "prepared_action_boundary",
+      "controller_state_after": "complete",
+      "action_index_after": 1,
+      "session_route_reason": "prepared_action_boundary",
+      "landing_observed": true,
+      "observed_position": [
+        0.5,
+        64.0,
+        3.611733607102635
+      ],
+      "observed_velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        1.8451384788630785
+      ],
+      "ledger_latest_tick": 20,
+      "ledger_is_current": true,
+      "changed_cells": [],
+      "boundary_at_session_proposal": 2,
+      "prepared_entry_status": "ready_match",
+      "prepared_boundary_reached": true,
+      "body_matches_prepared_entry": true,
+      "requested_window_allows_next_tick": true,
+      "dependency_facts_equal": false,
+      "dependency_payloads_equal": true,
+      "dependency_versions_equal": true,
+      "stamp_only_dependency_differences": 3,
+      "sample_stamp_only_cells": [
+        [
+          0,
+          63,
+          3
+        ],
+        [
+          0,
+          63,
+          5
+        ],
+        [
+          0,
+          63,
+          6
+        ]
+      ],
+      "prepared_window": [
+        21,
+        22
+      ],
+      "supervisor_status": "approved",
+      "supervisor_reason": null,
+      "action_index_after_prepared_commit": 2,
+      "tracker_action_index_after_prepared_commit": 2,
+      "runtime_selected_movement": {
+        "forward": 1,
+        "strafe": 0,
+        "jump": true,
+        "sneak": false,
+        "sprint": true
+      },
+      "runtime_selected_groups": [
+        "movement",
+        "look"
+      ],
+      "runtime_effect_tick": 21,
+      "controller_state_after_runtime": "running",
+      "applied_movement_at_observation": {
+        "forward": 1,
+        "strafe": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false
+      },
+      "session_state": "executing",
+      "session_reason_after_effect": "submit_verified_command",
+      "runtime_failure": null,
+      "route_validation": {
+        "observation_sequence_id": 18,
+        "incumbent": {
+          "action_index": 1,
+          "disposition": "unaffected",
+          "reason": "no_intersection"
+        }
+      },
+      "controller_ids": [
+        "route_executor"
+      ],
+      "source_bound": true,
+      "body_control_activities": [
+        {
+          "action_index": 1,
+          "observation_sequence_id": 18,
+          "phase": "strict_preparation"
+        }
+      ],
+      "submitted_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 18,
+        "phase": "strict_preparation"
+      },
+      "applied_body_activity": {
+        "action_index": 1,
+        "observation_sequence_id": 18,
+        "phase": "strict_preparation"
+      },
+      "active_and_applied_owner_match": true,
+      "owner_gap": false,
+      "async_events": []
+    }
+  ]
+}

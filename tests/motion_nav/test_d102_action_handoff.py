@@ -637,10 +637,32 @@ class ActionHandoffTests(unittest.TestCase):
                 installed = self.executor._verified_motion[1]
                 proof = installed.proof
                 if change == "inputs":
+                    from mc2p.motion_nav.motion_solver import (
+                        AirTransitionSolveRequest, _prove_delayed_starts, _replay_verified_commands,
+                    )
                     commands = proof.commands[:-1] + (replace(proof.commands[-1],
-                        movement=replace(proof.commands[-1].movement, sprint=True)),)
-                    proof = replace(proof, commands=commands, tick_inputs=proof.tick_inputs[:-1] +
-                                    (replace(proof.tick_inputs[-1], sprint=True),))
+                        movement=replace(proof.commands[-1].movement, sneak=True)),)
+                    # A neutral command cannot project sprint=True. Change a
+                    # real projected input and rebuild the complete proof.
+                    request = AirTransitionSolveRequest(proof.kind, proof.direction, proof.landing,
+                        proof.execution_window, proof.damage_budget, policy=proof.solver_policy,
+                        recovery_horizon_ticks=proof.recovery_horizon_ticks,
+                        continuation=proof.continuation, fallback_candidates=proof.fallback_candidates)
+                    anchor = self.anchor(proof.entry_state, self.current.observation_sequence_id)
+                    primary, failure = _replay_verified_commands(proof.entry_state, commands,
+                        self.physics_world, request, start_tick=proof.execution_window.earliest_start_tick)
+                    self.assertIsNone(failure)
+                    delayed, dependencies, resources, failure = _prove_delayed_starts(
+                        anchor, commands, self.physics_world, request)
+                    self.assertIsNone(failure)
+                    proof = replace(proof, commands=commands, tick_inputs=primary.tick_inputs,
+                        trajectory=primary.trajectory, step_events=primary.step_events,
+                        exit_state=primary.exit_state, fallback_tails=primary.fallback_tails,
+                        release_safe_command_indices=primary.release_safe_command_indices,
+                        delayed_start_variants=delayed,
+                        world_dependencies=tuple(sorted(set(primary.world_dependencies) | set(dependencies))),
+                        resource_incomplete_reasons=tuple(sorted(
+                            set(primary.resource_incomplete_reasons) | set(resources))))
                 elif change == "window":
                     proof = replace(proof, execution_window=CandidateExecutionWindow(
                         proof.execution_window.earliest_start_tick, proof.execution_window.earliest_start_tick),

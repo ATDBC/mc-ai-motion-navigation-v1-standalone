@@ -1,0 +1,15 @@
+{
+  "result": "FAILED",
+  "tests": 406,
+  "elapsed_seconds": 471.989,
+  "failures": 5,
+  "errors": 0,
+  "failed_tests": {
+    "test_complete_stream_with_native_release_evidence_releases_source": "The existing D102 helper appended a real neutral to registry without a stream annotation. Auto-completion borrowed only stream terminals and correctly retained both uses on COMMAND_TERMINALS_MISSING.",
+    "test_handoff_disposition_is_internal_lifecycle": "Process had loaded the old metrics module before CommittedExecutionPhase was registered; fresh 35-test run passes.",
+    "test_repository_derived_details_are_deterministic_and_constraints_are_visible": "Same old in-process metrics classification; fresh run passes.",
+    "test_d121_historical_s1_and_current_preparation_semantics_are_separate": "Export still selected Task3 source hashes for changed Task4 files.",
+    "test_f2_export_matches_frozen_production_fingerprints": "Export current semantic precedence has not yet included a new Task4 manifest."
+  },
+  "historical_evidence": "Task3 and older semantic manifests remain unchanged; Task4 requires a separate manifest."
+}

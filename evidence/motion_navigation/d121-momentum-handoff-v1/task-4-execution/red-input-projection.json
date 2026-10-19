@@ -1,0 +1,8 @@
+{
+  "test": "test_mixed_sneak_input_cannot_silently_change_runtime_projection",
+  "result": "RED",
+  "elapsed_seconds": 0.360,
+  "observed": "Admission allowed the unsupported projection through its fast guard, then start_variant rejected the mutated suffix instead of returning committed_input_projection_unsupported.",
+  "projection_fact": "Existing project_movement_command scales nonzero sneak axes by 0.3; raw int(TickInput.forward) is safe only for supported integer axes with sneak stationary.",
+  "required_scope": "Current D121 sneak=(0,0,true), back=(-1,0,false) project exactly. Fractional axes and mixed nonzero sneak controls must reject before executor admission; no int truncation or changed physical input is permitted."
+}

@@ -1,0 +1,17 @@
+{
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d121_transport_late",
+    "tests.motion_nav.test_navigation_design_metrics",
+    "-q"
+  ],
+  "cwd": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\task5-review-repair-export",
+  "exit_code": 0,
+  "wall_seconds": 16.86112350015901,
+  "tests_run": 46,
+  "unittest_seconds": 15.983,
+  "stdout": "",
+  "stderr": "----------------------------------------------------------------------\nRan 46 tests in 15.983s\n\nOK\n"
+}

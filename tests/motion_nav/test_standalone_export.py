@@ -318,7 +318,7 @@ class StandaloneExportTests(unittest.TestCase):
         self.assertTrue(all(fact["status"] == "unimplemented"
                             for fact in final["gaps"]))
 
-    def test_d121_current_semantics_cover_s1_fallback_proof_bytes(self):
+    def test_d121_historical_s1_and_current_preparation_semantics_are_separate(self):
         relative = (
             "evidence/motion_navigation/d121-momentum-handoff-v1/"
             "published-production-semantic-hashes.json"
@@ -339,7 +339,21 @@ class StandaloneExportTests(unittest.TestCase):
             "mc2p/motion_nav/prepared_motion.py",
             "mc2p/motion_nav/prepared_motion_proof.py",
         })
-        for name, expected in report["files"].items():
+        current_path = (self.root / "evidence/motion_navigation/d121-momentum-handoff-v1/"
+                        "task-4-execution/review-repair/production-semantic-hashes.json")
+        self.assertIn(current_path.relative_to(self.root).as_posix(), required)
+        current = json.loads(current_path.read_text("utf-8"))
+        self.assertEqual(current["normalization"], "CRLF_TO_LF")
+        self.assertEqual(current["historical_s1_record_sha256"],
+                         hashlib.sha256((self.root / relative).read_bytes()).hexdigest())
+        task3_path = self.root / "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/repair/production-semantic-hashes.json"
+        self.assertEqual(current["previous_task3_record_sha256"],
+                         hashlib.sha256(task3_path.read_bytes()).hexdigest())
+        task4_path = self.root / "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/production-semantic-hashes.json"
+        self.assertEqual(current["previous_task4_record_sha256"],
+                         hashlib.sha256(task4_path.read_bytes()).hexdigest())
+        self.assertTrue(set(report["files"]).issubset(current["files"]))
+        for name, expected in current["files"].items():
             raw = (self.root / name).read_bytes().replace(b"\r\n", b"\n")
             self.assertEqual(hashlib.sha256(raw).hexdigest(), expected, name)
 
@@ -566,10 +580,23 @@ class StandaloneExportTests(unittest.TestCase):
             self.root / "evidence/motion_navigation/d121-momentum-handoff-v1/"
             "published-production-semantic-hashes.json"
         ).read_text("utf-8"))["files"]
+        d121_task3 = json.loads((
+            self.root / "evidence/motion_navigation/d121-momentum-handoff-v1/"
+            "task-3-preparation/repair/production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
+        d121_task4 = json.loads((
+            self.root / "evidence/motion_navigation/d121-momentum-handoff-v1/"
+            "task-4-execution/production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
+        d121_task4_repair = json.loads((
+            self.root / "evidence/motion_navigation/d121-momentum-handoff-v1/"
+            "task-4-execution/review-repair/production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
         current_semantics = {**canonical, **r1, **r2, **r3, **handoff,
                              **late_handoff, **post_loss, **tp0, **published,
                              **d105, **d107, **d108, **d109, **d112, **d113,
-                             **d114, **d115, **d116, **d117, **d119, **d121}
+                             **d114, **d115, **d116, **d117, **d119, **d121, **d121_task3, **d121_task4,
+                             **d121_task4_repair}
         tp0_root = self.root / "evidence/motion_navigation/trajectory-proto-tp0-v1"
         frozen = json.loads((tp0_root / "frozen-control-manifest.json").read_text("utf-8"))
         audit = json.loads((tp0_root / "fabric/audit-summary.json").read_text("utf-8"))

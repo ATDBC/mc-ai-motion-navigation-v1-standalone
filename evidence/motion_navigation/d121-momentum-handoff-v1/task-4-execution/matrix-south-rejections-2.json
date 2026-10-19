@@ -1,0 +1,6 @@
+{
+  "schema": "mc2p.d121-task4-execution.v1",
+  "runs": [],
+  "result": "FAILED",
+  "failure": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\scripts\\d121_handoff_execution_matrix.py\", line 177, in main\n    row = run_case(direction, scenario)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\scripts\\d121_handoff_execution_matrix.py\", line 85, in run_case\n    assert result.report.failure is None, result.report.failure\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: FailureV0(code=<FailureCodeV0.BACKEND_IO: 'backend_io'>, message='sensor geometry differs from the collision world; inject changes through Perturbations.world_edits', retryable=True, source='runtime', detail_json='{\"exception_type\": \"RuntimeError\"}', schema_version='mc2p.failure.v0')\n"
+}

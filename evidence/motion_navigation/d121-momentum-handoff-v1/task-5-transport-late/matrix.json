@@ -1,0 +1,6713 @@
+{
+  "schema": "mc2p.d121-transport-late-matrix.v1",
+  "result": "FAILED_STOPPED",
+  "same_successor_action_and_window": true,
+  "stop_reason": "current ActionSnapshot/wire has no exact movement-tick window; the L successor was physically sampled at L+2 before the Python ledger could classify it outside the [L+1,L+1] proof window",
+  "runs": [
+    {
+      "schema": "mc2p.d121-transport-late-case.v1",
+      "policy": "timely_l1",
+      "direction_index": 0,
+      "L": 26,
+      "expected_effect_tick": 27,
+      "target_sequence": 26,
+      "target_window": [
+        27,
+        27
+      ],
+      "target_action": {
+        "episode_id": "episode-sim",
+        "request_sequence_id": 26,
+        "observation_sequence_id": 26,
+        "deadline_monotonic_ns": 1650000000,
+        "movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": true,
+          "sneak": false,
+          "sprint": true
+        },
+        "look": {
+          "yaw_delta_degrees": 0.0,
+          "pitch_delta_degrees": 0.0
+        },
+        "operation": null,
+        "valid_for_ticks": 1,
+        "cancel_request_sequence_id": null,
+        "schema_version": "mc2p.action-snapshot.v1"
+      },
+      "actual_effect_tick": 27,
+      "actual_movement": {
+        "forward": 1,
+        "strafe": 0,
+        "jump": true,
+        "sneak": false,
+        "sprint": true
+      },
+      "expired_jump_physically_applied": false,
+      "protocol_prevented_expired_application": true,
+      "final_target_ledger": {
+        "status": "applied",
+        "requested_first_tick": 27,
+        "latest_allowed_first_tick": 27,
+        "applied_ticks": [
+          27
+        ],
+        "resolved_at_tick": 27
+      },
+      "terminal_failure": null,
+      "final_body": {
+        "position": [
+          0.5,
+          64.0,
+          6.812656160928958
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "damage": 0.0
+      },
+      "final_driver_state": "success",
+      "source_released": true,
+      "transport_events": [
+        {
+          "kind": "successor_submitted",
+          "source_tick": 26,
+          "requested_effect_tick": 27,
+          "sequence": 26,
+          "movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": true,
+            "sneak": false,
+            "sprint": true
+          }
+        },
+        {
+          "kind": "successor_physically_sampled",
+          "movement_tick": 27,
+          "sequence": 26,
+          "movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": true,
+            "sneak": false,
+            "sprint": true
+          }
+        }
+      ],
+      "protocol_audit": {
+        "action_intent_has_movement_tick_window": true,
+        "action_snapshot_has_movement_tick_window": false,
+        "action_snapshot_has_prepared_generation": false,
+        "action_snapshot_fields": [
+          "episode_id",
+          "request_sequence_id",
+          "observation_sequence_id",
+          "deadline_monotonic_ns",
+          "movement",
+          "look",
+          "operation",
+          "valid_for_ticks",
+          "cancel_request_sequence_id",
+          "schema_version"
+        ],
+        "client_preapplication_exact_tick_guard": false,
+        "client_sequence_guard_is_tick_window": false,
+        "client_wall_deadline_is_tick_window": false,
+        "client_cancel_is_self_expiry": false,
+        "conclusion": "the exact movement window remains Python-local; the current wire can report an outside-window application after sampling but cannot reject that application by exact movement tick before physics",
+        "wire_fields": [
+          "cancel_request_sequence_id",
+          "episode_id",
+          "look",
+          "movement",
+          "observation_budget_ns",
+          "observation_sequence_id",
+          "operation",
+          "remaining_budget_ns",
+          "request_sequence_id",
+          "schema_version",
+          "valid_for_ticks"
+        ],
+        "wire_has_movement_tick_window": false,
+        "wire_has_prepared_generation": false,
+        "wire_cancel_request_sequence_id": null,
+        "wire_valid_for_ticks": 1
+      },
+      "outcome": "TIMELY_SUCCESS",
+      "frames": [
+        {
+          "source_tick": 0,
+          "effect_tick": 1,
+          "decision_sequence": 0,
+          "decision_window": [
+            1,
+            1
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 0,
+          "receipt_applications": [
+            {
+              "movement_tick": 1,
+              "sequence": 0,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -5.0425999870354525
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.06956040707864292
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 1,
+          "effect_tick": 2,
+          "decision_sequence": 1,
+          "decision_window": [
+            2,
+            2
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 1,
+          "receipt_applications": [
+            {
+              "movement_tick": 2,
+              "sequence": 1,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -4.845639566992262
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.10754038934358194
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 2,
+          "effect_tick": 3,
+          "decision_sequence": 2,
+          "decision_window": [
+            3,
+            3
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 2,
+          "receipt_applications": [
+            {
+              "movement_tick": 3,
+              "sequence": 2,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -4.610699164684133
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.12827745966023865
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 3,
+          "effect_tick": 4,
+          "decision_sequence": 3,
+          "decision_window": [
+            4,
+            4
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 3,
+          "receipt_applications": [
+            {
+              "movement_tick": 4,
+              "sequence": 3,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -4.355021692059347
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.13959990005313325
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 4,
+          "effect_tick": 5,
+          "decision_sequence": 4,
+          "decision_window": [
+            5,
+            5
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 4,
+          "receipt_applications": [
+            {
+              "movement_tick": 5,
+              "sequence": 4,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -4.088021779041667
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.14578195250765366
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 5,
+          "effect_tick": 6,
+          "decision_sequence": 5,
+          "decision_window": [
+            6,
+            6
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 5,
+          "receipt_applications": [
+            {
+              "movement_tick": 6,
+              "sequence": 5,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -3.814839813569466
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.1491573531478218
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 6,
+          "effect_tick": 7,
+          "decision_sequence": 6,
+          "decision_window": [
+            7,
+            7
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 6,
+          "receipt_applications": [
+            {
+              "movement_tick": 7,
+              "sequence": 6,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -3.538282447457097
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15100032189735363
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 7,
+          "effect_tick": 8,
+          "decision_sequence": 7,
+          "decision_window": [
+            8,
+            8
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 7,
+          "receipt_applications": [
+            {
+              "movement_tick": 8,
+              "sequence": 7,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -3.2598821125951956
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.152006582834598
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 8,
+          "effect_tick": 9,
+          "decision_sequence": 8,
+          "decision_window": [
+            9,
+            9
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 8,
+          "receipt_applications": [
+            {
+              "movement_tick": 9,
+              "sequence": 8,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -2.98047551679605
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15255600130633343
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 9,
+          "effect_tick": 10,
+          "decision_sequence": 9,
+          "decision_window": [
+            10,
+            10
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 9,
+          "receipt_applications": [
+            {
+              "movement_tick": 10,
+              "sequence": 9,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -2.7005195025251694
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.152855983791901
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 10,
+          "effect_tick": 11,
+          "decision_sequence": 10,
+          "decision_window": [
+            11,
+            11
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 10,
+          "receipt_applications": [
+            {
+              "movement_tick": 11,
+              "sequence": 10,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -2.420263505768721
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15301977422902086
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 11,
+          "effect_tick": 12,
+          "decision_sequence": 11,
+          "decision_window": [
+            12,
+            12
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 11,
+          "receipt_applications": [
+            {
+              "movement_tick": 12,
+              "sequence": 11,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -2.1398437185751527
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.1531092038076883
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 12,
+          "effect_tick": 13,
+          "decision_sequence": 12,
+          "decision_window": [
+            13,
+            13
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 12,
+          "receipt_applications": [
+            {
+              "movement_tick": 13,
+              "sequence": 12,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -1.859334501802917
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15315803235764072
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 13,
+          "effect_tick": 14,
+          "decision_sequence": 13,
+          "decision_window": [
+            14,
+            14
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 13,
+          "receipt_applications": [
+            {
+              "movement_tick": 14,
+              "sequence": 13,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -1.5787764564807287
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15318469274591476
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 14,
+          "effect_tick": 15,
+          "decision_sequence": 14,
+          "decision_window": [
+            15,
+            15
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": true,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 14,
+          "receipt_applications": [
+            {
+              "movement_tick": 15,
+              "sequence": 14,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": true,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.42,
+            -1.0981917507702665
+          ],
+          "velocity": [
+            0.0,
+            0.3332000064849853,
+            0.2623992493179124
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 15,
+          "effect_tick": 16,
+          "decision_sequence": 15,
+          "decision_window": [
+            16,
+            16
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 15,
+          "receipt_applications": [
+            {
+              "movement_tick": 16,
+              "sequence": 15,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.75320000648499,
+            -0.8103125012187039
+          ],
+          "velocity": [
+            0.0,
+            0.24813601118469247,
+            0.26197011709192203
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 16,
+          "effect_tick": 17,
+          "decision_sequence": 16,
+          "decision_window": [
+            17,
+            17
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 16,
+          "receipt_applications": [
+            {
+              "movement_tick": 17,
+              "sequence": 16,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.00133601766969,
+            -0.5228623838931317
+          ],
+          "velocity": [
+            0.0,
+            0.1647732941679385,
+            0.26157960676627073
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 17,
+          "effect_tick": 18,
+          "decision_sequence": 17,
+          "decision_window": [
+            18,
+            18
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 17,
+          "receipt_applications": [
+            {
+              "movement_tick": 18,
+              "sequence": 17,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.16610931183763,
+            -0.23580277689321072
+          ],
+          "velocity": [
+            0.0,
+            0.083077829901502,
+            0.2612242423699281
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 18,
+          "effect_tick": 19,
+          "decision_sequence": 18,
+          "decision_window": [
+            19,
+            19
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 18,
+          "receipt_applications": [
+            {
+              "movement_tick": 19,
+              "sequence": 18,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.24918714173913,
+            0.05090146571036758
+          ],
+          "velocity": [
+            0.0,
+            0.0030162733621769086,
+            0.2609008607692563
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 19,
+          "effect_tick": 20,
+          "decision_sequence": 19,
+          "decision_window": [
+            20,
+            20
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 19,
+          "receipt_applications": [
+            {
+              "movement_tick": 20,
+              "sequence": 19,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.2522034151013,
+            0.33728232671327407
+          ],
+          "velocity": [
+            0.0,
+            -0.07544405357341469,
+            0.26060658351264493
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 20,
+          "effect_tick": 21,
+          "decision_sequence": 20,
+          "decision_window": [
+            21,
+            21
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 20,
+          "receipt_applications": [
+            {
+              "movement_tick": 21,
+              "sequence": 20,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.17675936152789,
+            0.6233689104595692
+          ],
+          "velocity": [
+            0.0,
+            -0.15233517546680642,
+            0.26033879120912856
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 21,
+          "effect_tick": 22,
+          "decision_sequence": 21,
+          "decision_window": [
+            22,
+            22
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 21,
+          "receipt_applications": [
+            {
+              "movement_tick": 22,
+              "sequence": 21,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.02442418606108,
+            0.909187701902348
+          ],
+          "velocity": [
+            0.0,
+            -0.2276884763889121,
+            0.2600951002129287
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 22,
+          "effect_tick": 23,
+          "decision_sequence": 22,
+          "decision_window": [
+            23,
+            23
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 22,
+          "receipt_applications": [
+            {
+              "movement_tick": 23,
+              "sequence": 22,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.79673570967218,
+            1.194762802348927
+          ],
+          "velocity": [
+            0.0,
+            -0.3015347127298258,
+            0.2598733414063868
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 23,
+          "effect_tick": 24,
+          "decision_sequence": 23,
+          "decision_window": [
+            24,
+            24
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 23,
+          "receipt_applications": [
+            {
+              "movement_tick": 24,
+              "sequence": 23,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.49520099694234,
+            1.480116143988964
+          ],
+          "velocity": [
+            0.0,
+            -0.3739040257524264,
+            0.25967154089243366
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 24,
+          "effect_tick": 25,
+          "decision_sequence": 24,
+          "decision_window": [
+            25,
+            25
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 24,
+          "receipt_applications": [
+            {
+              "movement_tick": 25,
+              "sequence": 24,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.12129697118992,
+            1.765267685115048
+          ],
+          "velocity": [
+            0.0,
+            -0.44482595389491014,
+            0.25948790242473635
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 25,
+          "effect_tick": 26,
+          "decision_sequence": 25,
+          "decision_window": [
+            26,
+            26
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 25,
+          "receipt_applications": [
+            {
+              "movement_tick": 26,
+              "sequence": 25,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            2.0502355877734346
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.2593207914191318
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 26,
+          "effect_tick": 27,
+          "decision_sequence": 26,
+          "decision_window": [
+            27,
+            27
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": true,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 26,
+          "receipt_applications": [
+            {
+              "movement_tick": 27,
+              "sequence": 26,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": true,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.42,
+            2.636956392157114
+          ],
+          "velocity": [
+            0.0,
+            0.3332000064849853,
+            0.3203495591934889
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 27,
+          "effect_tick": 28,
+          "decision_sequence": 27,
+          "decision_window": [
+            28,
+            28
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 27,
+          "receipt_applications": [
+            {
+              "movement_tick": 28,
+              "sequence": 27,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.75320000648499,
+            2.982785951584253
+          ],
+          "velocity": [
+            0.0,
+            0.24813601118469247,
+            0.3147048990786966
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 28,
+          "effect_tick": 29,
+          "decision_sequence": 28,
+          "decision_window": [
+            29,
+            29
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 28,
+          "receipt_applications": [
+            {
+              "movement_tick": 29,
+              "sequence": 28,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            65.00133601766969,
+            3.3229708508965996
+          ],
+          "velocity": [
+            0.0,
+            0.1647732941679385,
+            0.30956825837423557
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 29,
+          "effect_tick": 30,
+          "decision_sequence": 29,
+          "decision_window": [
+            30,
+            30
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 29,
+          "receipt_applications": [
+            {
+              "movement_tick": 30,
+              "sequence": 29,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            65.16610931183763,
+            3.6580191095044854
+          ],
+          "velocity": [
+            0.0,
+            0.083077829901502,
+            0.30489391533317606
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 30,
+          "effect_tick": 31,
+          "decision_sequence": 30,
+          "decision_window": [
+            31,
+            31
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 30,
+          "receipt_applications": [
+            {
+              "movement_tick": 31,
+              "sequence": 30,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            65.24918714173913,
+            3.9883930250713115
+          ],
+          "velocity": [
+            0.0,
+            0.0030162733621769086,
+            0.30064026316581194
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 31,
+          "effect_tick": 32,
+          "decision_sequence": 31,
+          "decision_window": [
+            32,
+            32
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 31,
+          "receipt_applications": [
+            {
+              "movement_tick": 32,
+              "sequence": 31,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            65.2522034151013,
+            4.314513288470773
+          ],
+          "velocity": [
+            0.0,
+            -0.07544405357341469,
+            0.29676943969351055
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 32,
+          "effect_tick": 33,
+          "decision_sequence": 32,
+          "decision_window": [
+            33,
+            33
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 32,
+          "receipt_applications": [
+            {
+              "movement_tick": 33,
+              "sequence": 32,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            65.17675936152789,
+            4.636762728397934
+          ],
+          "velocity": [
+            0.0,
+            -0.15233517546680642,
+            0.2932469903337163
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 33,
+          "effect_tick": 34,
+          "decision_sequence": 33,
+          "decision_window": [
+            34,
+            34
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 33,
+          "receipt_applications": [
+            {
+              "movement_tick": 34,
+              "sequence": 33,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            65.02442418606108,
+            4.955489718965301
+          ],
+          "velocity": [
+            0.0,
+            -0.2276884763889121,
+            0.29004156141630355
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 34,
+          "effect_tick": 35,
+          "decision_sequence": 34,
+          "decision_window": [
+            35,
+            35
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 34,
+          "receipt_applications": [
+            {
+              "movement_tick": 35,
+              "sequence": 34,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.79673570967218,
+            5.271011280615254
+          ],
+          "velocity": [
+            0.0,
+            -0.3015347127298258,
+            0.2871246211014579
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 35,
+          "effect_tick": 36,
+          "decision_sequence": 35,
+          "decision_window": [
+            36,
+            36
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 35,
+          "receipt_applications": [
+            {
+              "movement_tick": 36,
+              "sequence": 35,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.49520099694234,
+            5.583615901950362
+          ],
+          "velocity": [
+            0.0,
+            -0.3739040257524264,
+            0.2844702054149484
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 36,
+          "effect_tick": 37,
+          "decision_sequence": 36,
+          "decision_window": [
+            37,
+            37
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 36,
+          "receipt_applications": [
+            {
+              "movement_tick": 37,
+              "sequence": 36,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.12129697118992,
+            5.893566107598961
+          ],
+          "velocity": [
+            0.0,
+            -0.44482595389491014,
+            0.28205468714022475
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 37,
+          "effect_tick": 38,
+          "decision_sequence": 37,
+          "decision_window": [
+            38,
+            38
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 37,
+          "receipt_applications": [
+            {
+              "movement_tick": 38,
+              "sequence": 37,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.0,
+            6.201100794972835
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.2798565655102262
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 38,
+          "effect_tick": 39,
+          "decision_sequence": 38,
+          "decision_window": [
+            39,
+            39
+          ],
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 38,
+          "receipt_applications": [
+            {
+              "movement_tick": 39,
+              "sequence": 38,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.0,
+            6.480957360483061
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15280168476858352
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 39,
+          "effect_tick": 40,
+          "decision_sequence": 39,
+          "decision_window": [
+            40,
+            40
+          ],
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 39,
+          "receipt_applications": [
+            {
+              "movement_tick": 40,
+              "sequence": 39,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.0,
+            6.633759045251645
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.08342971988364661
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 40,
+          "effect_tick": 41,
+          "decision_sequence": 40,
+          "decision_window": [
+            41,
+            41
+          ],
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 40,
+          "receipt_applications": [
+            {
+              "movement_tick": 41,
+              "sequence": 40,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.0,
+            6.717188765135291
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.045552627056471055
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 41,
+          "effect_tick": 42,
+          "decision_sequence": 41,
+          "decision_window": [
+            42,
+            42
+          ],
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 41,
+          "receipt_applications": [
+            {
+              "movement_tick": 42,
+              "sequence": 41,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.0,
+            6.762741392191763
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.024871734372833198
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 42,
+          "effect_tick": 43,
+          "decision_sequence": 42,
+          "decision_window": [
+            43,
+            43
+          ],
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 42,
+          "receipt_applications": [
+            {
+              "movement_tick": 43,
+              "sequence": 42,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.0,
+            6.787613126564596
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.013579966967566926
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 43,
+          "effect_tick": 44,
+          "decision_sequence": 43,
+          "decision_window": [
+            44,
+            44
+          ],
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 43,
+          "receipt_applications": [
+            {
+              "movement_tick": 44,
+              "sequence": 43,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.0,
+            6.801193093532163
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.007414661964291543
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 44,
+          "effect_tick": 45,
+          "decision_sequence": 44,
+          "decision_window": [
+            45,
+            45
+          ],
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 44,
+          "receipt_applications": [
+            {
+              "movement_tick": 45,
+              "sequence": 44,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.0,
+            6.808607755496454
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.004048405432503182
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 45,
+          "effect_tick": 46,
+          "decision_sequence": 45,
+          "decision_window": [
+            46,
+            46
+          ],
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 45,
+          "receipt_applications": [
+            {
+              "movement_tick": 46,
+              "sequence": 45,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.0,
+            6.812656160928958
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.002210429366146738
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 46,
+          "effect_tick": 47,
+          "decision_sequence": 46,
+          "decision_window": [
+            47,
+            47
+          ],
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 46,
+          "receipt_applications": [
+            {
+              "movement_tick": 47,
+              "sequence": 46,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.0,
+            6.812656160928958
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.0
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 47,
+          "effect_tick": 48,
+          "decision_sequence": 47,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 47,
+          "receipt_applications": [
+            {
+              "movement_tick": 48,
+              "sequence": 47,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              27
+            ],
+            "resolved_at_tick": 27
+          },
+          "position": [
+            0.5,
+            64.0,
+            6.812656160928958
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.0
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "success",
+          "failure": null
+        }
+      ]
+    },
+    {
+      "schema": "mc2p.d121-transport-late-case.v1",
+      "policy": "late_l2",
+      "direction_index": 0,
+      "L": 26,
+      "expected_effect_tick": 27,
+      "target_sequence": 26,
+      "target_window": [
+        27,
+        27
+      ],
+      "target_action": {
+        "episode_id": "episode-sim",
+        "request_sequence_id": 26,
+        "observation_sequence_id": 26,
+        "deadline_monotonic_ns": 1650000000,
+        "movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": true,
+          "sneak": false,
+          "sprint": true
+        },
+        "look": {
+          "yaw_delta_degrees": 0.0,
+          "pitch_delta_degrees": 0.0
+        },
+        "operation": null,
+        "valid_for_ticks": 1,
+        "cancel_request_sequence_id": null,
+        "schema_version": "mc2p.action-snapshot.v1"
+      },
+      "actual_effect_tick": 28,
+      "actual_movement": {
+        "forward": 1,
+        "strafe": 0,
+        "jump": true,
+        "sneak": false,
+        "sprint": true
+      },
+      "expired_jump_physically_applied": true,
+      "protocol_prevented_expired_application": false,
+      "final_target_ledger": {
+        "status": "applied_outside_window",
+        "requested_first_tick": 27,
+        "latest_allowed_first_tick": 27,
+        "applied_ticks": [
+          28
+        ],
+        "resolved_at_tick": 28
+      },
+      "terminal_failure": {
+        "code": "backend_io",
+        "message": "calculator stopped: needs_world ()",
+        "source": "runtime"
+      },
+      "final_body": {
+        "position": [
+          0.5,
+          61.215894526631075,
+          4.932339390913378
+        ],
+        "velocity": [
+          0.0,
+          -0.7787179680492816,
+          0.062226637935621304
+        ],
+        "on_ground": false,
+        "damage": 0.0
+      },
+      "final_driver_state": "stopping",
+      "source_released": false,
+      "transport_events": [
+        {
+          "kind": "successor_submitted",
+          "source_tick": 26,
+          "requested_effect_tick": 27,
+          "sequence": 26,
+          "movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": true,
+            "sneak": false,
+            "sprint": true
+          }
+        },
+        {
+          "kind": "successor_physically_sampled",
+          "movement_tick": 28,
+          "sequence": 26,
+          "movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": true,
+            "sneak": false,
+            "sprint": true
+          }
+        }
+      ],
+      "protocol_audit": {
+        "action_intent_has_movement_tick_window": true,
+        "action_snapshot_has_movement_tick_window": false,
+        "action_snapshot_has_prepared_generation": false,
+        "action_snapshot_fields": [
+          "episode_id",
+          "request_sequence_id",
+          "observation_sequence_id",
+          "deadline_monotonic_ns",
+          "movement",
+          "look",
+          "operation",
+          "valid_for_ticks",
+          "cancel_request_sequence_id",
+          "schema_version"
+        ],
+        "client_preapplication_exact_tick_guard": false,
+        "client_sequence_guard_is_tick_window": false,
+        "client_wall_deadline_is_tick_window": false,
+        "client_cancel_is_self_expiry": false,
+        "conclusion": "the exact movement window remains Python-local; the current wire can report an outside-window application after sampling but cannot reject that application by exact movement tick before physics",
+        "wire_fields": [
+          "cancel_request_sequence_id",
+          "episode_id",
+          "look",
+          "movement",
+          "observation_budget_ns",
+          "observation_sequence_id",
+          "operation",
+          "remaining_budget_ns",
+          "request_sequence_id",
+          "schema_version",
+          "valid_for_ticks"
+        ],
+        "wire_has_movement_tick_window": false,
+        "wire_has_prepared_generation": false,
+        "wire_cancel_request_sequence_id": null,
+        "wire_valid_for_ticks": 1
+      },
+      "outcome": "RED_EXPIRED_JUMP_PHYSICALLY_APPLIED",
+      "frames": [
+        {
+          "source_tick": 0,
+          "effect_tick": 1,
+          "decision_sequence": 0,
+          "decision_window": [
+            1,
+            1
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 0,
+          "receipt_applications": [
+            {
+              "movement_tick": 1,
+              "sequence": 0,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -5.0425999870354525
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.06956040707864292
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 1,
+          "effect_tick": 2,
+          "decision_sequence": 1,
+          "decision_window": [
+            2,
+            2
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 1,
+          "receipt_applications": [
+            {
+              "movement_tick": 2,
+              "sequence": 1,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -4.845639566992262
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.10754038934358194
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 2,
+          "effect_tick": 3,
+          "decision_sequence": 2,
+          "decision_window": [
+            3,
+            3
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 2,
+          "receipt_applications": [
+            {
+              "movement_tick": 3,
+              "sequence": 2,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -4.610699164684133
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.12827745966023865
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 3,
+          "effect_tick": 4,
+          "decision_sequence": 3,
+          "decision_window": [
+            4,
+            4
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 3,
+          "receipt_applications": [
+            {
+              "movement_tick": 4,
+              "sequence": 3,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -4.355021692059347
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.13959990005313325
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 4,
+          "effect_tick": 5,
+          "decision_sequence": 4,
+          "decision_window": [
+            5,
+            5
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 4,
+          "receipt_applications": [
+            {
+              "movement_tick": 5,
+              "sequence": 4,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -4.088021779041667
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.14578195250765366
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 5,
+          "effect_tick": 6,
+          "decision_sequence": 5,
+          "decision_window": [
+            6,
+            6
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 5,
+          "receipt_applications": [
+            {
+              "movement_tick": 6,
+              "sequence": 5,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -3.814839813569466
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.1491573531478218
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 6,
+          "effect_tick": 7,
+          "decision_sequence": 6,
+          "decision_window": [
+            7,
+            7
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 6,
+          "receipt_applications": [
+            {
+              "movement_tick": 7,
+              "sequence": 6,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -3.538282447457097
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15100032189735363
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 7,
+          "effect_tick": 8,
+          "decision_sequence": 7,
+          "decision_window": [
+            8,
+            8
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 7,
+          "receipt_applications": [
+            {
+              "movement_tick": 8,
+              "sequence": 7,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -3.2598821125951956
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.152006582834598
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 8,
+          "effect_tick": 9,
+          "decision_sequence": 8,
+          "decision_window": [
+            9,
+            9
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 8,
+          "receipt_applications": [
+            {
+              "movement_tick": 9,
+              "sequence": 8,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -2.98047551679605
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15255600130633343
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 9,
+          "effect_tick": 10,
+          "decision_sequence": 9,
+          "decision_window": [
+            10,
+            10
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 9,
+          "receipt_applications": [
+            {
+              "movement_tick": 10,
+              "sequence": 9,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -2.7005195025251694
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.152855983791901
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 10,
+          "effect_tick": 11,
+          "decision_sequence": 10,
+          "decision_window": [
+            11,
+            11
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 10,
+          "receipt_applications": [
+            {
+              "movement_tick": 11,
+              "sequence": 10,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -2.420263505768721
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15301977422902086
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 11,
+          "effect_tick": 12,
+          "decision_sequence": 11,
+          "decision_window": [
+            12,
+            12
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 11,
+          "receipt_applications": [
+            {
+              "movement_tick": 12,
+              "sequence": 11,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -2.1398437185751527
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.1531092038076883
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 12,
+          "effect_tick": 13,
+          "decision_sequence": 12,
+          "decision_window": [
+            13,
+            13
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 12,
+          "receipt_applications": [
+            {
+              "movement_tick": 13,
+              "sequence": 12,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -1.859334501802917
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15315803235764072
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 13,
+          "effect_tick": 14,
+          "decision_sequence": 13,
+          "decision_window": [
+            14,
+            14
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 13,
+          "receipt_applications": [
+            {
+              "movement_tick": 14,
+              "sequence": 13,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -1.5787764564807287
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15318469274591476
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 14,
+          "effect_tick": 15,
+          "decision_sequence": 14,
+          "decision_window": [
+            15,
+            15
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": true,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 14,
+          "receipt_applications": [
+            {
+              "movement_tick": 15,
+              "sequence": 14,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": true,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.42,
+            -1.0981917507702665
+          ],
+          "velocity": [
+            0.0,
+            0.3332000064849853,
+            0.2623992493179124
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 15,
+          "effect_tick": 16,
+          "decision_sequence": 15,
+          "decision_window": [
+            16,
+            16
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 15,
+          "receipt_applications": [
+            {
+              "movement_tick": 16,
+              "sequence": 15,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.75320000648499,
+            -0.8103125012187039
+          ],
+          "velocity": [
+            0.0,
+            0.24813601118469247,
+            0.26197011709192203
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 16,
+          "effect_tick": 17,
+          "decision_sequence": 16,
+          "decision_window": [
+            17,
+            17
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 16,
+          "receipt_applications": [
+            {
+              "movement_tick": 17,
+              "sequence": 16,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.00133601766969,
+            -0.5228623838931317
+          ],
+          "velocity": [
+            0.0,
+            0.1647732941679385,
+            0.26157960676627073
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 17,
+          "effect_tick": 18,
+          "decision_sequence": 17,
+          "decision_window": [
+            18,
+            18
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 17,
+          "receipt_applications": [
+            {
+              "movement_tick": 18,
+              "sequence": 17,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.16610931183763,
+            -0.23580277689321072
+          ],
+          "velocity": [
+            0.0,
+            0.083077829901502,
+            0.2612242423699281
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 18,
+          "effect_tick": 19,
+          "decision_sequence": 18,
+          "decision_window": [
+            19,
+            19
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 18,
+          "receipt_applications": [
+            {
+              "movement_tick": 19,
+              "sequence": 18,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.24918714173913,
+            0.05090146571036758
+          ],
+          "velocity": [
+            0.0,
+            0.0030162733621769086,
+            0.2609008607692563
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 19,
+          "effect_tick": 20,
+          "decision_sequence": 19,
+          "decision_window": [
+            20,
+            20
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 19,
+          "receipt_applications": [
+            {
+              "movement_tick": 20,
+              "sequence": 19,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.2522034151013,
+            0.33728232671327407
+          ],
+          "velocity": [
+            0.0,
+            -0.07544405357341469,
+            0.26060658351264493
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 20,
+          "effect_tick": 21,
+          "decision_sequence": 20,
+          "decision_window": [
+            21,
+            21
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 20,
+          "receipt_applications": [
+            {
+              "movement_tick": 21,
+              "sequence": 20,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.17675936152789,
+            0.6233689104595692
+          ],
+          "velocity": [
+            0.0,
+            -0.15233517546680642,
+            0.26033879120912856
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 21,
+          "effect_tick": 22,
+          "decision_sequence": 21,
+          "decision_window": [
+            22,
+            22
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 21,
+          "receipt_applications": [
+            {
+              "movement_tick": 22,
+              "sequence": 21,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.02442418606108,
+            0.909187701902348
+          ],
+          "velocity": [
+            0.0,
+            -0.2276884763889121,
+            0.2600951002129287
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 22,
+          "effect_tick": 23,
+          "decision_sequence": 22,
+          "decision_window": [
+            23,
+            23
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 22,
+          "receipt_applications": [
+            {
+              "movement_tick": 23,
+              "sequence": 22,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.79673570967218,
+            1.194762802348927
+          ],
+          "velocity": [
+            0.0,
+            -0.3015347127298258,
+            0.2598733414063868
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 23,
+          "effect_tick": 24,
+          "decision_sequence": 23,
+          "decision_window": [
+            24,
+            24
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 23,
+          "receipt_applications": [
+            {
+              "movement_tick": 24,
+              "sequence": 23,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.49520099694234,
+            1.480116143988964
+          ],
+          "velocity": [
+            0.0,
+            -0.3739040257524264,
+            0.25967154089243366
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 24,
+          "effect_tick": 25,
+          "decision_sequence": 24,
+          "decision_window": [
+            25,
+            25
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 24,
+          "receipt_applications": [
+            {
+              "movement_tick": 25,
+              "sequence": 24,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.12129697118992,
+            1.765267685115048
+          ],
+          "velocity": [
+            0.0,
+            -0.44482595389491014,
+            0.25948790242473635
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 25,
+          "effect_tick": 26,
+          "decision_sequence": 25,
+          "decision_window": [
+            26,
+            26
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 25,
+          "receipt_applications": [
+            {
+              "movement_tick": 26,
+              "sequence": 25,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            2.0502355877734346
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.2593207914191318
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 26,
+          "effect_tick": 27,
+          "decision_sequence": 26,
+          "decision_window": [
+            27,
+            27
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": true,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 26,
+          "receipt_applications": [
+            {
+              "movement_tick": 27,
+              "sequence": 25,
+              "state": "lease_exhausted",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "in_flight",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [],
+            "resolved_at_tick": null
+          },
+          "position": [
+            0.5,
+            64.0,
+            2.3095563791925664
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.14158915211484596
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 27,
+          "effect_tick": 28,
+          "decision_sequence": 27,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 0,
+          "receipt_request_sequence": 27,
+          "receipt_applications": [
+            {
+              "movement_tick": 28,
+              "sequence": 26,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": true,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            64.42,
+            2.7785455442719598
+          ],
+          "velocity": [
+            0.0,
+            0.3332000064849853,
+            0.2560680841333488
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 28,
+          "effect_tick": 29,
+          "decision_sequence": 28,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 28,
+          "receipt_applications": [
+            {
+              "movement_tick": 29,
+              "sequence": 28,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            64.75320000648499,
+            3.0346136284053085
+          ],
+          "velocity": [
+            0.0,
+            0.24813601118469247,
+            0.23302195656134742
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 29,
+          "effect_tick": 30,
+          "decision_sequence": 29,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 29,
+          "receipt_applications": [
+            {
+              "movement_tick": 30,
+              "sequence": 29,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            65.00133601766969,
+            3.267635584966656
+          ],
+          "velocity": [
+            0.0,
+            0.1647732941679385,
+            0.21204998047082615
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 30,
+          "effect_tick": 31,
+          "decision_sequence": 30,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 30,
+          "receipt_applications": [
+            {
+              "movement_tick": 31,
+              "sequence": 30,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            65.16610931183763,
+            3.479685565437482
+          ],
+          "velocity": [
+            0.0,
+            0.083077829901502,
+            0.1929654822284518
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 31,
+          "effect_tick": 32,
+          "decision_sequence": 31,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 31,
+          "receipt_applications": [
+            {
+              "movement_tick": 32,
+              "sequence": 31,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            65.24918714173913,
+            3.672651047665934
+          ],
+          "velocity": [
+            0.0,
+            0.0030162733621769086,
+            0.17559858882789114
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 32,
+          "effect_tick": 33,
+          "decision_sequence": 32,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 32,
+          "receipt_applications": [
+            {
+              "movement_tick": 33,
+              "sequence": 32,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            65.2522034151013,
+            3.8482496364938252
+          ],
+          "velocity": [
+            0.0,
+            -0.07544405357341469,
+            0.15979471583338095
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 33,
+          "effect_tick": 34,
+          "decision_sequence": 33,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 33,
+          "receipt_applications": [
+            {
+              "movement_tick": 34,
+              "sequence": 33,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            65.17675936152789,
+            4.0080443523272065
+          ],
+          "velocity": [
+            0.0,
+            -0.15233517546680642,
+            0.14541319140837666
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 34,
+          "effect_tick": 35,
+          "decision_sequence": 34,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 34,
+          "receipt_applications": [
+            {
+              "movement_tick": 35,
+              "sequence": 34,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            65.02442418606108,
+            4.153457543735583
+          ],
+          "velocity": [
+            0.0,
+            -0.2276884763889121,
+            0.13232600418162277
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 35,
+          "effect_tick": 36,
+          "decision_sequence": 35,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 35,
+          "receipt_applications": [
+            {
+              "movement_tick": 36,
+              "sequence": 35,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            64.79673570967218,
+            4.285783547917206
+          ],
+          "velocity": [
+            0.0,
+            -0.3015347127298258,
+            0.12041666380527673
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 36,
+          "effect_tick": 37,
+          "decision_sequence": 36,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 36,
+          "receipt_applications": [
+            {
+              "movement_tick": 37,
+              "sequence": 36,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            64.49520099694234,
+            4.406200211722483
+          ],
+          "velocity": [
+            0.0,
+            -0.3739040257524264,
+            0.10957916406280183
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 37,
+          "effect_tick": 38,
+          "decision_sequence": 37,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 37,
+          "receipt_applications": [
+            {
+              "movement_tick": 38,
+              "sequence": 37,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            64.12129697118992,
+            4.515779375785285
+          ],
+          "velocity": [
+            0.0,
+            -0.44482595389491014,
+            0.09971703929714966
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 38,
+          "effect_tick": 39,
+          "decision_sequence": 38,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 38,
+          "receipt_applications": [
+            {
+              "movement_tick": 39,
+              "sequence": 38,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            63.67647101729501,
+            4.6154964150824345
+          ],
+          "velocity": [
+            0.0,
+            -0.5143294448272726,
+            0.0907425057604062
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 39,
+          "effect_tick": 40,
+          "decision_sequence": 39,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 39,
+          "receipt_applications": [
+            {
+              "movement_tick": 40,
+              "sequence": 39,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            63.16214157246773,
+            4.706238920842841
+          ],
+          "velocity": [
+            0.0,
+            -0.5824428672666616,
+            0.08257568024196964
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 40,
+          "effect_tick": 41,
+          "decision_sequence": 40,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 40,
+          "receipt_applications": [
+            {
+              "movement_tick": 41,
+              "sequence": 40,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            62.57969870520107,
+            4.788814601084811
+          ],
+          "velocity": [
+            0.0,
+            -0.6491940225564233,
+            0.07514386902019238
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 41,
+          "effect_tick": 42,
+          "decision_sequence": 41,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 41,
+          "receipt_applications": [
+            {
+              "movement_tick": 42,
+              "sequence": 41,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            61.930504682644646,
+            4.863958470105003
+          ],
+          "velocity": [
+            0.0,
+            -0.714610156013567,
+            0.06838092080837506
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 42,
+          "effect_tick": 43,
+          "decision_sequence": 42,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 42,
+          "receipt_applications": [
+            {
+              "movement_tick": 43,
+              "sequence": 42,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            61.215894526631075,
+            4.932339390913378
+          ],
+          "velocity": [
+            0.0,
+            -0.7787179680492816,
+            0.062226637935621304
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 43,
+          "effect_tick": 43,
+          "decision_sequence": 43,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": null,
+          "receipt_applications": [],
+          "target_ledger": {
+            "status": "applied_outside_window",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [
+              28
+            ],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            61.215894526631075,
+            4.932339390913378
+          ],
+          "velocity": [
+            0.0,
+            -0.7787179680492816,
+            0.062226637935621304
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": {
+            "code": "backend_io",
+            "message": "calculator stopped: needs_world ()",
+            "source": "runtime"
+          }
+        }
+      ]
+    },
+    {
+      "schema": "mc2p.d121-transport-late-case.v1",
+      "policy": "never_applied",
+      "direction_index": 0,
+      "L": 26,
+      "expected_effect_tick": 27,
+      "target_sequence": 26,
+      "target_window": [
+        27,
+        27
+      ],
+      "target_action": {
+        "episode_id": "episode-sim",
+        "request_sequence_id": 26,
+        "observation_sequence_id": 26,
+        "deadline_monotonic_ns": 1650000000,
+        "movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": true,
+          "sneak": false,
+          "sprint": true
+        },
+        "look": {
+          "yaw_delta_degrees": 0.0,
+          "pitch_delta_degrees": 0.0
+        },
+        "operation": null,
+        "valid_for_ticks": 1,
+        "cancel_request_sequence_id": null,
+        "schema_version": "mc2p.action-snapshot.v1"
+      },
+      "actual_effect_tick": null,
+      "actual_movement": null,
+      "expired_jump_physically_applied": false,
+      "protocol_prevented_expired_application": true,
+      "final_target_ledger": {
+        "status": "superseded",
+        "requested_first_tick": 27,
+        "latest_allowed_first_tick": 27,
+        "applied_ticks": [],
+        "resolved_at_tick": 28
+      },
+      "terminal_failure": {
+        "code": "backend_io",
+        "message": "calculator stopped: needs_world ()",
+        "source": "runtime"
+      },
+      "final_body": {
+        "position": [
+          0.5,
+          61.305438451751215,
+          2.866235343038194
+        ],
+        "velocity": [
+          0.0,
+          -0.6517088341626173,
+          0.03994959399893555
+        ],
+        "on_ground": false,
+        "damage": 0.0
+      },
+      "final_driver_state": "stopping",
+      "source_released": false,
+      "transport_events": [
+        {
+          "kind": "successor_submitted",
+          "source_tick": 26,
+          "requested_effect_tick": 27,
+          "sequence": 26,
+          "movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": true,
+            "sneak": false,
+            "sprint": true
+          }
+        },
+        {
+          "kind": "successor_lost_before_sampling",
+          "sequence": 26
+        }
+      ],
+      "protocol_audit": {
+        "action_intent_has_movement_tick_window": true,
+        "action_snapshot_has_movement_tick_window": false,
+        "action_snapshot_has_prepared_generation": false,
+        "action_snapshot_fields": [
+          "episode_id",
+          "request_sequence_id",
+          "observation_sequence_id",
+          "deadline_monotonic_ns",
+          "movement",
+          "look",
+          "operation",
+          "valid_for_ticks",
+          "cancel_request_sequence_id",
+          "schema_version"
+        ],
+        "client_preapplication_exact_tick_guard": false,
+        "client_sequence_guard_is_tick_window": false,
+        "client_wall_deadline_is_tick_window": false,
+        "client_cancel_is_self_expiry": false,
+        "conclusion": "the exact movement window remains Python-local; the current wire can report an outside-window application after sampling but cannot reject that application by exact movement tick before physics",
+        "wire_fields": [
+          "cancel_request_sequence_id",
+          "episode_id",
+          "look",
+          "movement",
+          "observation_budget_ns",
+          "observation_sequence_id",
+          "operation",
+          "remaining_budget_ns",
+          "request_sequence_id",
+          "schema_version",
+          "valid_for_ticks"
+        ],
+        "wire_has_movement_tick_window": false,
+        "wire_has_prepared_generation": false,
+        "wire_cancel_request_sequence_id": null,
+        "wire_valid_for_ticks": 1
+      },
+      "outcome": "RED_LOST_SUCCESSOR_BODY_UNRESOLVED",
+      "frames": [
+        {
+          "source_tick": 0,
+          "effect_tick": 1,
+          "decision_sequence": 0,
+          "decision_window": [
+            1,
+            1
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 0,
+          "receipt_applications": [
+            {
+              "movement_tick": 1,
+              "sequence": 0,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -5.0425999870354525
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.06956040707864292
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 1,
+          "effect_tick": 2,
+          "decision_sequence": 1,
+          "decision_window": [
+            2,
+            2
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 1,
+          "receipt_applications": [
+            {
+              "movement_tick": 2,
+              "sequence": 1,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -4.845639566992262
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.10754038934358194
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 2,
+          "effect_tick": 3,
+          "decision_sequence": 2,
+          "decision_window": [
+            3,
+            3
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 2,
+          "receipt_applications": [
+            {
+              "movement_tick": 3,
+              "sequence": 2,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -4.610699164684133
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.12827745966023865
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 3,
+          "effect_tick": 4,
+          "decision_sequence": 3,
+          "decision_window": [
+            4,
+            4
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 3,
+          "receipt_applications": [
+            {
+              "movement_tick": 4,
+              "sequence": 3,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -4.355021692059347
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.13959990005313325
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 4,
+          "effect_tick": 5,
+          "decision_sequence": 4,
+          "decision_window": [
+            5,
+            5
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 4,
+          "receipt_applications": [
+            {
+              "movement_tick": 5,
+              "sequence": 4,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -4.088021779041667
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.14578195250765366
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 5,
+          "effect_tick": 6,
+          "decision_sequence": 5,
+          "decision_window": [
+            6,
+            6
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 5,
+          "receipt_applications": [
+            {
+              "movement_tick": 6,
+              "sequence": 5,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -3.814839813569466
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.1491573531478218
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 6,
+          "effect_tick": 7,
+          "decision_sequence": 6,
+          "decision_window": [
+            7,
+            7
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 6,
+          "receipt_applications": [
+            {
+              "movement_tick": 7,
+              "sequence": 6,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -3.538282447457097
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15100032189735363
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 7,
+          "effect_tick": 8,
+          "decision_sequence": 7,
+          "decision_window": [
+            8,
+            8
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 7,
+          "receipt_applications": [
+            {
+              "movement_tick": 8,
+              "sequence": 7,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -3.2598821125951956
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.152006582834598
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 8,
+          "effect_tick": 9,
+          "decision_sequence": 8,
+          "decision_window": [
+            9,
+            9
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 8,
+          "receipt_applications": [
+            {
+              "movement_tick": 9,
+              "sequence": 8,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -2.98047551679605
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15255600130633343
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 9,
+          "effect_tick": 10,
+          "decision_sequence": 9,
+          "decision_window": [
+            10,
+            10
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 9,
+          "receipt_applications": [
+            {
+              "movement_tick": 10,
+              "sequence": 9,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -2.7005195025251694
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.152855983791901
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 10,
+          "effect_tick": 11,
+          "decision_sequence": 10,
+          "decision_window": [
+            11,
+            11
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 10,
+          "receipt_applications": [
+            {
+              "movement_tick": 11,
+              "sequence": 10,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -2.420263505768721
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15301977422902086
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 11,
+          "effect_tick": 12,
+          "decision_sequence": 11,
+          "decision_window": [
+            12,
+            12
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 11,
+          "receipt_applications": [
+            {
+              "movement_tick": 12,
+              "sequence": 11,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -2.1398437185751527
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.1531092038076883
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 12,
+          "effect_tick": 13,
+          "decision_sequence": 12,
+          "decision_window": [
+            13,
+            13
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 12,
+          "receipt_applications": [
+            {
+              "movement_tick": 13,
+              "sequence": 12,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -1.859334501802917
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15315803235764072
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 13,
+          "effect_tick": 14,
+          "decision_sequence": 13,
+          "decision_window": [
+            14,
+            14
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 13,
+          "receipt_applications": [
+            {
+              "movement_tick": 14,
+              "sequence": 13,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            -1.5787764564807287
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.15318469274591476
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 14,
+          "effect_tick": 15,
+          "decision_sequence": 14,
+          "decision_window": [
+            15,
+            15
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": true,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 14,
+          "receipt_applications": [
+            {
+              "movement_tick": 15,
+              "sequence": 14,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": true,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.42,
+            -1.0981917507702665
+          ],
+          "velocity": [
+            0.0,
+            0.3332000064849853,
+            0.2623992493179124
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 15,
+          "effect_tick": 16,
+          "decision_sequence": 15,
+          "decision_window": [
+            16,
+            16
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 15,
+          "receipt_applications": [
+            {
+              "movement_tick": 16,
+              "sequence": 15,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.75320000648499,
+            -0.8103125012187039
+          ],
+          "velocity": [
+            0.0,
+            0.24813601118469247,
+            0.26197011709192203
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 16,
+          "effect_tick": 17,
+          "decision_sequence": 16,
+          "decision_window": [
+            17,
+            17
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 16,
+          "receipt_applications": [
+            {
+              "movement_tick": 17,
+              "sequence": 16,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.00133601766969,
+            -0.5228623838931317
+          ],
+          "velocity": [
+            0.0,
+            0.1647732941679385,
+            0.26157960676627073
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 17,
+          "effect_tick": 18,
+          "decision_sequence": 17,
+          "decision_window": [
+            18,
+            18
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 17,
+          "receipt_applications": [
+            {
+              "movement_tick": 18,
+              "sequence": 17,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.16610931183763,
+            -0.23580277689321072
+          ],
+          "velocity": [
+            0.0,
+            0.083077829901502,
+            0.2612242423699281
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 18,
+          "effect_tick": 19,
+          "decision_sequence": 18,
+          "decision_window": [
+            19,
+            19
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 18,
+          "receipt_applications": [
+            {
+              "movement_tick": 19,
+              "sequence": 18,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.24918714173913,
+            0.05090146571036758
+          ],
+          "velocity": [
+            0.0,
+            0.0030162733621769086,
+            0.2609008607692563
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 19,
+          "effect_tick": 20,
+          "decision_sequence": 19,
+          "decision_window": [
+            20,
+            20
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 19,
+          "receipt_applications": [
+            {
+              "movement_tick": 20,
+              "sequence": 19,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.2522034151013,
+            0.33728232671327407
+          ],
+          "velocity": [
+            0.0,
+            -0.07544405357341469,
+            0.26060658351264493
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 20,
+          "effect_tick": 21,
+          "decision_sequence": 20,
+          "decision_window": [
+            21,
+            21
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 20,
+          "receipt_applications": [
+            {
+              "movement_tick": 21,
+              "sequence": 20,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.17675936152789,
+            0.6233689104595692
+          ],
+          "velocity": [
+            0.0,
+            -0.15233517546680642,
+            0.26033879120912856
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 21,
+          "effect_tick": 22,
+          "decision_sequence": 21,
+          "decision_window": [
+            22,
+            22
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 21,
+          "receipt_applications": [
+            {
+              "movement_tick": 22,
+              "sequence": 21,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            65.02442418606108,
+            0.909187701902348
+          ],
+          "velocity": [
+            0.0,
+            -0.2276884763889121,
+            0.2600951002129287
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 22,
+          "effect_tick": 23,
+          "decision_sequence": 22,
+          "decision_window": [
+            23,
+            23
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 22,
+          "receipt_applications": [
+            {
+              "movement_tick": 23,
+              "sequence": 22,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.79673570967218,
+            1.194762802348927
+          ],
+          "velocity": [
+            0.0,
+            -0.3015347127298258,
+            0.2598733414063868
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 23,
+          "effect_tick": 24,
+          "decision_sequence": 23,
+          "decision_window": [
+            24,
+            24
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 23,
+          "receipt_applications": [
+            {
+              "movement_tick": 24,
+              "sequence": 23,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.49520099694234,
+            1.480116143988964
+          ],
+          "velocity": [
+            0.0,
+            -0.3739040257524264,
+            0.25967154089243366
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 24,
+          "effect_tick": 25,
+          "decision_sequence": 24,
+          "decision_window": [
+            25,
+            25
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 24,
+          "receipt_applications": [
+            {
+              "movement_tick": 25,
+              "sequence": 24,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.12129697118992,
+            1.765267685115048
+          ],
+          "velocity": [
+            0.0,
+            -0.44482595389491014,
+            0.25948790242473635
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 25,
+          "effect_tick": 26,
+          "decision_sequence": 25,
+          "decision_window": [
+            26,
+            26
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 25,
+          "receipt_applications": [
+            {
+              "movement_tick": 26,
+              "sequence": 25,
+              "state": "leased",
+              "forward": 1.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": true
+            }
+          ],
+          "target_ledger": null,
+          "position": [
+            0.5,
+            64.0,
+            2.0502355877734346
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.2593207914191318
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 0,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 26,
+          "effect_tick": 27,
+          "decision_sequence": 26,
+          "decision_window": [
+            27,
+            27
+          ],
+          "decision_movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": true,
+            "sneak": false,
+            "sprint": true
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 26,
+          "receipt_applications": [
+            {
+              "movement_tick": 27,
+              "sequence": 25,
+              "state": "lease_exhausted",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "in_flight",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [],
+            "resolved_at_tick": null
+          },
+          "position": [
+            0.5,
+            64.0,
+            2.3095563791925664
+          ],
+          "velocity": [
+            0.0,
+            -0.0784000015258789,
+            0.14158915211484596
+          ],
+          "on_ground": true,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "running",
+          "failure": null
+        },
+        {
+          "source_tick": 27,
+          "effect_tick": 28,
+          "decision_sequence": 27,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 0,
+          "receipt_request_sequence": 27,
+          "receipt_applications": [
+            {
+              "movement_tick": 28,
+              "sequence": 27,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "superseded",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            63.92159999847412,
+            2.451145531307412
+          ],
+          "velocity": [
+            0.0,
+            -0.1552320045166016,
+            0.0773076770547059
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 28,
+          "effect_tick": 29,
+          "decision_sequence": 28,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 28,
+          "receipt_applications": [
+            {
+              "movement_tick": 29,
+              "sequence": 28,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "superseded",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            63.76636799395752,
+            2.528453208362118
+          ],
+          "velocity": [
+            0.0,
+            -0.230527368912964,
+            0.07034998611978237
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 29,
+          "effect_tick": 30,
+          "decision_sequence": 29,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 29,
+          "receipt_applications": [
+            {
+              "movement_tick": 30,
+              "sequence": 29,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "superseded",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            63.53584062504456,
+            2.5988031944819006
+          ],
+          "velocity": [
+            0.0,
+            -0.30431682745754424,
+            0.06401848736900195
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 30,
+          "effect_tick": 31,
+          "decision_sequence": 30,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 30,
+          "receipt_applications": [
+            {
+              "movement_tick": 31,
+              "sequence": 30,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "superseded",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            63.231523797587016,
+            2.6628216818509025
+          ],
+          "velocity": [
+            0.0,
+            -0.37663049823865513,
+            0.058256823505791776
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 31,
+          "effect_tick": 32,
+          "decision_sequence": 31,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 31,
+          "receipt_applications": [
+            {
+              "movement_tick": 32,
+              "sequence": 31,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "superseded",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            62.85489329934836,
+            2.721078505356694
+          ],
+          "velocity": [
+            0.0,
+            -0.44749789698341763,
+            0.053013709390270516
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 32,
+          "effect_tick": 33,
+          "decision_sequence": 32,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 32,
+          "receipt_applications": [
+            {
+              "movement_tick": 33,
+              "sequence": 32,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "superseded",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            62.40739540236494,
+            2.7740922147469647
+          ],
+          "velocity": [
+            0.0,
+            -0.5169479491049732,
+            0.04824247554514617
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 33,
+          "effect_tick": 34,
+          "decision_sequence": 33,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 33,
+          "receipt_applications": [
+            {
+              "movement_tick": 34,
+              "sequence": 33,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "superseded",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            61.890447453259966,
+            2.8223346902921107
+          ],
+          "velocity": [
+            0.0,
+            -0.5850090015087522,
+            0.04390065274608302
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 34,
+          "effect_tick": 35,
+          "decision_sequence": 34,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": 34,
+          "receipt_applications": [
+            {
+              "movement_tick": 35,
+              "sequence": 34,
+              "state": "neutral",
+              "forward": 0.0,
+              "strafe": 0.0,
+              "jump": false,
+              "sneak": false,
+              "sprint": false
+            }
+          ],
+          "target_ledger": {
+            "status": "superseded",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            61.305438451751215,
+            2.866235343038194
+          ],
+          "velocity": [
+            0.0,
+            -0.6517088341626173,
+            0.03994959399893555
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": null
+        },
+        {
+          "source_tick": 35,
+          "effect_tick": 35,
+          "decision_sequence": 35,
+          "decision_window": null,
+          "decision_movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "winner_count": 1,
+          "receipt_request_sequence": null,
+          "receipt_applications": [],
+          "target_ledger": {
+            "status": "superseded",
+            "requested_first_tick": 27,
+            "latest_allowed_first_tick": 27,
+            "applied_ticks": [],
+            "resolved_at_tick": 28
+          },
+          "position": [
+            0.5,
+            61.305438451751215,
+            2.866235343038194
+          ],
+          "velocity": [
+            0.0,
+            -0.6517088341626173,
+            0.03994959399893555
+          ],
+          "on_ground": false,
+          "damage": 0.0,
+          "owner": "route/fixed-route",
+          "action_index": 1,
+          "driver_state": "stopping",
+          "failure": {
+            "code": "backend_io",
+            "message": "calculator stopped: needs_world ()",
+            "source": "runtime"
+          }
+        }
+      ]
+    }
+  ]
+}

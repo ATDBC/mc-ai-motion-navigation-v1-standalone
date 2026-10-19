@@ -143,9 +143,16 @@
     "scripts/d120_momentum_entry_calibration.py",
     "evidence/motion_navigation/d121-momentum-handoff-v1/**/*",
     "scripts/d121_momentum_handoff_probe.py",
-    "scripts/d121_joint_worker_stop_probe.py",
+    "scripts/d121_successor_preparation_probe.py",
     "tests/motion_nav/test_d121_momentum_handoff.py",
-    "tests/motion_nav/test_d121_joint_worker_stop.py"
+    "tests/motion_nav/test_d121_joint_worker_stop.py",
+    "tests/motion_nav/test_d121_successor_binding.py",
+    "tests/motion_nav/test_d121_handoff_execution.py",
+    "scripts/d121_handoff_execution_probe.py",
+    "scripts/d121_handoff_execution_matrix.py",
+    "scripts/d121_handoff_hotpath_probe.py",
+    "scripts/d121_transport_late_probe.py",
+    "tests/motion_nav/test_d121_transport_late.py"
   ],
   "exclude_globs": [
     "tests/motion_nav/test_d102_evidence_contract.py"
@@ -731,13 +738,26 @@
     "docs/motion_navigation/stages/d121-fallback-backed-momentum-handoff-plan.md",
     "docs/motion_navigation/acceptance/d121-fallback-backed-momentum-handoff.md",
     "scripts/d121_momentum_handoff_probe.py",
-    "scripts/d121_joint_worker_stop_probe.py",
+    "scripts/d121_successor_preparation_probe.py",
     "tests/motion_nav/test_d121_momentum_handoff.py",
     "tests/motion_nav/test_d121_joint_worker_stop.py",
+    "tests/motion_nav/test_d121_successor_binding.py",
     "evidence/motion_navigation/d121-momentum-handoff-v1/s0/diagnostic.json",
     "evidence/motion_navigation/d121-momentum-handoff-v1/s0/history/pre-receipt-gate/final.json",
     "evidence/motion_navigation/d121-momentum-handoff-v1/s0/final.json",
     "evidence/motion_navigation/d121-momentum-handoff-v1/s2/stop.json",
-    "evidence/motion_navigation/d121-momentum-handoff-v1/published-production-semantic-hashes.json"
+    "evidence/motion_navigation/d121-momentum-handoff-v1/published-production-semantic-hashes.json",
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/summary.json",
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/production-semantic-hashes.json",
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/repair/summary.json",
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation/repair/production-semantic-hashes.json",
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/production-semantic-hashes.json",
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution/review-repair/production-semantic-hashes.json",
+    "tests/motion_nav/test_d121_handoff_execution.py",
+    "scripts/d121_handoff_execution_probe.py",
+    "scripts/d121_handoff_execution_matrix.py",
+    "scripts/d121_handoff_hotpath_probe.py",
+    "scripts/d121_transport_late_probe.py",
+    "tests/motion_nav/test_d121_transport_late.py"
   ]
 }

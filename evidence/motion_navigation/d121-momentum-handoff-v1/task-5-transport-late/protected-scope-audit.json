@@ -1,0 +1,32 @@
+{
+  "baseline_commit": "c4f353868e1976bad4c94fd0ed5df43bf12c9f4d",
+  "protected_paths": [
+    "mc2p",
+    "deployment",
+    "config/motion-navigation/profiles",
+    "scripts/d121_handoff_execution_probe.py",
+    "tests/sim/backend.py",
+    "evidence/motion_navigation/d121-momentum-handoff-v1/s2",
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation",
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution"
+  ],
+  "protected_tracked_changes": [],
+  "history": {
+    "evidence/motion_navigation/d121-momentum-handoff-v1/s2": {
+      "baseline_git_tree_oid": "32b7b9618b7c2f60d74ea80906862069ae115517",
+      "files_byte_verified": 1
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-3-preparation": {
+      "baseline_git_tree_oid": "322f2d15fd83c83a35e5418baba787bcdd381254",
+      "files_byte_verified": 9
+    },
+    "evidence/motion_navigation/d121-momentum-handoff-v1/task-4-execution": {
+      "baseline_git_tree_oid": "605d6ff6915e8ed17499865cbf93db686af972f9",
+      "files_byte_verified": 41
+    }
+  },
+  "stop_sha256": "fb45e9c21e1bad9c54ea0a4f1aeedd680b5781f3bbe7cfad6ee1b10265bdf667",
+  "production_or_java_changes": [],
+  "fabric_run": false,
+  "full_windows_matrix": false
+}

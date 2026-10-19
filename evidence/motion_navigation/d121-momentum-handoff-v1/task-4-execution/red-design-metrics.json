@@ -1,0 +1,9 @@
+{
+  "command": "python -m unittest tests.motion_nav.test_navigation_design_metrics -q",
+  "result": "RED",
+  "tests": 35,
+  "failures": 2,
+  "elapsed_seconds": 6.315,
+  "unclassified": "CommittedExecutionPhase (14 checks)",
+  "classification": "Lifecycle inside the existing VerifiedMotionExecutor; consumes main suffix, fallback and release witness; no action/controller dispatch."
+}

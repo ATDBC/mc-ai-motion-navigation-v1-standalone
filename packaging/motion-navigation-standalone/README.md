@@ -2,6 +2,8 @@
 
 这个仓库是主项目按固定清单生成的源码快照。它包含当前正式实现、共享契约、配置、测试、Fabric 客户端代码和四类现行设计文档。`EXPORT-METADATA.json` 记录来源提交，`SHA256SUMS.txt` 覆盖导出的每个文件。
 
+2026-10-19，D121 已在同一阶段获授权继续修订（`AUTHORIZED REVISION／IN PROGRESS`），不新开 D122。S0、S1 保持完成；历史 S2 direct-copy 重复完整证明导致超出 2 MiB，失败证据和 `s2/stop.json` 保留。修订方案不新增联合证明消息：当前证明携带精确出口 fallback 和紧凑后继可行性绑定，完整后继证明继续走 D117 prepared 消息与生命周期。`L` 决定 `L+1`，默认 sneak fallback；后继错过唯一首效 tick `L+1` 后不得 `L+2` 补跳。2 MiB 不变，代表场景每条正式消息须不超过其 50%。修订 S2—S4 和当前完整发布矩阵尚未完成，下面 D120 全绿记录不能替代 D121 重跑结果。本轮仍只限组件，不授权规划、生产四格 profile、Session 状态、Java、Fabric、新 owner／账本／worker 管线或放宽安全规则。详见 [D121 计划](docs/motion_navigation/stages/d121-fallback-backed-momentum-handoff-plan.md)、[验收](docs/motion_navigation/acceptance/d121-fallback-backed-momentum-handoff.md)和[决定](docs/motion_navigation/decisions/0121-prove-fallback-backed-momentum-handoff.md)。
+
 2026-10-19，D120 有限入口与实机校准已完成：972 个入口、2916 个后缀通过，south 3/3、full 36/36。历史失败保留，连续 sound envelope 仍未验证，生产连续跑酷和 D118-1—D118-5 未授权；Windows 源码树正逆各 197 模块／2534 项，公开快照正逆各 196 模块／2510 项全绿，零失败、错误、超时、跳过和清理失败；Java 各 3/3，矩阵快照 verify 2634 文件。详见 [D120 验收](docs/motion_navigation/acceptance/d120-momentum-entry-calibration.md)和[公开证据](evidence/motion_navigation/d120-momentum-entry-v1/README.md)。
 
 2026-10-19，D119 已完成。1.21 计算器已恢复原版的 0 高度 step 候选规则；D118 已封存 raw 的 7 个 trial、273 个 tick 离散差异为 0。源码树和独立公开快照的正逆完整门禁全部通过。D118-0 的历史失败不改写，full matrix、连续两跳和后续阶段仍未授权。详见 [D119 计划](docs/motion_navigation/stages/d119-zero-height-step-candidate-repair-plan.md)和[验收](docs/motion_navigation/acceptance/d119-zero-height-step-candidate-repair.md)。
@@ -109,8 +111,8 @@ Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于�
 ## 先读什么
 
 1. `AGENTS.md`
-2. [D120 计划](docs/motion_navigation/stages/d120-momentum-entry-calibration-plan.md)
-3. [D120 验收](docs/motion_navigation/acceptance/d120-momentum-entry-calibration.md)和 [D120 决定](docs/motion_navigation/decisions/0120-resume-momentum-entry-calibration.md)
+2. [D121 修订计划](docs/motion_navigation/stages/d121-fallback-backed-momentum-handoff-plan.md)
+3. [D121 验收](docs/motion_navigation/acceptance/d121-fallback-backed-momentum-handoff.md)和 [D121 决定](docs/motion_navigation/decisions/0121-prove-fallback-backed-momentum-handoff.md)；需要核对冻结入口时再读 D120。
 4. 需要追溯产品能力时再读 F2REC、连续地面路线和对应历史验收。
 5. `docs/motion_navigation/architecture/navigation-coordination-v1.md`（第 17 节包含当前 R28 目标和已实施的持续目标语义）
 6. 当前实现和证据读 R27 阶段文档、`navigation-coordination-refactor.md` 第 20 节与 `defect-ledger.md`。

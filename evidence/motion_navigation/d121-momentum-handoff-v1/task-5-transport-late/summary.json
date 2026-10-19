@@ -1,0 +1,57 @@
+{
+  "schema": "mc2p.d121-transport-late-summary.v1",
+  "result": "FAILED_STOPPED",
+  "same_successor_action_and_window": true,
+  "timely_l1": {
+    "expected": 27,
+    "actual": 27,
+    "outcome": "TIMELY_SUCCESS",
+    "ledger": {
+      "status": "applied",
+      "requested_first_tick": 27,
+      "latest_allowed_first_tick": 27,
+      "applied_ticks": [
+        27
+      ],
+      "resolved_at_tick": 27
+    }
+  },
+  "late_l2": {
+    "expected": 27,
+    "actual": 28,
+    "outcome": "RED_EXPIRED_JUMP_PHYSICALLY_APPLIED",
+    "physical_movement": {
+      "forward": 1,
+      "strafe": 0,
+      "jump": true,
+      "sneak": false,
+      "sprint": true
+    },
+    "ledger": {
+      "status": "applied_outside_window",
+      "requested_first_tick": 27,
+      "latest_allowed_first_tick": 27,
+      "applied_ticks": [
+        28
+      ],
+      "resolved_at_tick": 28
+    },
+    "body_after_application": [
+      0.5,
+      64.42,
+      2.7785455442719598
+    ]
+  },
+  "never_applied": {
+    "actual": null,
+    "outcome": "RED_LOST_SUCCESSOR_BODY_UNRESOLVED",
+    "ledger": {
+      "status": "superseded",
+      "requested_first_tick": 27,
+      "latest_allowed_first_tick": 27,
+      "applied_ticks": [],
+      "resolved_at_tick": 28
+    }
+  },
+  "conclusion": "PARTIAL_STOPPED: Task4 timely component execution remains PASS; current wire cannot prevent an exact-window successor from being physically sampled at L+2."
+}
