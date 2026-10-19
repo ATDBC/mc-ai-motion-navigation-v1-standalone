@@ -1,0 +1,16 @@
+[
+  "D:\\Admin\\Programs\\Python\\Python3\\python.exe",
+  "D:\\My_project\\mc_ai\\scripts\\probe_fabric_deployment_observation.py",
+  "--seed",
+  "21001",
+  "--server-port",
+  "25597",
+  "--ipc-port",
+  "8140",
+  "--d118-motion-calibration-probe",
+  "--time-diagnostics",
+  "--physics-tick-diagnostics",
+  "--ftick-diagnostics",
+  "--timeout-seconds",
+  "600"
+]

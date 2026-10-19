@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 import math
+from struct import Struct
 
 from mc2p.motion_nav.geometry import required_cells_for_sweep
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
@@ -14,6 +15,7 @@ from mc2p.motion_nav.world_model import Aabb, CellKnowledge
 
 
 _EPSILON = 1.0e-9
+_FLOAT32 = Struct("!f")
 _INPUT_RETENTION = 0.98
 _AIR_RETENTION = 0.91
 _VERTICAL_RETENTION = 0.9800000190734863
@@ -107,6 +109,10 @@ def _resolve(body: Aabb, requested: tuple[float, float, float],
     return dx, dy, dz
 
 
+def _float32(value: float) -> float:
+    return _FLOAT32.unpack(_FLOAT32.pack(value))[0]
+
+
 def _resolve_with_step(body: Aabb, requested: tuple[float, float, float],
                        obstacles: tuple[Aabb, ...], step_height: float,
                        was_on_ground: bool, *,
@@ -121,14 +127,16 @@ def _resolve_with_step(body: Aabb, requested: tuple[float, float, float],
         return base, False
     vertical_offset = base[1] if downward_contact else 0.0
     vertical_base = body.moved(0, vertical_offset, 0)
+    base_y = _float32(base[1])
+    max_height = _float32(step_height)
     heights = sorted({
         height
         for obstacle in obstacles
         for height in (
-            obstacle.min_y - vertical_base.min_y,
-            obstacle.max_y - vertical_base.min_y,
+            _float32(obstacle.min_y - vertical_base.min_y),
+            _float32(obstacle.max_y - vertical_base.min_y),
         )
-        if _EPSILON < height <= step_height + _EPSILON
+        if 0.0 <= height <= max_height and height != base_y
     })
     base_horizontal = base[0] * base[0] + base[2] * base[2]
     for height in heights:
@@ -137,7 +145,9 @@ def _resolve_with_step(body: Aabb, requested: tuple[float, float, float],
         candidate = (relative[0], vertical_offset + relative[1], relative[2])
         candidate_horizontal = relative[0] * relative[0] + relative[2] * relative[2]
         if candidate_horizontal > base_horizontal + _EPSILON:
-            return candidate, True
+            # A zero-height candidate can bridge a same-level edge without
+            # moving upward. It must not report an actual step-up event.
+            return candidate, height > 0.0
     return base, False
 
 

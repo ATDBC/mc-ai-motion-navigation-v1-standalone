@@ -1,0 +1,10 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D119 zero-height step candidate repair",
+  "normalization": "CRLF_TO_LF",
+  "status": "current",
+  "files": {
+    "mc2p/motion_nav/physics_1_21.py": "995641c686c89bb571c2bcd02a4c002ae5d07d715f3acd9d898f1eb138356688"
+  },
+  "source_commit": "05a97922bdf5a089f8e6373c2c78db4cdae3f6dc"
+}

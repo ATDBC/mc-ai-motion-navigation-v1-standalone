@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\scripts\probe_fabric_deployment_observation.py", line 2530, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "D:\My_project\mc_ai\scripts\probe_fabric_deployment_observation.py", line 2449, in main
+    launch_path = args.launch_json or export_launch()
+                                      ^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\scripts\fabric_deployment_launch.py", line 144, in export_launch
+    write_json_atomic(log_dir / "verified.json", {**inspect_launch(value), "assets": verify_assets()})
+                                                                                     ^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\scripts\fabric_deployment_launch.py", line 108, in verify_assets
+    raise ValueError("asset metadata is not the locked Minecraft release")
+ValueError: asset metadata is not the locked Minecraft release

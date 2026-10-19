@@ -279,3 +279,9 @@ Linux 复核来源：`bee34bd:reviews/2026-10-15-d110-review.md` 的 E40、E53�
 | D116-ASYNC-01 | P1，既有缺口，打开 | prepared 结果已有 `finish` 且 admission 为 `APPLIED`，但异步生命周期没有对应 `apply` 事件；监视器唯一报告 I19：`result applied without current identity, facts or time`。显式旧门槛 RED 和现行结果都会出现，因此不是 D116-1 引入 | 让 prepared admission 与通用异步生命周期使用同一个 apply 入口，并保留 identity、facts、time 门槛。绝对 movement tick 受进程内 worker 调度影响，回归应检查事件关系和唯一性，不写死 tick |
 | D115-FIXTURE-01 | P2，组件已关闭 | `tests.sim.runner.InlineMotionWorker` 原先按普通作业读取 `job.work_identity`，不认识 `PreparedMotionJob.request.async_identity` | 测试 worker 现在按作业种类读取正式身份；prepared job 经同一 worker 路径登记。`test_inline_worker_records_prepared_job_formal_identity` 通过；没有修改生产身份来迎合夹具 |
 | D115-VALIDATION-01 | P2，组件已关闭 | prepared proof 带后继 Walk 时，冻结值校验器原先不支持入口中的 `frozenset[str]`，返回 worker failure | 公共冻结值校验器已原生支持 `frozenset[str]`，并保留元素类型、可变对象和隐藏存储负例。`test_frozen_string_set_matches_declared_entry_contract_type` 通过；代表路线仍保留后继 Walk |
+
+### D118 带动量跨隙校准（2026-10-18）
+
+| 编号 | 严重度 | 当前事实 | 当前处理 |
+|---|---|---|---|
+| D118-PHYSICS-01 | P1，D119 已关闭 | 根因是 `physics_1_21` 用 `height > epsilon` 排除了原版允许的 0 高度 step 候选。D119 已按 Java `float` 语义恢复 `height >= 0`、排除 `height == baseY` 并限制最大台阶高度；0 高度候选不发布 `step_up` | D118 raw 只读重放覆盖 7 个 trial、273 个 tick，离散差异 0；源码树和独立公开快照正逆完整门禁全绿。D118-0 保持历史 FAILED／STOPPED，历史证据不回写；入口包络仍未验证，D118 full matrix、连续两跳、生产接入和 D118-1—D118-5 仍未授权 |

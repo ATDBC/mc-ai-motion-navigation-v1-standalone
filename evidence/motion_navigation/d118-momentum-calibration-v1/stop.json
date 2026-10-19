@@ -1,0 +1,39 @@
+{
+  "schema_version": "mc2p.d118-stop.v1",
+  "status": "failed_stopped",
+  "decision": "D118-0",
+  "formal_platform": "Windows",
+  "source_run": "artifacts/fabric-deployment/20261018T145935753542Z-be4892d2",
+  "source_result_status": "passed",
+  "fixed_manifest_sha256": "23379a353a87e914c8d61490ee58f866a4ceadb69740c97b371c1a2dc8a83b6f",
+  "trial_count": 7,
+  "joined_command_count": 273,
+  "matching_trial_count": 6,
+  "blocking_trial": "fallback-back-south-0",
+  "first_divergent_movement_tick_id": 246,
+  "blocking_reason": "calculator_omits_vanilla_zero_height_step_candidate",
+  "physics_replay_issues": [
+    "position_tolerance_exceeded",
+    "velocity_tolerance_exceeded",
+    "discrete_state_mismatch"
+  ],
+  "sneak_fallback": {
+    "applied_relative_to_landing_ticks": 1,
+    "safe": true,
+    "minimum_platform_overlap_margin_blocks": 0.0005512838390400177
+  },
+  "second_jump": {
+    "on_time_relative_to_landing_ticks": 1,
+    "late_one_relative_to_landing_ticks": 2,
+    "entry_envelope_status": "unverified"
+  },
+  "not_run": [
+    "four_direction_full_matrix",
+    "production_motion_integration",
+    "D118-1",
+    "D118-2",
+    "D118-3",
+    "D118-4",
+    "D118-5"
+  ]
+}

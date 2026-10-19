@@ -18,9 +18,14 @@ from mc2p.contracts.common import ContractViolation, require_identifier
 from mc2p.contracts.motion_activation import StreamStartBranch, validate_frozen_value
 from mc2p.motion_nav.geometry import QueryStatus, query_support, required_cells_for_sweep
 from mc2p.motion_nav.motion_risk import conservative_plain_fall_damage_points
+from mc2p.motion_nav.motion_chain import (
+    FallbackCandidate, ProvenFallbackSelection,
+    fallback_release_witness_body_ready, fallback_requires_continuous_support,
+    fallback_terminal_body_ready,
+)
 from mc2p.motion_nav.physics_1_21 import step
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
-from mc2p.motion_nav.physics_types import CalculationStatus, JAVA_1_21_RULESET, TickInput
+from mc2p.motion_nav.physics_types import CalculationStatus, JAVA_1_21_RULESET, PhysicsState, TickInput
 from mc2p.motion_nav.prepared_motion import (
     PreparedBranchProof, PreparedComputeCounts, PreparedComputeResult, PreparedComputeStatus,
     PreparedMotionBundle, PreparedMotionProof, PreparedMotionRequest, PreparedSafetyTail,
@@ -36,7 +41,6 @@ MAXIMUM_MESSAGE_BYTES = 2 * 1024 * 1024
 MAXIMUM_PHYSICS_STEPS = 65_536
 MAXIMUM_TRAJECTORY_TICKS = 40
 MAXIMUM_TAIL_TICKS = 80
-_SCANNER_TAIL_TICKS = 40
 _MINIMUM_SAFE_SUPPORT_FRACTION = .15
 
 
@@ -179,7 +183,7 @@ def _damage(states):
     return total + conservative_plain_fall_damage_points(peak)
 
 
-def _safe_support(state, world, dependencies):
+def _support_fraction(state, world, dependencies):
     cells = required_cells_for_sweep(state.body_box, (0., -.05, 0.))
     facts = {position: world.cell(position) for position in cells}
     dependencies.update(cells)
@@ -190,8 +194,12 @@ def _safe_support(state, world, dependencies):
         raise _ScanFailure(PreparedComputeStatus.MISSING_INFORMATION, support.missing_cells)
     if support.status is QueryStatus.UNSUPPORTED:
         raise _ScanFailure(PreparedComputeStatus.UNSUPPORTED)
-    return (state.on_ground and support.status is QueryStatus.FEASIBLE
-            and support.support_fraction >= _MINIMUM_SAFE_SUPPORT_FRACTION - 1.e-9)
+    return support.support_fraction if support.status is QueryStatus.FEASIBLE else 0.0
+
+
+def _safe_support(state, world, dependencies):
+    return (state.on_ground and _support_fraction(state, world, dependencies)
+            >= _MINIMUM_SAFE_SUPPORT_FRACTION - 1.e-9)
 
 
 @dataclass(frozen=True, slots=True)
@@ -201,26 +209,86 @@ class _StoppingTail:
     states: tuple
     dependencies: tuple
     damage: float
+    release_witness_input: TickInput | None = None
+    release_witness_state: PhysicsState | None = None
 
 
-def _stop_tail(counter, prefix, irrevocable, stop_input, world, minimum_y, maximum_damage):
+def _stop_tail(counter, prefix, irrevocable, fallback, world, minimum_y, maximum_damage):
+    if type(fallback) is not FallbackCandidate:
+        raise ContractViolation("stopping proof requires a declared fallback candidate")
     counter.node()
     current = prefix[-1]
     states, inputs, dependencies = [current], [], set()
-    for tick in range(_SCANNER_TAIL_TICKS):
-        command = irrevocable[tick] if tick < len(irrevocable) else stop_input
+    edge_mode = fallback_requires_continuous_support(fallback)
+    if edge_mode and (not current.on_ground
+                      or _support_fraction(current, world, dependencies) <= 0.0):
+        return _StoppingTail(False, (), (current,), tuple(sorted(dependencies)),
+                             _damage(prefix))
+    horizon = min(MAXIMUM_TAIL_TICKS, len(irrevocable) + fallback.maximum_ticks)
+    for tick in range(horizon):
+        command = (irrevocable[tick] if tick < len(irrevocable)
+                   else fallback.materialize(current))
         current = counter.calculated(current, command, world, dependencies, tail=True)
         states.append(current)
         inputs.append(command)
         damage = _damage(prefix[:-1] + tuple(states))
+        if edge_mode and (not current.on_ground
+                          or _support_fraction(current, world, dependencies) <= 0.0):
+            return _StoppingTail(False, tuple(inputs), tuple(states),
+                                 tuple(sorted(dependencies)), damage)
         if current.position[1] < minimum_y - 1.e-7 or damage > maximum_damage + 1.e-9:
             return _StoppingTail(False, tuple(inputs), tuple(states), tuple(sorted(dependencies)), damage)
         speed = math.hypot(current.velocity_blocks_per_tick[0], current.velocity_blocks_per_tick[2])
-        if (tick + 1 >= len(irrevocable) and speed <= 1.e-9
+        if (tick + 1 >= len(irrevocable) and fallback_terminal_body_ready(fallback, current)
                 and current.position[1] >= minimum_y - 1.e-7
-                and damage <= maximum_damage + 1.e-9
-                and _safe_support(current, world, dependencies)):
-            return _StoppingTail(True, tuple(inputs), tuple(states), tuple(sorted(dependencies)), damage)
+                and damage <= maximum_damage + 1.e-9):
+            if edge_mode:
+                release = TickInput(0., 0., False, False, False, current.yaw_radians)
+                released = counter.calculated(current, release, world, dependencies, tail=True)
+                release_damage = _damage(prefix[:-1] + tuple(states) + (released,))
+                stable = (fallback_release_witness_body_ready(
+                              fallback, current, release, released)
+                          and _support_fraction(released, world, dependencies) > 0.0
+                          and release_damage <= maximum_damage + 1.e-9)
+                if stable:
+                    return _StoppingTail(True, tuple(inputs), tuple(states),
+                        tuple(sorted(dependencies)), release_damage, release, released)
+            elif _safe_support(current, world, dependencies):
+                return _StoppingTail(True, tuple(inputs), tuple(states),
+                                     tuple(sorted(dependencies)), damage)
+    return _StoppingTail(False, tuple(inputs), tuple(states), tuple(sorted(dependencies)),
+                         _damage(prefix[:-1] + tuple(states)))
+
+
+def _declared_fallback_tail(counter, prefix, irrevocable, candidates, world,
+                            minimum_y, maximum_damage):
+    """Choose the first proved declaration; isolate candidate-local failures."""
+    unsafe = []
+    failures = []
+    for candidate in candidates:
+        try:
+            tail = _stop_tail(counter, prefix, irrevocable, candidate, world,
+                              minimum_y, maximum_damage)
+        except _ScanFailure as failure:
+            if failure.status is PreparedComputeStatus.BUDGET_EXHAUSTED:
+                raise
+            failures.append(failure)
+            continue
+        if tail.safe:
+            return candidate, tail
+        unsafe.append((candidate, tail))
+    if failures:
+        missing = tuple(sorted({cell for failure in failures
+                                if failure.status is PreparedComputeStatus.MISSING_INFORMATION
+                                for cell in failure.missing_cells}))
+        if missing:
+            raise _ScanFailure(PreparedComputeStatus.MISSING_INFORMATION, missing)
+        if any(failure.status is PreparedComputeStatus.UNSUPPORTED for failure in failures):
+            raise _ScanFailure(PreparedComputeStatus.UNSUPPORTED)
+        if not unsafe:
+            raise failures[0]
+    if unsafe:
+        return unsafe[0]
     raise _ScanFailure(PreparedComputeStatus.BLOCKED)
 
 
@@ -278,30 +346,35 @@ def _scan_branch(request, snapshot, world, counter, branch):
     if normal_damage > request.damage_remaining_points or not states[-1].on_ground:
         raise _ScanFailure(PreparedComputeStatus.BLOCKED)
     minimum_y = min(states[0].position[1], states[-1].position[1])
-    stop_input = TickInput(0., 0., False, False, False, anchor.yaw_radians)
     tails = []
     for boundary in range(len(request.expected_inputs) + 1):
         prefix = tuple(prelude[:-1]) + states[:boundary + 1]
-        tail = _stop_tail(counter, prefix, request.expected_inputs[boundary:boundary + 1],
-                          stop_input, world, minimum_y, request.damage_remaining_points)
+        candidate, tail = _declared_fallback_tail(
+            counter, prefix, request.expected_inputs[boundary:boundary + 1],
+            request.fallback_candidates, world, minimum_y,
+            request.damage_remaining_points)
         dependencies.update(tail.dependencies)
         if branch is StreamStartBranch.LATE_ONE and boundary == 0 and not tail.safe:
             raise _ScanFailure(PreparedComputeStatus.BLOCKED)
-        tails.append(tail)
-    if not tails[-1].safe:
+        tails.append((candidate, tail))
+    if not tails[-1][1].safe:
         raise _ScanFailure(PreparedComputeStatus.BLOCKED)
-    intervals = _risk_intervals(tails, counter, world, dependencies)
+    intervals = _risk_intervals(tuple(tail for _, tail in tails), counter, world, dependencies)
     safety_tails = []
-    for boundary, tail in enumerate(tails):
+    for boundary, (candidate, tail) in enumerate(tails):
         if tail.safe:
+            selected_tail = tail
             inputs, trajectory, used, damage = tail.inputs, tail.states, set(tail.dependencies), tail.damage
+            fallback_start = len(request.expected_inputs[boundary:boundary + 1])
         else:
             _, first, recovered = intervals[0]
             if not first <= boundary < recovered:
                 raise _ScanFailure(PreparedComputeStatus.BLOCKED)
-            recovered_tail = tails[recovered]
+            candidate, recovered_tail = tails[recovered]
+            selected_tail = recovered_tail
             inputs = request.expected_inputs[boundary:recovered] + recovered_tail.inputs
             trajectory = states[boundary:recovered] + recovered_tail.states
+            fallback_start = recovered - boundary + len(request.expected_inputs[recovered:recovered + 1])
             used = set(recovered_tail.dependencies)
             for positions in step_dependencies[boundary:recovered]:
                 used.update(positions)
@@ -310,9 +383,17 @@ def _scan_branch(request, snapshot, world, counter, branch):
             raise _ScanFailure(PreparedComputeStatus.BUDGET_EXHAUSTED)
         facts, versions = _dependency_values(snapshot, used)
         tail_tick = trajectory[0].movement_tick_id + 1
+        applied = fallback_start < len(inputs)
+        fallback_tick = tail_tick + fallback_start if applied else None
+        selection = ProvenFallbackSelection(candidate,
+            request.stream.generation_id, request.stream.owner_id,
+            request.stream.route_id, request.stream.action_index,
+            fallback_start if applied else None, fallback_tick,
+            CandidateExecutionWindow(fallback_tick, fallback_tick) if applied else None,
+            selected_tail.release_witness_input, selected_tail.release_witness_state)
         safety_tails.append(PreparedSafetyTail(
             boundary, branch, inputs, trajectory, facts, versions, damage,
-            CandidateExecutionWindow(tail_tick, tail_tick)))
+            CandidateExecutionWindow(tail_tick, tail_tick), selection))
     facts, versions = _dependency_values(snapshot, dependencies)
     last_abandon, committed = (intervals[0][:2] if intervals else (0, 0))
     return PreparedBranchProof(

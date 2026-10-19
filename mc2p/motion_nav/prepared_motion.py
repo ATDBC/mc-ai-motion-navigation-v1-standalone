@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, fields
 from enum import StrEnum
+import math
 from typing import TYPE_CHECKING, Protocol, TypeAlias, runtime_checkable
 
 from mc2p.contracts.common import ContractViolation, require_finite, require_identifier, require_nonnegative_int
@@ -18,6 +19,10 @@ from mc2p.contracts.action_v1 import ActionSnapshotV1, MovementV1
 from mc2p.motion_nav.async_work import AsyncComputationScope, AsyncWorkIdentity, AsyncWorkKind
 from mc2p.motion_nav.body_control import HandoffEvidence
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from mc2p.motion_nav.motion_chain import (
+    FallbackCandidate, FallbackTerminalMode, ProvenFallbackSelection,
+    preserve_current_neutral_fallback, validate_fallback_candidates,
+)
 from mc2p.motion_nav.motion_solver import MotionCommandTick
 from mc2p.motion_nav.online_motion import (
     CandidateExecutionWindow, InputApplicationRecord, project_movement_command, ProjectionStatus,
@@ -109,6 +114,9 @@ def _proof_snapshot(proof: PreparedMotionProof, identity: SnapshotIdentity) -> N
             _snapshot_facts(identity.world_session_id, identity.bounds, tail.dependency_facts, tail.dependency_versions)
             for state in tail.trajectory:
                 _state_rules(state, identity.ruleset, identity.world_session_id)
+            if tail.fallback.release_witness_state is not None:
+                _state_rules(tail.fallback.release_witness_state,
+                             identity.ruleset, identity.world_session_id)
 
 
 def _tail_damage_budget(proof: PreparedMotionProof, budget: TaskDamageBudget, remaining: float) -> None:
@@ -348,6 +356,7 @@ class PreparedActionPreparation:
     damage_remaining_points: float
     scan_budget: PreparedScanBudget
     boundary_applications: tuple[FirstStreamApplication, ...] = ()
+    fallback_candidates: tuple[FallbackCandidate, ...] | None = None
 
     def __post_init__(self) -> None:
         _ids(self, "job_token", "ledger_id")
@@ -361,6 +370,11 @@ class PreparedActionPreparation:
                 or type(self.ruleset) is not PhysicsRuleset or type(self.damage_budget) is not TaskDamageBudget
                 or type(self.scan_budget) is not PreparedScanBudget):
             raise ContractViolation("raw preparation requires existing immutable native references")
+        if self.fallback_candidates is None:
+            object.__setattr__(self, "fallback_candidates", (
+                preserve_current_neutral_fallback(),
+            ))
+        validate_fallback_candidates(self.fallback_candidates)
         _amount(self.damage_remaining_points, "raw preparation damage balance")
 
     def build_request(self, lease: SnapshotLease) -> PreparedMotionRequest:
@@ -372,7 +386,8 @@ class PreparedActionPreparation:
             self.exit_state, stream.requested_window, stream.requested_window.earliest_start_tick,
             self.ledger_id, self.current_state.session.value, self.boundary_applications,
             lease.identity, lease.lease_token, self.inherited_dependencies, self.ruleset,
-            self.damage_budget, self.damage_remaining_points, self.scan_budget, stream.suffix_identity)
+            self.damage_budget, self.damage_remaining_points, self.scan_budget, stream.suffix_identity,
+            self.fallback_candidates)
 
 
 @dataclass(frozen=True, slots=True)
@@ -401,6 +416,7 @@ class PreparedMotionRequest:
     damage_remaining_points: float
     scan_budget: PreparedScanBudget
     safety_tail_requirement: tuple[object, ...]
+    fallback_candidates: tuple[FallbackCandidate, ...] | None = None
 
     @property
     def request_id(self) -> str:
@@ -423,6 +439,11 @@ class PreparedMotionRequest:
             raise ContractViolation("this exact-entry request must bind its stream to the same entry state")
         if self.stream.suffix_identity != self.safety_tail_requirement:
             raise ContractViolation("request safety requirements differ from the input-stream suffix")
+        if self.fallback_candidates is None:
+            object.__setattr__(self, "fallback_candidates", (
+                preserve_current_neutral_fallback(),
+            ))
+        validate_fallback_candidates(self.fallback_candidates)
         if self.expected_inputs != self.stream.expected_inputs or not self.expected_inputs:
             raise ContractViolation("parent inputs and stream inputs must be the same exact sequence")
         if self.requested_window != self.stream.requested_window:
@@ -457,6 +478,7 @@ class PreparedSafetyTail:
     dependency_versions: DependencyVersions
     expected_damage_points: float
     permitted_window: CandidateExecutionWindow
+    fallback: ProvenFallbackSelection
 
     @property
     def first_effect_tick(self) -> int:
@@ -480,6 +502,31 @@ class PreparedSafetyTail:
         if (not self.permitted_window.allows_start(self.first_effect_tick)
                 or self.permitted_window.latest_start_tick > self.activation_deadline_tick):
             raise ContractViolation("tail window must cover its exact first effect tick without a new late branch")
+        if type(self.fallback) is not ProvenFallbackSelection:
+            raise ContractViolation("safety tail must retain its selected fallback")
+        # Stream ownership is checked again at the containing branch/proof.
+        start = self.fallback.input_start_index
+        if start is not None:
+            if (start >= len(self.inputs)
+                    or self.fallback.first_effect_tick != self.first_effect_tick + start):
+                raise ContractViolation("selected fallback is detached from the tail timing")
+            for index in range(start, len(self.inputs)):
+                if not self.fallback.candidate.matches_materialized(
+                        self.inputs[index], self.trajectory[index]):
+                    raise ContractViolation("safety tail inputs differ from the selected fallback")
+        if self.fallback.candidate.terminal_mode is FallbackTerminalMode.SNEAK_EDGE_STABLE:
+            terminal = self.trajectory[-1]
+            witness = self.fallback.release_witness_state
+            if (not terminal.on_ground or not terminal.sneaking
+                    or math.hypot(terminal.velocity_blocks_per_tick[0],
+                                  terminal.velocity_blocks_per_tick[2]) > 1.e-9
+                    or witness.movement_tick_id != terminal.movement_tick_id + 1
+                    or not witness.on_ground or witness.sneaking
+                    or any(abs(actual - expected) > 1.e-9
+                           for actual, expected in zip(witness.position, terminal.position))
+                    or math.hypot(witness.velocity_blocks_per_tick[0],
+                                  witness.velocity_blocks_per_tick[2]) > 1.e-9):
+                raise ContractViolation("sneak-edge fallback release witness is not stable")
 
 
 @dataclass(frozen=True, slots=True)
@@ -559,8 +606,16 @@ class PreparedMotionProof:
             _require_dependency_subset(branch.dependency_facts, branch.dependency_versions,
                                        self.dependency_facts, self.dependency_versions)
             for tail in branch.safety_tails:
+                if (tail.fallback.generation_id != self.stream.generation_id
+                        or tail.fallback.owner_id != self.stream.owner_id
+                        or tail.fallback.route_id != self.stream.route_id
+                        or tail.fallback.action_index != self.stream.action_index):
+                    raise ContractViolation("fallback proof belongs to another stream owner or action")
                 for state in tail.trajectory:
                     _state_rules(state, self.ruleset, session)
+                if tail.fallback.release_witness_state is not None:
+                    _state_rules(tail.fallback.release_witness_state,
+                                 self.ruleset, session)
                 _dependency_world(tail.dependency_facts, session)
                 _require_dependency_subset(tail.dependency_facts, tail.dependency_versions,
                                            self.dependency_facts, self.dependency_versions)
@@ -603,6 +658,10 @@ class PreparedMotionBundle:
             raise ContractViolation("on-time branch must start at the exact parent entry")
         if self.proof.branches[0].trajectory[-1] != self.request.exit_state:
             raise ContractViolation("on-time branch must finish at the exact parent exit")
+        declared_fallbacks = set(self.request.fallback_candidates)
+        if any(tail.fallback.candidate not in declared_fallbacks
+               for branch in self.proof.branches for tail in branch.safety_tails):
+            raise ContractViolation("proof selected a fallback the parent did not declare")
         if (self.proof.nodes_scanned > self.request.scan_budget.maximum_nodes
                 or self.proof.physics_steps > self.request.scan_budget.maximum_physics_steps
                 or self.proof.completed_candidates > self.request.scan_budget.maximum_candidates):

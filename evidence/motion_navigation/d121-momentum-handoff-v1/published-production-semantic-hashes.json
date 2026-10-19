@@ -1,0 +1,13 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D121 S1 declared fallback proof",
+  "normalization": "CRLF_TO_LF",
+  "status": "current",
+  "files": {
+    "mc2p/motion_nav/motion_chain.py": "859a4668138b73874982ff7b895cccf507e8f2a0de250e57ad5b9ee402d23ee9",
+    "mc2p/motion_nav/motion_solver.py": "88807d739b024f289d9c283047ce1bbfa1f55319bd23f62aabd82d4a9e7e4adf",
+    "mc2p/motion_nav/prepared_motion.py": "ca03a013724fb9b0260f2fc82b6caef0a70c87c7b7ebd2343ef45bbcc252b8aa",
+    "mc2p/motion_nav/prepared_motion_proof.py": "fd1fb0929f5de35c1e5d587aea1bcb16160b1544a54a8e2c4be2c227905908ab"
+  },
+  "source_commit": "1ef025d193d3c9ac61b0d5dd1a27d27774c9f9d5"
+}

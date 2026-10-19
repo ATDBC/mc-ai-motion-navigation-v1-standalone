@@ -194,7 +194,7 @@ class StandaloneExportTests(unittest.TestCase):
                 (commit, name),
             )
 
-    def test_d117_current_semantics_cover_prepared_handoff_bytes(self):
+    def test_d117_historical_semantics_remain_bound_to_the_published_commit(self):
         relative = (
             "evidence/motion_navigation/d117-prepared-handoff-v1/"
             "published-production-semantic-hashes.json"
@@ -231,6 +231,135 @@ class StandaloneExportTests(unittest.TestCase):
             "mc2p/motion_nav/route_admission.py",
             "mc2p/motion_nav/route_body_controller.py",
             "mc2p/motion_nav/world_model.py",
+        })
+        if not (ROOT / ".git").exists():
+            return
+        commit = report["source_commit"]
+        if subprocess.run(["git", "cat-file", "-e", f"{commit}^{{commit}}"],
+                          cwd=ROOT, capture_output=True).returncode != 0:
+            return
+        for name, expected in report["files"].items():
+            raw = subprocess.check_output(["git", "show", f"{commit}:{name}"], cwd=ROOT)
+            self.assertEqual(
+                hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest(),
+                expected,
+                (commit, name),
+            )
+
+    def test_d120_compact_evidence_preserves_limits_history_and_source_identity(self):
+        base = "evidence/motion_navigation/d120-momentum-entry-v1/"
+        required = {path.as_posix() for path in self.manifest.required_paths}
+        for name in ("index.json","README.md","windows-regression/summary.json","offline/summary.json","offline/manifest.json",
+                     "south/summary.json","south/analysis.json","full/summary.json","full/analysis.json",
+                     "history/jdk-preflight/summary.json","history/south-health/summary.json",
+                     "history/full-yaw/summary.json"):
+            self.assertIn(base+name,required)
+        index = json.loads((self.root/base/"index.json").read_text("utf-8"))
+        self.assertEqual(index["sound_envelope"],"unverified")
+        self.assertFalse(index["production_capability_authorized"])
+        self.assertEqual(index["d118_historical_status"],"FAILED/STOPPED")
+        regression = json.loads((self.root/base/"windows-regression/summary.json").read_text("utf-8"))
+        self.assertEqual(regression["status"],"passed")
+        for name,run in regression["runs"].items():
+            self.assertEqual((run["module_count"],run["test_count"]),
+                (197,2534) if name.startswith("source-") else (196,2510))
+            self.assertTrue(all(run[k]==0 for k in ("failures","errors","timeouts","skipped","cleanup_failures")))
+            self.assertEqual(run["state"],"complete")
+            self.assertGreater(run["bytes"],0)
+            self.assertEqual(len(run["sha256"]),64)
+        self.assertEqual(set(regression["runs"]),{"source-forward","source-reverse","public-forward","public-reverse"})
+        self.assertEqual(regression["java"],{"source":{"tests_run":3,"passed":3},"public":{"tests_run":3,"passed":3}})
+        self.assertEqual(regression["verified_baseline_file_count"],2634)
+        for name,digest in index["files"].items():
+            self.assertEqual(hashlib.sha256((self.root/base/name).read_bytes()).hexdigest(),digest,name)
+        offline = json.loads((self.root/base/"offline/summary.json").read_text("utf-8"))
+        self.assertEqual((offline["sample_count"],offline["suffix_count"],offline["main_physics_steps"]),(972,2916,47628))
+        for mode,trials,commands in (("south",3,123),("full",36,1476)):
+            summary = json.loads((self.root/base/mode/"summary.json").read_text("utf-8"))
+            analysis = json.loads((self.root/base/mode/"analysis.json").read_text("utf-8"))
+            self.assertEqual(summary["acceptance_status"],"passed")
+            self.assertEqual(len(summary["raw_files"]),14)
+            self.assertEqual((len(analysis["entries"]),analysis["joined_command_count"]),(trials,commands))
+            self.assertEqual(analysis["status"],"passed")
+            self.assertEqual(analysis["health_evidence"]["health_decrease_count"],0)
+            self.assertEqual(analysis["post_release_tail_status"],"passed")
+            self.assertTrue(all(e["within_registered_bounds"] and e["timing_passed"]
+                and all(s["passed"] for s in e["raw_suffix_replay"].values()) for e in analysis["entries"]))
+        for name in ("jdk-preflight","south-health","full-yaw"):
+            summary = json.loads((self.root/base/"history"/name/"summary.json").read_text("utf-8"))
+            self.assertEqual(summary["status"],"failed")
+            original = index["original_files"]["history/"+name+"/summary.json"]
+            self.assertEqual(hashlib.sha256((self.root/base/"history"/name/"summary.json").read_bytes()).hexdigest(),original["sha256"])
+        for name,digest in index["implementation_semantic_hashes"].items():
+            self.assertEqual(hashlib.sha256((self.root/name).read_bytes().replace(b"\r\n",b"\n")).hexdigest(),digest,name)
+        self.assertIn("scripts/d120_momentum_calibration.py",required)
+        self.assertIn("scripts/d120_momentum_entry_calibration.py",required)
+        self.assertIn("tests/motion_nav/test_d120_momentum_entry_calibration.py",required)
+
+    def test_d121_s0_diagnostics_keep_their_explicit_non_authority_boundary(self):
+        base = "evidence/motion_navigation/d121-momentum-handoff-v1/s0/"
+        required = {path.as_posix() for path in self.manifest.required_paths}
+        for name in (
+            "scripts/d121_momentum_handoff_probe.py",
+            "tests/motion_nav/test_d121_momentum_handoff.py",
+            base + "diagnostic.json",
+            base + "history/pre-receipt-gate/final.json",
+            base + "final.json",
+        ):
+            self.assertIn(name, required)
+        final = json.loads((self.root / base / "final.json").read_text("utf-8"))
+        self.assertEqual(final["status"], "diagnostic_only")
+        self.assertEqual(final["sound_envelope"], "unverified")
+        self.assertEqual(final["diagnostic_checks_status"], "passed")
+        self.assertTrue(all(row["receipt_identity_match"]
+                            and row["receipt_movement_match"]
+                            and row["final_position_velocity_match"]
+                            for row in final["runtime"]))
+        self.assertTrue(all(fact["status"] == "unimplemented"
+                            for fact in final["gaps"]))
+
+    def test_d121_current_semantics_cover_s1_fallback_proof_bytes(self):
+        relative = (
+            "evidence/motion_navigation/d121-momentum-handoff-v1/"
+            "published-production-semantic-hashes.json"
+        )
+        required = {path.as_posix() for path in self.manifest.required_paths}
+        self.assertIn(relative, required)
+        report = json.loads((self.root / relative).read_text("utf-8"))
+        self.assertEqual(report["schema"], "mc2p.public-production-semantic-hashes.v1")
+        self.assertEqual(report["normalization"], "CRLF_TO_LF")
+        self.assertEqual(report["status"], "current")
+        self.assertEqual(
+            report["source_commit"],
+            "1ef025d193d3c9ac61b0d5dd1a27d27774c9f9d5",
+        )
+        self.assertEqual(set(report["files"]), {
+            "mc2p/motion_nav/motion_chain.py",
+            "mc2p/motion_nav/motion_solver.py",
+            "mc2p/motion_nav/prepared_motion.py",
+            "mc2p/motion_nav/prepared_motion_proof.py",
+        })
+        for name, expected in report["files"].items():
+            raw = (self.root / name).read_bytes().replace(b"\r\n", b"\n")
+            self.assertEqual(hashlib.sha256(raw).hexdigest(), expected, name)
+
+    def test_d119_current_semantics_cover_zero_height_step_bytes(self):
+        relative = (
+            "evidence/motion_navigation/d119-zero-height-step-v1/"
+            "published-production-semantic-hashes.json"
+        )
+        required = {path.as_posix() for path in self.manifest.required_paths}
+        self.assertIn(relative, required)
+        report = json.loads((self.root / relative).read_text("utf-8"))
+        self.assertEqual(report["schema"], "mc2p.public-production-semantic-hashes.v1")
+        self.assertEqual(report["normalization"], "CRLF_TO_LF")
+        self.assertEqual(report["status"], "current")
+        self.assertEqual(
+            report["source_commit"],
+            "05a97922bdf5a089f8e6373c2c78db4cdae3f6dc",
+        )
+        self.assertEqual(set(report["files"]), {
+            "mc2p/motion_nav/physics_1_21.py",
         })
         for name, expected in report["files"].items():
             raw = (self.root / name).read_bytes().replace(b"\r\n", b"\n")
@@ -429,10 +558,18 @@ class StandaloneExportTests(unittest.TestCase):
             self.root / "evidence/motion_navigation/d117-prepared-handoff-v1/"
             "published-production-semantic-hashes.json"
         ).read_text("utf-8"))["files"]
+        d119 = json.loads((
+            self.root / "evidence/motion_navigation/d119-zero-height-step-v1/"
+            "published-production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
+        d121 = json.loads((
+            self.root / "evidence/motion_navigation/d121-momentum-handoff-v1/"
+            "published-production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
         current_semantics = {**canonical, **r1, **r2, **r3, **handoff,
                              **late_handoff, **post_loss, **tp0, **published,
                              **d105, **d107, **d108, **d109, **d112, **d113,
-                             **d114, **d115, **d116, **d117}
+                             **d114, **d115, **d116, **d117, **d119, **d121}
         tp0_root = self.root / "evidence/motion_navigation/trajectory-proto-tp0-v1"
         frozen = json.loads((tp0_root / "frozen-control-manifest.json").read_text("utf-8"))
         audit = json.loads((tp0_root / "fabric/audit-summary.json").read_text("utf-8"))

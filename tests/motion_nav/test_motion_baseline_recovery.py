@@ -6,6 +6,7 @@ import math
 from unittest.mock import patch
 
 from dataclasses import replace
+from mc2p.motion_nav import motion_coordination
 from mc2p.motion_nav.action_route import ActionRoute, WalkSegment
 from mc2p.motion_nav.action_route_executor import ActionRouteExecutor, ActionRouteState
 from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
@@ -88,7 +89,35 @@ class MotionBaselineRecoveryTests(unittest.TestCase):
         self.assertFalse(result.violations)
         self.assertFalse(result.trace[-1]['source_bound'])
 
-    def test_seed_163_waits_for_landing_then_reanchors_from_observation(self):
+    def test_seed_163_uses_proved_ground_recovery_and_completes(self):
+        recovered = []
+        choose = motion_coordination.verified_ground_target_movement
+
+        def observe_ground_recovery(frame, state, target_position):
+            movement = choose(frame, state, target_position)
+            if movement is not None:
+                recovered.append((frame.body.position, movement))
+            return movement
+
+        with patch.object(
+                motion_coordination, "verified_ground_target_movement",
+                observe_ground_recovery):
+            result = run(self.scenario(163))
+
+        self.assertTrue(recovered, "the proved grounded recovery path was not entered")
+        self.assertTrue(all(movement.sneak for _, movement in recovered))
+        applied_recovery = [
+            row for row in result.trace
+            if row['applied_movement']['sneak']
+            and (row['applied_movement']['forward']
+                 or row['applied_movement']['strafe'])
+        ]
+        self.assertTrue(applied_recovery)
+        self.assertEqual(result.outcome, 'success', result.reason)
+        self.assertFalse(result.violations)
+        self.assertFalse(result.trace[-1]['source_bound'])
+
+    def test_airborne_needs_state_waits_for_landing_then_reanchors_from_observation(self):
         from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
         from mc2p.motion_nav.motion_solver import SolveStatus
         observed = []
@@ -97,8 +126,20 @@ class MotionBaselineRecoveryTests(unittest.TestCase):
             if result.solve_result.status is SolveStatus.NEEDS_STATE and not anchor.physics_state.on_ground:
                 observed.append(anchor.movement_tick_id)
             return accept(owner, result, anchor, *args, **kwargs)
-        with patch.object(MotionRouteCoordinator, '_accept_result', observe_needs_state):
+        recovery_attempted = []
+
+        def unavailable_ground_recovery(*args, **kwargs):
+            recovery_attempted.append(args[0].body.position)
+            return None
+
+        with (patch.object(
+                    motion_coordination, 'verified_ground_target_movement',
+                    unavailable_ground_recovery),
+              patch.object(
+                    MotionRouteCoordinator, '_accept_result',
+                    observe_needs_state)):
             result = run(self.scenario(163))
+        self.assertTrue(recovery_attempted)
         self.assertTrue(observed, "the airborne needs_state recovery path was not entered")
         airborne = [row for row in result.trace if not row['on_ground']]
         self.assertTrue(airborne)

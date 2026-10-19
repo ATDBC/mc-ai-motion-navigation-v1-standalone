@@ -132,7 +132,13 @@ class RegistryTests(unittest.TestCase):
         stream = replace(self.request.stream, generation_id="next-stream", request_id="next-request", action_index=1)
         request = replace(self.request, job_token="next-job", stream=stream,
                           async_identity=replace(self.request.async_identity, subject_id=stream.request_id, revision=2))
-        bundle = reseal(replace(self.bundle, request=request, proof=replace(self.bundle.proof, stream=stream)))
+        branches = tuple(replace(branch, safety_tails=tuple(
+            replace(tail, fallback=replace(tail.fallback,
+                generation_id=stream.generation_id, owner_id=stream.owner_id,
+                route_id=stream.route_id, action_index=stream.action_index))
+            for tail in branch.safety_tails)) for branch in self.bundle.proof.branches)
+        proof = replace(self.bundle.proof, stream=stream, branches=branches)
+        bundle = reseal(replace(self.bundle, request=request, proof=proof))
         inbox.publish_current_facts(replace(self.current, stream=stream))
         self.ready(inbox=inbox, worker=worker, request=request, bundle=bundle)
         self.assertFalse(inbox.job_active(self.request.async_identity))

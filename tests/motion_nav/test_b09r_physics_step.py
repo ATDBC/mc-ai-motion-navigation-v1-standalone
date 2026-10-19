@@ -1,14 +1,15 @@
 import math
 import unittest
 from dataclasses import replace
+from unittest.mock import patch
 
-from mc2p.motion_nav.physics_1_21 import step
+from mc2p.motion_nav.physics_1_21 import _resolve_with_step, step
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView, build_physics_state
 from mc2p.motion_nav.physics_types import (
     CalculationStatus, JAVA_1_21_RULESET, ResourceStatus, TickInput,
 )
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
-from mc2p.motion_nav.world_model import BlockGeometry, WorldKnowledge
+from mc2p.motion_nav.world_model import Aabb, BlockGeometry, WorldKnowledge
 from tests.observation_v3_fixtures import valid_snapshot_v3
 
 
@@ -143,6 +144,114 @@ class B09RPhysicsStepTests(unittest.TestCase):
         self.assertGreater(result.next_state.position[2], 0.7)
         self.assertTrue(result.next_state.on_ground)
         self.assertIn("step_up", result.events)
+
+    def test_d118_tick_246_zero_height_step_preserves_ground_contact(self):
+        world = WorldKnowledge(self.state.session)
+        world.confirm_air(self.frame_stamp, tuple(
+            (x, y, z)
+            for x in range(13, 17)
+            for y in range(-2, 4)
+            for z in range(27, 32)
+        ))
+        world.observe_blocks(self.frame_stamp, {
+            (14, -1, 28): BlockGeometry.full_cube("minecraft:grass_block"),
+            (14, -1, 30): BlockGeometry.full_cube("minecraft:grass_block"),
+        })
+        before = replace(
+            self.state, position=(14.5, 0.0, 29.505511702072333),
+            velocity_blocks_per_tick=(0.0, -0.0784000015258789,
+                                      -0.11737414716857816),
+            yaw_radians=0.0, on_ground=True, horizontal_collision=False,
+            vertical_collision=True, sprinting=False, sneaking=False,
+        )
+
+        result = step(
+            before, TickInput(-1, 0, False, False, False, 0),
+            PhysicsWorldView(world.view(), JAVA_1_21_RULESET), JAVA_1_21_RULESET,
+        )
+
+        self.assertIs(result.status, CalculationStatus.OK)
+        after = result.next_state
+        self.assertAlmostEqual(after.position[0], 14.5, places=7)
+        self.assertAlmostEqual(after.position[1], 0.0, places=7)
+        self.assertAlmostEqual(after.position[2], 29.29013755153609, places=7)
+        self.assertAlmostEqual(after.velocity_blocks_per_tick[2],
+                               -0.1175942998516743, places=7)
+        self.assertTrue(after.on_ground)
+        self.assertTrue(after.vertical_collision)
+        self.assertFalse(after.horizontal_collision)
+        self.assertEqual(result.events, ("vertical_collision",))
+
+    def test_step_candidates_do_not_repeat_the_base_vertical_displacement(self):
+        body = Aabb(.2, 0.0, .2, .8, 1.8, .8)
+        floor = Aabb(0.0, -1.0, 0.0, 1.0, 0.0, 1.0)
+        wall = Aabb(0.0, 0.0, 1.0, 1.0, 2.0, 2.0)
+        base = (0.0, 0.0, .2)
+
+        with patch("mc2p.motion_nav.physics_1_21._resolve") as resolve:
+            applied, stepped_up = _resolve_with_step(
+                body, (0.0, -.08, .35), (floor, wall), .6, True,
+                base=base,
+            )
+
+        self.assertEqual(applied, base)
+        self.assertFalse(stepped_up)
+        resolve.assert_not_called()
+
+    def test_landing_step_candidates_compare_with_original_base_y(self):
+        body = Aabb(.2, 1.0, .2, .8, 2.8, .8)
+        floor = Aabb(0.0, -.25, 0.0, 1.0, .75, 1.0)
+        wall = Aabb(0.0, .75, 1.0, 1.0, 2.75, 2.0)
+        obstacles = (floor, wall)
+        base = (0.0, -.25, .2)
+
+        with patch("mc2p.motion_nav.physics_1_21._resolve",
+                   return_value=(0.0, 0.0, .2)) as resolve:
+            applied, stepped_up = _resolve_with_step(
+                body, (0.0, -.5, .35), obstacles, .6, False, base=base,
+            )
+
+        # The clipped fall moves the candidate origin down by .25. Vanilla
+        # still excludes original base Y (-.25), so candidate height 0 is tried.
+        resolve.assert_called_once_with(
+            body.moved(0.0, -.25, 0.0), (0.0, 0.0, .35), obstacles)
+        self.assertEqual(applied, base)
+        self.assertFalse(stepped_up)
+
+    def test_step_candidates_exclude_base_y_after_java_float_rounding(self):
+        body = Aabb(.2, 0.0, .2, .8, 1.8, .8)
+        obstacle = Aabb(0.0, -1.0, 0.0, 1.0, .125 + 3e-9, 1.0)
+        base = (0.0, .125 + 1e-9, .2)
+
+        with patch("mc2p.motion_nav.physics_1_21._resolve",
+                   return_value=(0.0, .125, .2)) as resolve:
+            applied, stepped_up = _resolve_with_step(
+                body, (0.0, base[1], .35), (obstacle,), .6, True,
+                base=base,
+            )
+
+        self.assertEqual(applied, base)
+        self.assertFalse(stepped_up)
+        resolve.assert_not_called()
+
+    def test_step_candidates_keep_positive_float_heights_below_epsilon(self):
+        body = Aabb(.2, 0.0, .2, .8, 1.8, .8)
+        obstacle = Aabb(0.0, -1.0, 0.0, 1.0, 1e-10, 1.0)
+
+        def resolve_candidate(candidate_body, requested, obstacles):
+            return requested
+
+        with patch("mc2p.motion_nav.physics_1_21._resolve",
+                   side_effect=resolve_candidate) as resolve:
+            applied, stepped_up = _resolve_with_step(
+                body, (0.0, -.08, .35), (obstacle,), .6, True,
+                base=(0.0, 0.0, .2),
+            )
+
+        self.assertEqual(resolve.call_count, 1)
+        self.assertGreater(applied[1], 0.0)
+        self.assertLess(applied[1], 1e-9)
+        self.assertTrue(stepped_up)
 
     def test_supported_carpet_snow_and_stair_shapes_use_their_real_tread_height(self):
         shapes = (

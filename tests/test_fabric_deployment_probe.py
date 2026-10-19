@@ -473,12 +473,12 @@ class FabricDeploymentProbeTests(unittest.TestCase):
             self.assertIsInstance(plain, JsonlTraceWriterV0)
             plain.close()
 
-        source = (ROOT / "scripts/probe_fabric_deployment_observation.py").read_text(
-            "utf-8"
-        )
-        self.assertIn(
-            "or (continuous_height_probe and time_diagnostics)", source,
-        )
+        self.assertTrue(probe._captures_close_diagnostics(
+            {"continuous_height"}, time_diagnostics=True,
+        ))
+        self.assertTrue(probe._captures_close_diagnostics(
+            {"d118_motion_calibration"}, time_diagnostics=True,
+        ))
 
     def test_async_close_diagnostics_accepts_projected_runtime_records(self):
         from dataclasses import dataclass

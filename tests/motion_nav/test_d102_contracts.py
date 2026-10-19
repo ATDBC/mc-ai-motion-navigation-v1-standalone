@@ -15,6 +15,7 @@ from mc2p.contracts.motion_activation import (
 from mc2p.motion_nav.async_work import AsyncComputationScope, AsyncWorkIdentity, AsyncWorkKind
 from mc2p.motion_nav.input_stream import InputStreamTracker
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from mc2p.motion_nav.motion_chain import ProvenFallbackSelection
 from mc2p.motion_nav.motion_solver import MotionCommandTick
 from mc2p.motion_nav.online_motion import CandidateExecutionWindow
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET, TickInput
@@ -58,7 +59,12 @@ def prepared_bundle():
                            replace(request.entry_state, movement_tick_id=10 + offset + i)
                            for i in range(4))
         tails = tuple(PreparedSafetyTail(i, branch, (), (trajectory[i],), (), (), 0.,
-                                        CandidateExecutionWindow(11 + offset + i, 11 + offset + i))
+                                        CandidateExecutionWindow(11 + offset + i, 11 + offset + i),
+                                        ProvenFallbackSelection(
+                                            request.fallback_candidates[0],
+                                            request.stream.generation_id, request.stream.owner_id,
+                                            request.stream.route_id, request.stream.action_index,
+                                            None, None, None))
                       for i in range(4))
         branches.append(PreparedBranchProof(branch, 11 + offset, request.expected_inputs,
                                            trajectory, tails, 1, 0, (), (),
@@ -541,14 +547,19 @@ class FixRound1Tests(unittest.TestCase):
                 for nonempty in (False, True):
                     tick = original.trajectory[0].movement_tick_id + 1
                     trajectory = original.trajectory + (replace(original.trajectory[0], movement_tick_id=tick),) if nonempty else original.trajectory
-                    inputs = (branch.inputs[0],) if nonempty else ()
+                    inputs = (original.fallback.candidate.tick_input,) if nonempty else ()
                     for window in (CandidateExecutionWindow(0, 0), CandidateExecutionWindow(tick + 1, tick + 1),
                                    CandidateExecutionWindow(tick, tick + 1)):
                         with self.subTest(branch=branch.start_branch, boundary=original.boundary_index,
                                           nonempty=nonempty, window=window), self.assertRaises(ContractViolation):
                             replace(original, inputs=inputs, trajectory=trajectory, permitted_window=window)
+                    fallback = (replace(original.fallback, input_start_index=0,
+                                first_effect_tick=tick,
+                                permitted_window=CandidateExecutionWindow(tick, tick)) if nonempty
+                                else original.fallback)
                     ready = replace(original, inputs=inputs, trajectory=trajectory,
-                                    permitted_window=CandidateExecutionWindow(tick, tick))
+                                    permitted_window=CandidateExecutionWindow(tick, tick),
+                                    fallback=fallback)
                     self.assertEqual(ready.permitted_window.latest_start_tick, tick)
 
 

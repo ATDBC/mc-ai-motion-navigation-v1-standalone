@@ -2,6 +2,12 @@
 
 这个仓库是主项目按固定清单生成的源码快照。它包含当前正式实现、共享契约、配置、测试、Fabric 客户端代码和四类现行设计文档。`EXPORT-METADATA.json` 记录来源提交，`SHA256SUMS.txt` 覆盖导出的每个文件。
 
+2026-10-19，D120 有限入口与实机校准已完成：972 个入口、2916 个后缀通过，south 3/3、full 36/36。历史失败保留，连续 sound envelope 仍未验证，生产连续跑酷和 D118-1—D118-5 未授权；Windows 源码树正逆各 197 模块／2534 项，公开快照正逆各 196 模块／2510 项全绿，零失败、错误、超时、跳过和清理失败；Java 各 3/3，矩阵快照 verify 2634 文件。详见 [D120 验收](docs/motion_navigation/acceptance/d120-momentum-entry-calibration.md)和[公开证据](evidence/motion_navigation/d120-momentum-entry-v1/README.md)。
+
+2026-10-19，D119 已完成。1.21 计算器已恢复原版的 0 高度 step 候选规则；D118 已封存 raw 的 7 个 trial、273 个 tick 离散差异为 0。源码树和独立公开快照的正逆完整门禁全部通过。D118-0 的历史失败不改写，full matrix、连续两跳和后续阶段仍未授权。详见 [D119 计划](docs/motion_navigation/stages/d119-zero-height-step-candidate-repair-plan.md)和[验收](docs/motion_navigation/acceptance/d119-zero-height-step-candidate-repair.md)。
+
+2026-10-18，D118-0 的 Windows 朝南校准在物理一致性门槛停止。Fabric probe 和 273 条命令身份链通过，7 个 trial 中 6 个与计算器一致；`fallback-back-south-0` 暴露计算器遗漏原版 0 高度 step 候选。D118-1—D118-5、四方向矩阵和生产接入均未启动。详见 [D118 验收](docs/motion_navigation/acceptance/d118-momentum-gap-calibration.md)。
+
 2026-10-17，[D116](docs/motion_navigation/decisions/0116-attribute-prepared-handoff-before-changing-order.md) 已执行到 D116-1 并按门槛停止，状态为 **PARTIAL／STOPPED**。D116-0 的正式链时间线更正了 D115 的顺序判断：执行器先发布边界，Session 随后申请批准；最初的拒绝来自完整 `CellFact` 把纯观察时间戳刷新误判为地形变化。测试夹具已支持 `PreparedMotionJob` 正式身份，冻结值校验已支持 `frozenset[T]`。D116-1 改用 `WorldModel.dependency_changes()` 的语义版本：纯 stamp 刷新可继续，owner 缺失、历史不完整及真实方块、流体或碰撞变化仍拒绝。代表链在 tick 20 获批，tick 21 实际应用第二跳输入，单一 movement winner、owner 无空档、零伤害；随后路线 tracker 身份仍停在上一动作，prepared admission 也缺少异步生命周期 `apply` 事件，因此连续两跳仍未完成。未运行扩大矩阵、完整 Windows、公开快照、性能签署或 Fabric。见[计划](docs/motion_navigation/stages/d116-semantic-dependency-repair-plan.md)、[验收](docs/motion_navigation/acceptance/d116-prepared-handoff-attribution.md)和 `evidence/motion_navigation/d116-handoff-timeline-v1/`。
 
 2026-10-17，[D115](docs/motion_navigation/decisions/0115-close-d114-and-enable-bounded-two-jump-continuity.md) 的以下顺序归因为当时记录，已由上文 D116 更正；该阶段已按范围执行并在连续两跳代表闭环止损，状态为 **PARTIAL／STOPPED**。D114 夹具收尾已完成组件验证：传送必须先有命令生效迹象，再满足最少 3 tick 和连续 2 帧稳定；同位姿自然漂移不能冒充传送完成；组件与 Fabric 共用 trial 组装和“本帧没有移动意图”的等待口径。交付估计改为新的动作主体（subject）用 SOLVE 重建，同一主体的求解重试和 REVALIDATE 只上调。正式规划器生成的 `Walk -> JumpGap -> JumpGap` 代表链暴露同帧交接顺序缺口：身体在 tick20 精确命中第二跳入口，但 Session 的批准早于执行器发布边界；下一帧身体已离开入口，证明随后过期。局部自动准备改动已撤回，未运行扩大矩阵、完整门禁或 Fabric。见[计划](docs/motion_navigation/stages/d115-two-jump-continuity-plan.md)、[验收](docs/motion_navigation/acceptance/d115-two-jump-continuity.md)和 `evidence/motion_navigation/d115-two-jump-v1/stop.json`。
@@ -103,8 +109,8 @@ Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于�
 ## 先读什么
 
 1. `AGENTS.md`
-2. [D116 计划](docs/motion_navigation/stages/d116-semantic-dependency-repair-plan.md)
-3. [D116 验收](docs/motion_navigation/acceptance/d116-prepared-handoff-attribution.md)和 [D116 决定](docs/motion_navigation/decisions/0116-attribute-prepared-handoff-before-changing-order.md)
+2. [D120 计划](docs/motion_navigation/stages/d120-momentum-entry-calibration-plan.md)
+3. [D120 验收](docs/motion_navigation/acceptance/d120-momentum-entry-calibration.md)和 [D120 决定](docs/motion_navigation/decisions/0120-resume-momentum-entry-calibration.md)
 4. 需要追溯产品能力时再读 F2REC、连续地面路线和对应历史验收。
 5. `docs/motion_navigation/architecture/navigation-coordination-v1.md`（第 17 节包含当前 R28 目标和已实施的持续目标语义）
 6. 当前实现和证据读 R27 阶段文档、`navigation-coordination-refactor.md` 第 20 节与 `defect-ledger.md`。
