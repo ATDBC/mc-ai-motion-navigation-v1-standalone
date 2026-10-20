@@ -1,0 +1,19 @@
+对照树换回原字节的文件数：1614；忽略行尾后对照树与 dfaa0b4f 的差异行数：0
+
+== dfaa0b4f 原样
+test_action_entry_handoff_repair  FAILED (errors=6)
+test_f2rec_r0_baseline  FAILED (failures=1, errors=1)
+test_f2rec_r1_region_geometry  FAILED (errors=5)
+test_reference_baselines  FAILED (errors=1)
+test_action_continuity_solver_limits  FAILED (errors=1)
+test_d058_runtime_validation  FAILED (errors=1)
+test_navigation_session  FAILED (errors=1)
+
+== 对照树：只有行尾换回 3889d10e
+test_action_entry_handoff_repair  OK
+test_f2rec_r0_baseline  OK
+test_f2rec_r1_region_geometry  OK
+test_reference_baselines  OK
+test_action_continuity_solver_limits  FAILED (errors=1)
+test_d058_runtime_validation  FAILED (errors=1)
+test_navigation_session  FAILED (errors=1)

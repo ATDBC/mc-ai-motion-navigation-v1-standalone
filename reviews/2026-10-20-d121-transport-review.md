@@ -4,7 +4,7 @@
 
 平台说明：
 
-- 本轮只在 Linux 上运行项目函数、项目夹具和项目测试，项目树本身不改；唯一的对照树（E125）只把一个冻结清单换回 3889d10 的原字节。
+- 本轮只在 Linux 上运行项目函数、项目夹具和项目测试，项目树本身不改；唯一的对照树（E125）只把只有行尾变化的文件换回 3889d10 的原字节。
 - 没有运行 Java 或 Fabric。Java 客户端的结论来自源码阅读，文中给出文件和行号。
 - 脚本和输出在 [`2026-10-20-d121-transport-review/`](2026-10-20-d121-transport-review/)。
 
@@ -50,8 +50,11 @@
    - **不需要：** 通用排程器、多个默认，或把 generation 放进 wire。
    - **兼容问题必须先解决：** 现行 Java 解码要求键集合完全一致，解码失败会让整个部署会话进入失败。新字段只能在握手确认后发送。
 6. **这次发布本身有几处要先修。**
-   - **三项新的测试错误：** 它们在 3889d10 上通过（E125、E126、全量分片）。这命中 D121 §6 的停止条件“出现旧成功退步”。
-   - **行尾统一改写了 1614 个文件：** 其中 787 个是历史证据，并且打断了冻结清单和 11 条“证据引用证据”的哈希。这命中了 D121 §6 的另一条停止条件“无关行尾变化”。
+   - **全量分片有 7 个模块新报错，都在 3889d10 上通过。**
+     - 4 个由行尾改写造成，恢复原行尾后通过（E125）：R28 v8 冻结清单、F2REC 工具来源记录和 B01 参照场景 S04 的字节变了。
+     - 另 3 个是两处代码回归（E126）。
+     - 这命中 D121 §6 的停止条件“出现旧成功退步”。
+   - **行尾统一改写了 1614 个文件：** 其中 787 个是历史证据，另外打断了 11 条“证据引用证据”的哈希。这命中 D121 §6 的另一条停止条件“无关行尾变化”。
    - **入口文档状态不一致：** AGENTS.md 和 README 仍写 `AUTHORIZED REVISION／IN PROGRESS`。
    - **复现命令失效：** S2 的复现命令指向已删除的脚本。
 
@@ -229,7 +232,7 @@ k=7 时有 648 个入口速度已降到阈值以下，但中心越过平台边�
 
 D122 开工前，先把 D121 收口：
 
-- 修正 §4 的三项测试错误；
+- 修正 §4 的代码回归；
 - 恢复被改写的历史字节；
 - 入口文档状态改为 PARTIAL／STOPPED；
 - S2 复现命令改为指向 3889d10。
@@ -240,19 +243,49 @@ D122 开工前，先把 D121 收口：
 
 ### 4.1 全量分片
 
-（分片完成后补入，见 `output/linux-forward-summary.txt`。）
+项目自己的分片器跑完整 `tests/motion_nav`，201 个模块：193 个通过，8 个报错，2631 项测试中 1 个 failure、18 个 error（`output/linux-forward-summary.txt`）。
 
-### 4.2 三项新的测试错误
+与 3889d10 的分片相比：
 
-三项在 3889d10 上都通过（E125、E126）。
+- **已修好：** 上一轮报告的 `test_navigation_design_metrics` 两项失败已修好。
+- **新增模块：** D121 的三个新模块（handoff execution、successor binding、transport late）通过。
+- **D101：** `test_d101_measurement` 只能在 Windows 上跑，两轮相同。
+- **新报错：** 新出现 7 个报错模块，都在 3889d10 上通过。
 
-| 模块 | 错误 | 原因 | 建议 |
+E125 把这 7 个模块的原因分开。它在 dfaa0b4f 上建一棵对照树：把 1614 个只有行尾变化的文件全部换回 3889d10 的原字节，忽略行尾后与 dfaa0b4f 没有任何差异，再在两棵树上重跑。
+
+| 模块 | dfaa0b4f 原样 | 只换回行尾 | 原因 |
 |---|---|---|---|
-| `test_action_entry_handoff_repair` | 6 个 error | 冻结清单 `tests/sim/manifests/navigation-product-r28-v8.json` 被改为 LF，sha256 从记录的 `c29e9158…` 变成 `418a330e…`；`tests/sim/f2s_cases.py:159` 拒绝 | 恢复原字节；只换回这一个文件，9/9 通过（E125） |
-| `test_action_continuity_solver_limits` | 1 个 error | 新的 `VerifiedMotionResult` 构造校验（`motion_solver.py:748-756`）让测试里 `replace(proof, recovery_horizon_ticks=1)` 直接抛 `ContractViolation`，测试原本要检查的重验证拒绝路径走不到 | 行为更严格，属于测试没随契约更新；改测试，保留“求解和重验证都拒绝”的意图 |
-| `test_d058_runtime_validation`（`test_cancel_keeps_executor_until_its_landing_responsibility_finishes`） | 1 个 error | 新的 `_release_completed_prepared_uses`（`execution_supervisor.py:930`）在 cancel 路径读 `control.activation_registry`；它读执行器私有字段 `_prepared_result_inbox`（`route_body_controller.py:193`），测试替身没有这个字段 | 执行器提供只读公开访问，不跨模块读私有字段；同文件 `action_route_executor.py:591` 已用 `getattr` 兜底，说明这里本就该是接口 |
+| `test_action_entry_handoff_repair` | 6 error | OK | 行尾 |
+| `test_f2rec_r0_baseline` | 1 failure、1 error | OK | 行尾 |
+| `test_f2rec_r1_region_geometry` | 5 error | OK | 行尾 |
+| `test_reference_baselines` | 1 error | OK | 行尾 |
+| `test_action_continuity_solver_limits` | 1 error | 1 error | 代码 |
+| `test_d058_runtime_validation` | 1 error | 1 error | 代码 |
+| `test_navigation_session` | 1 error | 1 error | 代码（与上一行是同一个用例） |
 
-验收文档自己写明“完整 Windows 和独立公开快照矩阵尚未重跑”。这三项在 Windows 上同样会失败：一项是字节哈希，两项是纯 Python 逻辑。
+所以 18 个 error 中，13 个和那 1 个 failure 由行尾改写造成，3 个是两处代码回归，2 个是 Windows 专用的 D101。
+
+验收文档自己写明“完整 Windows 和独立公开快照矩阵尚未重跑”。这些问题在 Windows 上同样会出现：前四项是字节哈希，后两项是纯 Python 逻辑。
+
+### 4.2 回归明细
+
+行尾造成的四项，各自卡在一个被改写的冻结文件上：
+
+| 冻结文件 | 校验位置 | 受影响模块 |
+|---|---|---|
+| `tests/sim/manifests/navigation-product-r28-v8.json`（记录 `c29e9158…`，现为 `418a330e…`） | `tests/sim/f2s_cases.py:159` | `test_action_entry_handoff_repair`、`test_f2rec_r1_region_geometry`、`test_f2rec_r0_baseline` 的 v9 输入用例 |
+| `evidence/motion_navigation/F2REC-recovery-v1/r0/tool-provenance.json`（测试固定为 `57da7698…`，现为 `cdccd4f3…`） | `test_f2rec_r0_baseline.py:139-142` | `test_f2rec_r0_baseline` |
+| `experiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json`（B01 场景 S04，记录 `99c144d6…`，现为 `39145f39…`） | `mc2p/motion_nav/evidence/reference_baselines.py:177-178` | `test_reference_baselines`；AGENTS.md 里的 `motion_navigation_references.py verify` 读同一份场景注册表 |
+
+B01 参照场景、F2REC 的工具来源记录和 R28 v8 清单都是早已冻结的历史基线。恢复原字节即可，不应改动记录的哈希。
+
+代码造成的两处：
+
+| 模块 | 原因 | 建议 |
+|---|---|---|
+| `test_action_continuity_solver_limits` | 新的 `VerifiedMotionResult` 构造校验（`motion_solver.py:748-756`）让测试里的 `replace(proof, recovery_horizon_ticks=1)` 直接抛 `ContractViolation`，测试要检查的重验证拒绝路径走不到 | 行为更严格，属于测试没随契约更新；改测试，保留“求解和重验证都拒绝”的意图 |
+| `test_d058_runtime_validation`／`test_navigation_session` 的 `test_cancel_keeps_executor_until_its_landing_responsibility_finishes` | 新的 `_release_completed_prepared_uses`（`execution_supervisor.py:924` 起）在 cancel 路径读 `control.activation_registry`；它读执行器私有字段 `_prepared_result_inbox`（`route_body_controller.py:193`），测试替身没有这个字段 | 执行器提供只读公开访问，不跨模块读私有字段；执行器自己在 `action_route_executor.py:591` 也用 `getattr` 兜底，说明这里本该是接口 |
 
 ### 4.3 行尾统一
 
@@ -269,7 +302,7 @@ dfaa0b4f 改了 1753 个文件，其中 1614 个只有行尾变化：
 
 影响（E124、E124b）：
 
-- **冻结清单：** 见 §4.2，直接让测试报错。
+- **冻结文件：** 三个冻结文件的哈希变了，4 个测试模块因此报错（§4.1、§4.2）。
 - **证据引用证据：** 共 48 条，统一前 41 条对得上，统一后 33 条。新断的 11 条全部记录在 `F2REC-recovery-v1/r0/reused-baselines.json`，指向 `F2R-piecewise-completion-v1` 和 `r28-baseline-v7` 的 index、summary 等文件；换回 CRLF 即可对上。另有 3 条（D106 引用 D105）反而由此对上。
 - **证据记录的源文件哈希：** 共有记录 24,852 条。统一前对上、统一后对不上的有 1,721 条，其中 1,709 条换回 CRLF 即可对上；反方向由此对上的有 10,042 条。源文件哈希随代码修改而失配属于正常；这里只说明行尾统一不是“无副作用”。
 
@@ -309,8 +342,8 @@ dfaa0b4f 删除了 `scripts/d121_joint_worker_stop_probe.py`。测试改为只�
 | E123 | `e123_late_tick_physics.py` | `output/e123_late_tick_physics.json` | `L+1`／`L+2` 九种输入组合，以及潜行 k 拍后松键，各 972 个入口 |
 | E124 | `e124_evidence_hash_references.py` | `output/e124_evidence_hash_references.txt` | 证据中“路径 → sha256”记录，在两个提交上各有多少对得上 |
 | E124b | `e124b_evidence_reference_diff.py` | `output/e124b_evidence_reference_diff.json` | 同一记录在行尾统一前后的变化，以及证据引用证据的逐条状态 |
-| E125 | `run_all.sh` 内联 | `output/e125_frozen_v8_manifest.txt` | 冻结 v8 清单：原样与换回原字节的对照 |
-| E126 | `run_all.sh` 内联 | `output/e126_suite_regressions.txt` | 另外两项回归在两个提交上的结果 |
+| E125 | `run_all.sh` 内联 | `output/e125_line_ending_attribution.txt` | 7 个新报错模块：dfaa0b4f 原样，与只把 1614 个文件的行尾换回 3889d10 的对照树 |
+| E126 | `run_all.sh` 内联 | `output/e126_suite_regressions.txt` | 两处代码回归在两个提交上的错误信息 |
 | 全量分片 | `scripts/run_motion_nav_shards.py` | `output/linux-forward-summary.txt` | dfaa0b4f 完整 `tests/motion_nav` |
 
 复现：`PROJECT=<dfaa0b4f 检出> BASE=<3889d10 检出> sh run_all.sh`。
