@@ -1,0 +1,7 @@
+== dfaa0b4f 原样
+Ran 9 tests in 2.549s
+FAILED (errors=6)
+
+== 对照树：只把 tests/sim/manifests/navigation-product-r28-v8.json 换回 CRLF
+Ran 9 tests in 10.962s
+OK

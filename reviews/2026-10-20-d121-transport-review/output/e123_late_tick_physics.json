@@ -1,0 +1,70 @@
+{
+ "manifest_sha256": "89c5ee269da0b8ac969d69be781a589c8f28449faf0b153fe69a6b2c2a433dd6",
+ "entries": 972,
+ "outcomes": {
+  "sneak_then_sneak": {
+   "middle": 972
+  },
+  "neutral_then_sneak": {
+   "fell": 972
+  },
+  "neutral_then_neutral": {
+   "fell": 972
+  },
+  "sneak_then_neutral": {
+   "fell": 972
+  },
+  "neutral_then_jump": {
+   "fell": 972
+  },
+  "sneak_then_jump": {
+   "fell": 972
+  },
+  "run_then_jump": {
+   "target": 972
+  },
+  "run_then_sneak": {
+   "fell": 972
+  },
+  "jump_on_time": {
+   "target": 972
+  }
+ },
+ "sneak_k_ticks_then_neutral": {
+  "1": {
+   "fell": 972
+  },
+  "2": {
+   "fell": 972
+  },
+  "4": {
+   "fell": 972
+  },
+  "6": {
+   "fell": 648,
+   "middle": 324
+  },
+  "7": {
+   "fell": 648,
+   "middle": 324
+  },
+  "8": {
+   "middle": 972
+  },
+  "9": {
+   "middle": 972
+  },
+  "10": {
+   "middle": 972
+  },
+  "12": {
+   "middle": 972
+  },
+  "16": {
+   "middle": 972
+  },
+  "20": {
+   "middle": 972
+  }
+ }
+}

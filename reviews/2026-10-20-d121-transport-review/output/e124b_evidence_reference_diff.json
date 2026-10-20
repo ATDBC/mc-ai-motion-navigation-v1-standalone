@@ -1,0 +1,143 @@
+{
+ "common_records": 24852,
+ "matched_before": 4566,
+ "matched_after": 12887,
+ "broken_by_commit": 1721,
+ "broken_by_commit_crlf_would_match": 1709,
+ "fixed_by_commit": 10042,
+ "broken_target_top_dirs": [
+  [
+   "mc2p",
+   1453
+  ],
+  [
+   "tests",
+   164
+  ],
+  [
+   "scripts",
+   80
+  ],
+  [
+   "experiments",
+   13
+  ],
+  [
+   "evidence",
+   11
+  ]
+ ],
+ "broken_eol_only_target_top_dirs": [
+  [
+   "mc2p",
+   1442
+  ],
+  [
+   "tests",
+   164
+  ],
+  [
+   "scripts",
+   79
+  ],
+  [
+   "experiments",
+   13
+  ],
+  [
+   "evidence",
+   11
+  ]
+ ],
+ "evidence_to_evidence": {
+  "records": 48,
+  "matched_before": 41,
+  "matched_after": 33,
+  "changed": [
+   {
+    "recorded_in": "evidence/motion_navigation/F2REC-recovery-v1/r0/reused-baselines.json",
+    "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/f2/index.json",
+    "before": "match",
+    "after": "crlf_would_match"
+   },
+   {
+    "recorded_in": "evidence/motion_navigation/F2REC-recovery-v1/r0/reused-baselines.json",
+    "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/f2/summary.json",
+    "before": "match",
+    "after": "crlf_would_match"
+   },
+   {
+    "recorded_in": "evidence/motion_navigation/F2REC-recovery-v1/r0/reused-baselines.json",
+    "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/five-groups/coordination-index.json",
+    "before": "match",
+    "after": "crlf_would_match"
+   },
+   {
+    "recorded_in": "evidence/motion_navigation/F2REC-recovery-v1/r0/reused-baselines.json",
+    "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/five-groups/faults-index.json",
+    "before": "match",
+    "after": "crlf_would_match"
+   },
+   {
+    "recorded_in": "evidence/motion_navigation/F2REC-recovery-v1/r0/reused-baselines.json",
+    "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/five-groups/follow-index.json",
+    "before": "match",
+    "after": "crlf_would_match"
+   },
+   {
+    "recorded_in": "evidence/motion_navigation/F2REC-recovery-v1/r0/reused-baselines.json",
+    "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/five-groups/product-index.json",
+    "before": "match",
+    "after": "crlf_would_match"
+   },
+   {
+    "recorded_in": "evidence/motion_navigation/F2REC-recovery-v1/r0/reused-baselines.json",
+    "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/five-groups/world_changes-index.json",
+    "before": "match",
+    "after": "crlf_would_match"
+   },
+   {
+    "recorded_in": "evidence/motion_navigation/F2REC-recovery-v1/r0/reused-baselines.json",
+    "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/v8/overall-summary.json",
+    "before": "match",
+    "after": "crlf_would_match"
+   },
+   {
+    "recorded_in": "evidence/motion_navigation/F2REC-recovery-v1/r0/reused-baselines.json",
+    "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/v8/repeat-check.json",
+    "before": "match",
+    "after": "crlf_would_match"
+   },
+   {
+    "recorded_in": "evidence/motion_navigation/F2REC-recovery-v1/r0/reused-baselines.json",
+    "path": "evidence/motion_navigation/r28-baseline-v7/comparison-summary.json",
+    "before": "match",
+    "after": "crlf_would_match"
+   },
+   {
+    "recorded_in": "evidence/motion_navigation/F2REC-recovery-v1/r0/reused-baselines.json",
+    "path": "evidence/motion_navigation/r28-baseline-v7/summary.json",
+    "before": "match",
+    "after": "crlf_would_match"
+   },
+   {
+    "recorded_in": "evidence/motion_navigation/sound-motion-proof-d106-v1/r0/index.json",
+    "path": "evidence/motion_navigation/sound-motion-proof-d105-v1/t1/index.json",
+    "before": "mismatch",
+    "after": "match"
+   },
+   {
+    "recorded_in": "evidence/motion_navigation/sound-motion-proof-d106-v1/r0/index.json",
+    "path": "evidence/motion_navigation/sound-motion-proof-d105-v1/t2/index.json",
+    "before": "mismatch",
+    "after": "match"
+   },
+   {
+    "recorded_in": "evidence/motion_navigation/sound-motion-proof-d106-v1/r0/index.json",
+    "path": "evidence/motion_navigation/sound-motion-proof-d105-v1/t3/index.json",
+    "before": "mismatch",
+    "after": "match"
+   }
+  ]
+ }
+}

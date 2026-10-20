@@ -1,0 +1,16 @@
+== 3889d10e tests.motion_nav.test_action_continuity_solver_limits
+Ran 15 tests in 1.942s
+OK
+== 3889d10e tests.motion_nav.test_d058_runtime_validation
+Ran 104 tests in 8.785s
+OK
+== dfaa0b4f tests.motion_nav.test_action_continuity_solver_limits
+ERROR: test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation)
+mc2p.contracts.common.ContractViolation: verified fallback exceeds its declaration or route limits
+Ran 15 tests in 1.902s
+FAILED (errors=1)
+== dfaa0b4f tests.motion_nav.test_d058_runtime_validation
+ERROR: test_cancel_keeps_executor_until_its_landing_responsibility_finishes (tests.motion_nav.test_navigation_session.NavigationSessionTests.test_cancel_keeps_executor_until_its_landing_responsibility_finishes)
+AttributeError: '_DelayedCancelExecutor' object has no attribute '_prepared_result_inbox'
+Ran 104 tests in 8.790s
+FAILED (errors=1)

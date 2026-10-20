@@ -1,0 +1,88 @@
+== 3889d10e
+{
+ "root_head": true,
+ "evidence_json_files": 885,
+ "records": 27702,
+ "match": 5139,
+ "mismatch": 17708,
+ "missing": 4855,
+ "mismatch_fixed_by_crlf": 223,
+ "examples": [
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/jump-up-b06-v1.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/standalone-export-v1.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/vanilla-block-registry-1_21.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/verified-height-transitions-v1.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/backends/__init__.py"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/backends/client_behavior_payload.py"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/backends/client_observation_payload.py"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/backends/client_observation_payload_v3.py"
+  }
+ ]
+}
+== dfaa0b4f
+{
+ "root_head": true,
+ "evidence_json_files": 980,
+ "records": 27793,
+ "match": 14405,
+ "mismatch": 8532,
+ "missing": 4856,
+ "mismatch_fixed_by_crlf": 2133,
+ "examples": [
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/jump-up-b06-v1.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/standalone-export-v1.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/vanilla-block-registry-1_21.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/verified-height-transitions-v1.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/contracts/observation_request_v3.py"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/contracts/observation_v2.py"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/motion_nav/__init__.py"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/motion_nav/action_preconditions.py"
+  }
+ ]
+}
