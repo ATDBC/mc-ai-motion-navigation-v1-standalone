@@ -1,0 +1,14 @@
+--- a/mc2p/motion_nav/motion_solver.py
++++ b/mc2p/motion_nav/motion_solver.py
+@@ -1318,6 +1318,11 @@ def _release_recovery_evidence(
+                 for cell in failure.missing_cells
+             }))
+             if missing:
++                if request.allow_committed_main_suffix and index < len(trajectory) - 1:
++                    # 对照：已承诺主轨迹后缀覆盖的中间边界上，候选缺信息只说明这里不能放弃，
++                    # 不让整条父证明 NEEDS_WORLD。出口边界仍按原规则。
++                    tails.append(None)
++                    continue
+                 return _ReleaseRecoveryEvidence(
+                     tuple(safe), tuple(tail for tail in tails if tail is not None),
+                     tuple(sorted(dependencies)),

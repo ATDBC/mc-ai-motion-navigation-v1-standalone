@@ -1,0 +1,125 @@
+{
+ "air": {
+  "parent_status": "solved",
+  "reasons": [],
+  "allow_committed_main_suffix": true,
+  "release_recovery_trajectory_lengths": [
+   27
+  ],
+  "boundaries_without_any_fallback": {
+   "15": [
+    {
+     "candidate": "neutral",
+     "status": "no_solution_within_search",
+     "missing": []
+    },
+    {
+     "candidate": "back",
+     "status": "no_solution_within_search",
+     "missing": []
+    },
+    {
+     "candidate": "sneak",
+     "status": "no_solution_within_search",
+     "missing": []
+    }
+   ],
+   "23": [
+    {
+     "candidate": "neutral",
+     "status": "no_solution_within_search",
+     "missing": []
+    },
+    {
+     "candidate": "back",
+     "status": "no_solution_within_search",
+     "missing": []
+    },
+    {
+     "candidate": "sneak",
+     "status": "no_solution_within_search",
+     "missing": []
+    }
+   ],
+   "24": [
+    {
+     "candidate": "neutral",
+     "status": "no_solution_within_search",
+     "missing": []
+    },
+    {
+     "candidate": "back",
+     "status": "no_solution_within_search",
+     "missing": []
+    },
+    {
+     "candidate": "sneak",
+     "status": "no_solution_within_search",
+     "missing": []
+    }
+   ],
+   "25": [
+    {
+     "candidate": "neutral",
+     "status": "no_solution_within_search",
+     "missing": []
+    },
+    {
+     "candidate": "back",
+     "status": "no_solution_within_search",
+     "missing": []
+    },
+    {
+     "candidate": "sneak",
+     "status": "no_solution_within_search",
+     "missing": []
+    }
+   ]
+  },
+  "boundaries_with_missing_cells": []
+ },
+ "unknown": {
+  "parent_status": "needs_world",
+  "reasons": [
+   "release_recovery_world_incomplete"
+  ],
+  "allow_committed_main_suffix": true,
+  "release_recovery_trajectory_lengths": [
+   27
+  ],
+  "boundaries_without_any_fallback": {
+   "15": [
+    {
+     "candidate": "neutral",
+     "status": "needs_world",
+     "missing": [
+      [
+       0,
+       62,
+       0
+      ]
+     ]
+    },
+    {
+     "candidate": "back",
+     "status": "needs_world",
+     "missing": [
+      [
+       0,
+       62,
+       0
+      ]
+     ]
+    },
+    {
+     "candidate": "sneak",
+     "status": "no_solution_within_search",
+     "missing": []
+    }
+   ]
+  },
+  "boundaries_with_missing_cells": [
+   15
+  ]
+ }
+}

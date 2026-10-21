@@ -1,0 +1,6 @@
+dfaa0b4f run1 Ran 1 test in 0.676s OK
+dfaa0b4f run2 Ran 1 test in 0.780s OK
+dfaa0b4f run3 Ran 1 test in 0.654s OK
+fdf22ff9 run1 Ran 1 test in 0.655s OK
+fdf22ff9 run2 Ran 1 test in 0.618s OK
+fdf22ff9 run3 Ran 1 test in 0.686s OK

@@ -1,0 +1,17 @@
+test_bounded_schedule_selects_pending_before_default_and_holds_response (tests.test_d122_java_timing.D122JavaTimingTests.test_bounded_schedule_selects_pending_before_default_and_holds_response) ... ok
+test_preinstall_rejection_preserves_incumbent_fallback (tests.test_d122_java_timing.D122JavaTimingTests.test_preinstall_rejection_preserves_incumbent_fallback) ... ok
+test_timing_semantic_rejection_consumes_identity_without_installing_lease (tests.test_d122_java_timing.D122JavaTimingTests.test_timing_semantic_rejection_consumes_identity_without_installing_lease) ... ok
+test_v2_decoder_is_strict_and_v1_remains_isolated (tests.test_d122_java_timing.D122JavaTimingTests.test_v2_decoder_is_strict_and_v1_remains_isolated) ... ok
+test_permission_revocation_closes_parent_and_pending_in_python_ledger (tests.test_d122_java_permission_bridge.D122JavaPermissionBridgeTests.test_permission_revocation_closes_parent_and_pending_in_python_ledger) ... ok
+test_python_and_java_share_default_relation_vectors (tests.test_d122_java_permission_bridge.D122JavaPermissionBridgeTests.test_python_and_java_share_default_relation_vectors) ... ok
+test_rejected_successor_response_waits_for_parent_default_evidence (tests.test_d122_java_permission_bridge.D122JavaPermissionBridgeTests.test_rejected_successor_response_waits_for_parent_default_evidence) ... ok
+test_behavior_input_compiles_and_runs_with_minimal_minecraft_stub (tests.test_standalone_java_gates.StandaloneJavaGateTests.test_behavior_input_compiles_and_runs_with_minimal_minecraft_stub) ... ok
+test_damage_event_buffer_is_bounded_and_acknowledges_next_generation (tests.test_standalone_java_gates.StandaloneJavaGateTests.test_damage_event_buffer_is_bounded_and_acknowledges_next_generation) ... ok
+test_pure_java_control_gates_compile_and_run_with_discovered_jdk21 (tests.test_standalone_java_gates.StandaloneJavaGateTests.test_pure_java_control_gates_compile_and_run_with_discovered_jdk21) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 14.242s
+
+OK
+exit=0
+4241c14a7727c34feea6507ec801318a3d4a90f070e4525681079fb94ee4c593  gson-2.10.1.jar

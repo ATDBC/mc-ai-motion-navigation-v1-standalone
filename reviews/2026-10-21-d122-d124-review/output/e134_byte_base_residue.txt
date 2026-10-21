@@ -1,0 +1,28 @@
+dfaa0b4f 相对 3889d10e：变化文件 1753，其中只有行尾变化 1614
+fdf22ff9 相对 3889d10e：变化文件 2201，其中只有行尾变化 1577
+两轮都只有行尾变化：1577
+dfaa0b4f 有、fdf22ff9 不再是纯行尾变化：37
+  恢复为 3889d10e 原字节：evidence/motion_navigation/F2REC-recovery-v1/r0/tool-provenance.json
+  恢复为 3889d10e 原字节：evidence/motion_navigation/continuous-motion-d101-v1/manifest.json
+  恢复为 3889d10e 原字节：experiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json
+  恢复为 3889d10e 原字节：tests/sim/manifests/navigation-product-r28-v8.json
+  其余 33 个本轮有真实内容修改
+仍为纯行尾变化的文件中，fdf22ff9 与 dfaa0b4f 字节不同的：0
+按顶层目录：
+    785 evidence
+    254 docs
+    248 tests
+    131 mc2p
+     97 scripts
+     22 tools
+     14 experiments
+     13 deployment
+     13 .superpowers
+fdf22ff9 EXPORT-METADATA.json：
+{
+  "schema_version": "mc2p.motion-navigation-standalone-metadata.v1",
+  "source_commit": "9b8a2e7da570361bb2eedba14f6b5c3b8c3ba9a5",
+  "source_worktree_dirty": true,
+  "export_manifest_sha256": "f4158efc2777290434e65a5b7fe8b18491d69fec07bf36119261f9b18a1d2046",
+  "selected_source_file_count": 3194
+}

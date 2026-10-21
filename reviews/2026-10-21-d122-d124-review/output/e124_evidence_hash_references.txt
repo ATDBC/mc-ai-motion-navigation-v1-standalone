@@ -1,0 +1,88 @@
+== 3889d10e
+{
+ "root_head": true,
+ "evidence_json_files": 885,
+ "records": 27702,
+ "match": 5139,
+ "mismatch": 17708,
+ "missing": 4855,
+ "mismatch_fixed_by_crlf": 223,
+ "examples": [
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/jump-up-b06-v1.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/standalone-export-v1.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/vanilla-block-registry-1_21.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/verified-height-transitions-v1.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/backends/__init__.py"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/backends/client_behavior_payload.py"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/backends/client_observation_payload.py"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/backends/client_observation_payload_v3.py"
+  }
+ ]
+}
+== fdf22ff9
+{
+ "root_head": true,
+ "evidence_json_files": 1215,
+ "records": 29111,
+ "match": 14607,
+ "mismatch": 9369,
+ "missing": 5135,
+ "mismatch_fixed_by_crlf": 2014,
+ "examples": [
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/jump-up-b06-v1.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/standalone-export-v1.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/vanilla-block-registry-1_21.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "config/motion-navigation/verified-height-transitions-v1.json"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/backends/client_behavior_payload.py"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/backends/fabric_behavior.py"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/contracts/action_receipt.py"
+  },
+  {
+   "recorded_in": "evidence/motion_navigation/F2-ground-route-v1/final/f2/summary.json",
+   "path": "mc2p/contracts/action_v1.py"
+  }
+ ]
+}

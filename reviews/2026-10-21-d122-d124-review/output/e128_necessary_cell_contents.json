@@ -1,0 +1,290 @@
+{
+ "(0, 62, 0)": {
+  "air": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "cube": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "unknown": {
+   "parent_status": "needs_world",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "NEEDS_WORLD",
+   "main_same_as_air": false,
+   "exit_same_as_air": false,
+   "fallback_behavior_same_as_air": false,
+   "max_fallback_damage": null
+  },
+  "fence_post": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "fence_x": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "wall_post": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "bottom_slab": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "top_slab": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "tall_ordinary": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": false,
+   "max_fallback_damage": 0.0
+  }
+ },
+ "(0, 62, 2)": {
+  "air": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "cube": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "unknown": {
+   "parent_status": "needs_world",
+   "successor_binding_status": "needs_world",
+   "successor_failure_reasons": [
+    "parent_snapshot_replay_mismatch"
+   ],
+   "offline_dependency_gate": "NEEDS_WORLD",
+   "main_same_as_air": false,
+   "exit_same_as_air": false,
+   "fallback_behavior_same_as_air": false,
+   "max_fallback_damage": null
+  },
+  "fence_post": {
+   "parent_status": "no_solution_within_search",
+   "successor_binding_status": "needs_world",
+   "successor_failure_reasons": [
+    "parent_snapshot_replay_mismatch"
+   ],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": false,
+   "exit_same_as_air": false,
+   "fallback_behavior_same_as_air": false,
+   "max_fallback_damage": null
+  },
+  "fence_x": {
+   "parent_status": "no_solution_within_search",
+   "successor_binding_status": "needs_world",
+   "successor_failure_reasons": [
+    "parent_snapshot_replay_mismatch"
+   ],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": false,
+   "exit_same_as_air": false,
+   "fallback_behavior_same_as_air": false,
+   "max_fallback_damage": null
+  },
+  "wall_post": {
+   "parent_status": "no_solution_within_search",
+   "successor_binding_status": "needs_world",
+   "successor_failure_reasons": [
+    "parent_snapshot_replay_mismatch"
+   ],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": false,
+   "exit_same_as_air": false,
+   "fallback_behavior_same_as_air": false,
+   "max_fallback_damage": null
+  },
+  "bottom_slab": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "top_slab": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "tall_ordinary": {
+   "parent_status": "solved",
+   "successor_binding_status": "needs_world",
+   "successor_failure_reasons": [
+    "parent_snapshot_replay_mismatch"
+   ],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": false,
+   "max_fallback_damage": 0.0
+  }
+ },
+ "(0, 62, 5)": {
+  "air": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "cube": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "unknown": {
+   "parent_status": "solved",
+   "successor_binding_status": "needs_world",
+   "successor_failure_reasons": [
+    "fixed_successor_world_incomplete"
+   ],
+   "offline_dependency_gate": "NEEDS_WORLD",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "fence_post": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "fence_x": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "wall_post": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "bottom_slab": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "top_slab": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  },
+  "tall_ordinary": {
+   "parent_status": "solved",
+   "successor_binding_status": "solved",
+   "successor_failure_reasons": [],
+   "offline_dependency_gate": "known",
+   "main_same_as_air": true,
+   "exit_same_as_air": true,
+   "fallback_behavior_same_as_air": true,
+   "max_fallback_damage": 0.0
+  }
+ }
+}

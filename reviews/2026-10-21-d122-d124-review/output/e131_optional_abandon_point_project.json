@@ -1,0 +1,274 @@
+{
+ "0": {
+  "cell": [
+   0,
+   62,
+   0
+  ],
+  "air": {
+   "status": "solved",
+   "reasons": [],
+   "fallback_tail_boundaries": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26
+   ],
+   "release_safe_command_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+   ],
+   "cell_in_parent_dependencies": true
+  },
+  "unknown": {
+   "status": "needs_world",
+   "reasons": [
+    "release_recovery_world_incomplete"
+   ],
+   "fallback_tail_boundaries": null,
+   "release_safe_command_indices": null,
+   "cell_in_parent_dependencies": null,
+   "exit_tail_same_as_air": false
+  }
+ },
+ "1": {
+  "cell": [
+   0,
+   62,
+   -1
+  ],
+  "air": {
+   "status": "solved",
+   "reasons": [],
+   "fallback_tail_boundaries": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26
+   ],
+   "release_safe_command_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+   ],
+   "cell_in_parent_dependencies": true
+  },
+  "unknown": {
+   "status": "needs_world",
+   "reasons": [
+    "release_recovery_world_incomplete"
+   ],
+   "fallback_tail_boundaries": null,
+   "release_safe_command_indices": null,
+   "cell_in_parent_dependencies": null,
+   "exit_tail_same_as_air": false
+  }
+ },
+ "2": {
+  "cell": [
+   -1,
+   62,
+   -1
+  ],
+  "air": {
+   "status": "solved",
+   "reasons": [],
+   "fallback_tail_boundaries": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26
+   ],
+   "release_safe_command_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+   ],
+   "cell_in_parent_dependencies": true
+  },
+  "unknown": {
+   "status": "needs_world",
+   "reasons": [
+    "release_recovery_world_incomplete"
+   ],
+   "fallback_tail_boundaries": null,
+   "release_safe_command_indices": null,
+   "cell_in_parent_dependencies": null,
+   "exit_tail_same_as_air": false
+  }
+ },
+ "3": {
+  "cell": [
+   -1,
+   62,
+   0
+  ],
+  "air": {
+   "status": "solved",
+   "reasons": [],
+   "fallback_tail_boundaries": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26
+   ],
+   "release_safe_command_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+   ],
+   "cell_in_parent_dependencies": true
+  },
+  "unknown": {
+   "status": "needs_world",
+   "reasons": [
+    "release_recovery_world_incomplete"
+   ],
+   "fallback_tail_boundaries": null,
+   "release_safe_command_indices": null,
+   "cell_in_parent_dependencies": null,
+   "exit_tail_same_as_air": false
+  }
+ }
+}

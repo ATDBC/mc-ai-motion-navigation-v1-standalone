@@ -1,0 +1,85 @@
+{
+ "air": {
+  "parent_status": "solved",
+  "parent_reasons": [],
+  "main_lowest_point_beyond_z_1_7": [
+   64.0,
+   2.05
+  ],
+  "exit_boundary": 26,
+  "exit_boundary_candidates": [
+   {
+    "boundary": 26,
+    "candidate": "neutral",
+    "status": "no_solution_within_search",
+    "reasons": [
+     "release_recovery_not_safe"
+    ],
+    "release_y": 64.0,
+    "release_z": 2.05
+   },
+   {
+    "boundary": 26,
+    "candidate": "back",
+    "status": "no_solution_within_search",
+    "reasons": [
+     "release_recovery_not_safe"
+    ],
+    "release_y": 64.0,
+    "release_z": 2.05
+   },
+   {
+    "boundary": 26,
+    "candidate": "sneak",
+    "status": "proved",
+    "reasons": [],
+    "release_y": 64.0,
+    "release_z": 2.05
+   }
+  ]
+ },
+ "fence_post": {
+  "parent_status": "no_solution_within_search",
+  "parent_reasons": [
+   "start_window_release_recovery_not_safe",
+   "final_exit_stop_tail_not_safe"
+  ],
+  "main_lowest_point_beyond_z_1_7": [
+   64.0,
+   2.05
+  ],
+  "exit_boundary": 26,
+  "exit_boundary_candidates": [
+   {
+    "boundary": 26,
+    "candidate": "neutral",
+    "status": "no_solution_within_search",
+    "reasons": [
+     "release_recovery_not_safe"
+    ],
+    "release_y": 64.0,
+    "release_z": 2.05
+   },
+   {
+    "boundary": 26,
+    "candidate": "back",
+    "status": "no_solution_within_search",
+    "reasons": [
+     "release_recovery_not_safe"
+    ],
+    "release_y": 64.0,
+    "release_z": 2.05
+   },
+   {
+    "boundary": 26,
+    "candidate": "sneak",
+    "status": "no_solution_within_search",
+    "reasons": [
+     "release_recovery_not_safe"
+    ],
+    "release_y": 64.0,
+    "release_z": 2.05
+   }
+  ]
+ }
+}

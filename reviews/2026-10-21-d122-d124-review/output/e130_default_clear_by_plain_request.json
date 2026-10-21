@@ -1,0 +1,160 @@
+{
+ "entries": 972,
+ "default_ticks": 8,
+ "sampled_states_ticks_27_to_36": {
+  "neutral_admitted_at_tick_27": [
+   "neutral",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted"
+  ],
+  "neutral_admitted_at_tick_28": [
+   "default_active",
+   "neutral",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted"
+  ],
+  "neutral_admitted_at_tick_29": [
+   "default_active",
+   "default_active",
+   "neutral",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted"
+  ],
+  "neutral_admitted_at_tick_30": [
+   "default_active",
+   "default_active",
+   "default_active",
+   "neutral",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted"
+  ],
+  "neutral_admitted_at_tick_31": [
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "neutral",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted"
+  ],
+  "neutral_admitted_at_tick_32": [
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "neutral",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted"
+  ],
+  "neutral_admitted_at_tick_33": [
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "neutral",
+   "lease_exhausted",
+   "lease_exhausted",
+   "lease_exhausted"
+  ],
+  "neutral_admitted_at_tick_34": [
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "neutral",
+   "lease_exhausted",
+   "lease_exhausted"
+  ],
+  "neutral_admitted_at_tick_35": [
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "neutral",
+   "lease_exhausted"
+  ],
+  "never_interrupted": [
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "default_active",
+   "lease_exhausted",
+   "disallowed"
+  ]
+ },
+ "outcomes": {
+  "neutral_admitted_at_tick_27": {
+   "fell": 972
+  },
+  "neutral_admitted_at_tick_28": {
+   "fell": 972
+  },
+  "neutral_admitted_at_tick_29": {
+   "fell": 972
+  },
+  "neutral_admitted_at_tick_30": {
+   "fell": 972
+  },
+  "neutral_admitted_at_tick_31": {
+   "fell": 972
+  },
+  "neutral_admitted_at_tick_32": {
+   "fell": 972
+  },
+  "neutral_admitted_at_tick_33": {
+   "fell": 648,
+   "middle": 324
+  },
+  "neutral_admitted_at_tick_34": {
+   "fell": 648,
+   "middle": 324
+  },
+  "neutral_admitted_at_tick_35": {
+   "middle": 972
+  },
+  "never_interrupted": {
+   "middle": 972
+  }
+ }
+}

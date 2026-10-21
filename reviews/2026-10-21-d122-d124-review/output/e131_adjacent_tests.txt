@@ -1,0 +1,18 @@
+== fdf22ff9 原样
+test_d123_dependency_probe  OK
+test_d123_dependency_gate_repair  OK
+test_d123_actor_calibration  OK
+test_d124_proof_dependency_projection  OK
+test_d121_momentum_handoff  OK
+test_d121_successor_binding  OK
+test_action_continuity_solver_limits  OK
+test_b10_gap_solver  OK
+== 对照树：fdf22ff9 + e131 diff
+test_d123_dependency_probe  FAIL: test_unknown_under_air_rejects_parent_and_successor (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_unknown_under_air_rejects_parent_and_successor) FAILED (failures=1)
+test_d123_dependency_gate_repair  OK
+test_d123_actor_calibration  OK
+test_d124_proof_dependency_projection  OK
+test_d121_momentum_handoff  OK
+test_d121_successor_binding  OK
+test_action_continuity_solver_limits  OK
+test_b10_gap_solver  OK
