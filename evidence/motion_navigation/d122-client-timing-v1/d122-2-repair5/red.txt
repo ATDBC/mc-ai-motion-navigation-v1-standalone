@@ -1,0 +1,35 @@
+test_preinstall_rejection_preserves_incumbent_fallback (tests.test_d122_java_timing.D122JavaTimingTests.test_preinstall_rejection_preserves_incumbent_fallback) ... FAIL
+
+======================================================================
+FAIL: test_preinstall_rejection_preserves_incumbent_fallback (tests.test_d122_java_timing.D122JavaTimingTests.test_preinstall_rejection_preserves_incumbent_fallback)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_java_timing.py", line 43, in test_preinstall_rejection_preserves_incumbent_fallback
+    self.compile_run("CLIENT_TIMING_REJECT_ISOLATION_OK",
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_java_timing.py", line 19, in compile_run
+    self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+AssertionError: 1 != 0 : D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientTimingRejectIsolationTest.java:37: ����: �޷����� ClientBehaviorInput�еķ��� rejectTimingForRequestӦ�õ���������;
+        boolean installed = input.rejectTimingForRequest(26, false);
+                                 ^
+  ��Ҫ: long
+  �ҵ�:    int,boolean
+  ԭ��: ʵ�ʲ����б�����ʽ�����б����Ȳ�ͬ
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientTimingRejectIsolationTest.java:80: ����: �޷����� ClientBehaviorInput�еķ��� rejectTimingForRequestӦ�õ���������;
+        yes(!pendingInput.rejectTimingForRequest(36, false));
+                         ^
+  ��Ҫ: long
+  �ҵ�:    int,boolean
+  ԭ��: ʵ�ʲ����б�����ʽ�����б����Ȳ�ͬ
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientTimingRejectIsolationTest.java:95: ����: �޷����� ClientBehaviorInput�еķ��� rejectTimingForRequestӦ�õ���������;
+        yes(!parentInput.rejectTimingForRequest(45, false));
+                        ^
+  ��Ҫ: long
+  �ҵ�:    int,boolean
+  ԭ��: ʵ�ʲ����б�����ʽ�����б����Ȳ�ͬ
+3 ������
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.527s
+
+FAILED (failures=1)

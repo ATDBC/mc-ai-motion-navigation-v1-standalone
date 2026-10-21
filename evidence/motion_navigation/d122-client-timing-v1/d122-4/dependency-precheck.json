@@ -1,0 +1,109 @@
+{
+  "directions": [
+    {
+      "category_counts": {
+        "fallback": 32,
+        "parent": 43,
+        "successor": 32
+      },
+      "direction_index": 0,
+      "fixture_not_placed": [],
+      "known_count": 67,
+      "legacy_missing_count": 25,
+      "legacy_request_count": 42,
+      "mismatched": [],
+      "new_request_count": 67,
+      "new_request_missing": [],
+      "required_count": 67,
+      "unknown": []
+    },
+    {
+      "category_counts": {
+        "fallback": 32,
+        "parent": 43,
+        "successor": 32
+      },
+      "direction_index": 1,
+      "fixture_not_placed": [],
+      "known_count": 67,
+      "legacy_missing_count": 25,
+      "legacy_request_count": 42,
+      "mismatched": [],
+      "new_request_count": 67,
+      "new_request_missing": [],
+      "required_count": 67,
+      "unknown": []
+    },
+    {
+      "category_counts": {
+        "fallback": 32,
+        "parent": 43,
+        "successor": 32
+      },
+      "direction_index": 2,
+      "fixture_not_placed": [],
+      "known_count": 67,
+      "legacy_missing_count": 25,
+      "legacy_request_count": 42,
+      "mismatched": [],
+      "new_request_count": 67,
+      "new_request_missing": [],
+      "required_count": 67,
+      "unknown": []
+    },
+    {
+      "category_counts": {
+        "fallback": 32,
+        "parent": 43,
+        "successor": 32
+      },
+      "direction_index": 3,
+      "fixture_not_placed": [],
+      "known_count": 67,
+      "legacy_missing_count": 25,
+      "legacy_request_count": 42,
+      "mismatched": [],
+      "new_request_count": 67,
+      "new_request_missing": [],
+      "required_count": 67,
+      "unknown": []
+    }
+  ],
+  "fabric_rerun_authorized": false,
+  "fabric_trials_after_fix": 0,
+  "root_cause": "fixture cells were placed as AIR and coordinates were correct, but the legacy centerline observation request omitted proof-required lateral/high cells",
+  "schema": "d122-4-proof-dependency-precheck-v1",
+  "status": "PASS_OFFLINE_COMPONENT_ONLY",
+  "unknown_is_never_air": true,
+  "v7_missing_cells": [
+    {
+      "expected": {
+        "knowledge": "air",
+        "material": null
+      },
+      "is_in_proof_dependencies": true,
+      "position": [
+        25,
+        2,
+        18
+      ],
+      "was_in_legacy_observation_request": false,
+      "was_placed": true
+    },
+    {
+      "expected": {
+        "knowledge": "air",
+        "material": null
+      },
+      "is_in_proof_dependencies": true,
+      "position": [
+        25,
+        2,
+        19
+      ],
+      "was_in_legacy_observation_request": false,
+      "was_placed": true
+    }
+  ],
+  "v7_source_run": "artifacts/fabric-deployment/20261020T113835759757Z-d5255eb7"
+}

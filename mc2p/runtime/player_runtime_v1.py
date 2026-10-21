@@ -23,7 +23,7 @@ from mc2p.contracts.intent_source import (
 )
 from mc2p.contracts.observation_v2 import ObservationSnapshotV2
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
-from mc2p.contracts.action_receipt import ClientBehaviorReceiptV3
+from mc2p.contracts.action_receipt import ClientBehaviorReceiptV3, ClientBehaviorReceiptV4
 from mc2p.contracts.observation_request_v3 import (
     OBSERVATION_V3, ObservationRequestV3, merge_observation_requests,
     resolve_observation_request, validate_observation_schema,
@@ -215,7 +215,12 @@ class PlayerRuntimeV1:
                 raise
             if result.succeeded:
                 self._observation = result.observation
-                self._input_ledger = InputApplicationLedger()
+                self._input_ledger = InputApplicationLedger(
+                    action_timing_v2=(
+                        getattr(self._backend, "negotiated_action_schema", None)
+                        == "mc2p.client_action.v2"
+                    ),
+                )
                 if type(self._observation) is ObservationSnapshotV3:
                     own = self._observation.self_state.value
                     if own is not None and own.movement_tick_id is not None:
@@ -449,6 +454,11 @@ class PlayerRuntimeV1:
                         decision, selected_execution_window,
                     )
                 )
+                if selected_execution_window is not None:
+                    decision = replace(decision, action=replace(decision.action,
+                        first_effect_window=MovementTickWindowV1(
+                            selected_execution_window.earliest_start_tick,
+                            selected_execution_window.latest_start_tick)))
                 action = decision.action
                 fallback, fallback_port = self._incumbent_fallback(decision, prepared_streams)
                 activation, selected_stream = self._activate_prepared_stream(
@@ -481,10 +491,19 @@ class PlayerRuntimeV1:
                         command_index=getattr(selected_stream.port, "next_command_index", 0))
                     self._prepared_application_port = selected_stream.port
                 dispatched_ns = self._clock()
-                backend_result = self._backend_step(action, action.deadline_monotonic_ns, request)
-                self._validate_result(action, backend_result, request)
+                # A v1 peer must receive its original exact key set. Keep the
+                # internal selected window on the decision and ledger, then
+                # remove v2-only fields only at the backend wire boundary.
+                backend_action = (
+                    action if self._input_ledger.action_timing_v2 else
+                    replace(action, first_effect_window=None, safe_default=None)
+                )
+                backend_result = self._backend_step(
+                    backend_action, backend_action.deadline_monotonic_ns, request,
+                )
+                self._validate_result(backend_action, backend_result, request)
                 self._ensure_input_record(
-                    action, backend_result, selected_execution_window,
+                    backend_action, backend_result, selected_execution_window,
                 )
                 self._input_ledger.observe_receipt(backend_result.receipt)
                 self._report_stream_applications(backend_result)
@@ -608,7 +627,8 @@ class PlayerRuntimeV1:
                 or action.valid_for_ticks != 1):
             return mismatch(ActivationRejectReason.MOVEMENT)
         window = proposal.requested_window
-        if (decision.movement_tick_window != window
+        selected_window = decision.movement_tick_window
+        if (selected_window != window
                 or not window.earliest_tick <= own.movement_tick_id + 1 <= window.latest_tick):
             return mismatch(ActivationRejectReason.WINDOW)
         self._input_ledger.check_submission_capacity()
@@ -664,10 +684,12 @@ class PlayerRuntimeV1:
     def _report_stream_applications(self, result):
         """Notify the borrowed owner at ledger update, before returning to a driver."""
         port = self._prepared_application_port
-        if port is None or type(result.receipt) is not ClientBehaviorReceiptV3:
+        if port is None or type(result.receipt) not in (ClientBehaviorReceiptV3, ClientBehaviorReceiptV4):
             return
         for sample in result.receipt.input_applications:
-            if sample.request_sequence_id is None:
+            if sample.request_sequence_id is None or sample.state == "default_active":
+                # A prearmed suffix belongs to the parent, but is not a second
+                # application of that parent's main stream command index.
                 continue
             fact = self._input_ledger.stream_command(sample.request_sequence_id)
             if fact is None:
@@ -797,6 +819,9 @@ class PlayerRuntimeV1:
             return
         requested_tick = own.movement_tick_id + 1
         latest_tick = requested_tick
+        if action.first_effect_window is not None:
+            requested_tick = action.first_effect_window.earliest_tick
+            latest_tick = action.first_effect_window.latest_tick
         if execution_window is not None:
             if execution_window.earliest_start_tick != requested_tick:
                 raise ContractViolation(
@@ -839,7 +864,7 @@ class PlayerRuntimeV1:
                 )))
             return replace(
                 decision,
-                action=replace(decision.action, movement=MovementV1()),
+                action=replace(decision.action, movement=MovementV1(), first_effect_window=None, safe_default=None),
                 selected_intents=tuple(
                     item for item in decision.selected_intents
                     if item[0] != "movement"
@@ -894,7 +919,7 @@ class PlayerRuntimeV1:
         if self._input_ledger.record(action.request_sequence_id) is not None:
             return
         if (type(result.observation) is not ObservationSnapshotV3
-                or type(result.receipt) is not ClientBehaviorReceiptV3):
+                or type(result.receipt) not in (ClientBehaviorReceiptV3, ClientBehaviorReceiptV4)):
             return
         matching_ticks = tuple(
             sample.movement_tick_id

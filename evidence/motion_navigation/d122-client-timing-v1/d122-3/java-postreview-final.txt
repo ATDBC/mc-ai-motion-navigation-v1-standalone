@@ -1,0 +1,1 @@
+STANDALONE_EXPORT_ERROR: OpenJDK 21 was not found through JAVA_HOME or PATH

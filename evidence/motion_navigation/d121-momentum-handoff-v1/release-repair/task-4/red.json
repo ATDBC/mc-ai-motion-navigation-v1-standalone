@@ -1,0 +1,13 @@
+{
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_transport_dispositions_do_not_claim_unperformed_protocol_rejection",
+    "-v"
+  ],
+  "platform": "win32",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "exit_code": 1,
+  "elapsed_seconds": 10.209617614746094
+}

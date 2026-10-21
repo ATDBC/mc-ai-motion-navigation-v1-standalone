@@ -1,0 +1,44 @@
+======================================================================
+FAIL: test_accepted_cancel_retires_target_default_and_cancel_record (tests.test_d122_python_timing_repair.TimingRepairTests.test_accepted_cancel_retires_target_default_and_cancel_record)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_python_timing_repair.py", line 79, in test_accepted_cancel_retires_target_default_and_cancel_record
+    self.assertTrue(input_application_has_finished(ledger.record(25)))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_armed_default_finishes_real_ticks_despite_wall_expiry (tests.test_d122_python_timing_repair.TimingRepairTests.test_armed_default_finishes_real_ticks_despite_wall_expiry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_python_timing_repair.py", line 48, in test_armed_default_finishes_real_ticks_despite_wall_expiry
+    self.assertTrue(client.sample(tick, 2_000_000_000 + tick * 100_000_000).movement.sneak)
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_default_budget_must_cover_nominal_proof_duration (tests.test_d122_python_timing_repair.TimingRepairTests.test_default_budget_must_cover_nominal_proof_duration)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_python_timing_repair.py", line 34, in test_default_budget_must_cover_nominal_proof_duration
+    with self.assertRaises(ContractViolation):
+AssertionError: ContractViolation not raised
+
+======================================================================
+FAIL: test_exhausted_before_activation_cannot_retire_parent (tests.test_d122_python_timing_repair.TimingRepairTests.test_exhausted_before_activation_cannot_retire_parent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_python_timing_repair.py", line 53, in test_exhausted_before_activation_cannot_retire_parent
+    with self.assertRaises(ContractViolation):
+AssertionError: ContractViolation not raised
+
+======================================================================
+FAIL: test_exhausted_without_complete_real_samples_cannot_retire_parent (tests.test_d122_python_timing_repair.TimingRepairTests.test_exhausted_without_complete_real_samples_cannot_retire_parent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_python_timing_repair.py", line 59, in test_exhausted_without_complete_real_samples_cannot_retire_parent
+    with self.assertRaises(ContractViolation):
+AssertionError: ContractViolation not raised
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.023s
+
+FAILED (failures=5)

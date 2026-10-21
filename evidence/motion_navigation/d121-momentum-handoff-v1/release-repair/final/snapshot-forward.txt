@@ -1,0 +1,402 @@
+[1/201] START tests.motion_nav.test_action_continuity_admission
+[1/201] END   tests.motion_nav.test_action_continuity_admission passed 1.025s
+[2/201] START tests.motion_nav.test_action_continuity_fabric_options
+[2/201] END   tests.motion_nav.test_action_continuity_fabric_options passed 1.240s
+[3/201] START tests.motion_nav.test_action_continuity_formal
+[3/201] END   tests.motion_nav.test_action_continuity_formal passed 3.805s
+[4/201] START tests.motion_nav.test_action_continuity_solver_limits
+[4/201] END   tests.motion_nav.test_action_continuity_solver_limits passed 1.595s
+[5/201] START tests.motion_nav.test_action_controller_adapter
+[5/201] END   tests.motion_nav.test_action_controller_adapter passed 0.470s
+[6/201] START tests.motion_nav.test_action_entry_handoff_repair
+[6/201] END   tests.motion_nav.test_action_entry_handoff_repair passed 8.046s
+[7/201] START tests.motion_nav.test_action_entry_late_hardening
+[7/201] END   tests.motion_nav.test_action_entry_late_hardening passed 7.246s
+[8/201] START tests.motion_nav.test_action_preconditions
+[8/201] END   tests.motion_nav.test_action_preconditions passed 6.199s
+[9/201] START tests.motion_nav.test_action_spec_boundaries
+[9/201] END   tests.motion_nav.test_action_spec_boundaries passed 0.346s
+[10/201] START tests.motion_nav.test_action_spec_integration
+[10/201] END   tests.motion_nav.test_action_spec_integration passed 0.590s
+[11/201] START tests.motion_nav.test_action_specs
+[11/201] END   tests.motion_nav.test_action_specs passed 0.343s
+[12/201] START tests.motion_nav.test_air_transition_solver
+[12/201] END   tests.motion_nav.test_air_transition_solver passed 2.574s
+[13/201] START tests.motion_nav.test_async_gap_revalidation_delivery
+[13/201] END   tests.motion_nav.test_async_gap_revalidation_delivery passed 1.781s
+[14/201] START tests.motion_nav.test_async_work_verification
+[14/201] END   tests.motion_nav.test_async_work_verification passed 5.487s
+[15/201] START tests.motion_nav.test_b02_geometry_acceptance
+[15/201] END   tests.motion_nav.test_b02_geometry_acceptance passed 14.263s
+[16/201] START tests.motion_nav.test_b06_block_motion_traits
+[16/201] END   tests.motion_nav.test_b06_block_motion_traits passed 0.344s
+[17/201] START tests.motion_nav.test_b06_environment_identity
+[17/201] END   tests.motion_nav.test_b06_environment_identity passed 0.344s
+[18/201] START tests.motion_nav.test_b06_fabric_material_probe
+[18/201] END   tests.motion_nav.test_b06_fabric_material_probe passed 0.374s
+[19/201] START tests.motion_nav.test_b06_movement_contracts
+[19/201] END   tests.motion_nav.test_b06_movement_contracts passed 0.650s
+[20/201] START tests.motion_nav.test_b06_ordinary_profiles
+[20/201] END   tests.motion_nav.test_b06_ordinary_profiles passed 0.715s
+[21/201] START tests.motion_nav.test_b06_registry_export
+[21/201] END   tests.motion_nav.test_b06_registry_export passed 0.159s
+[22/201] START tests.motion_nav.test_b07_shape_matrix
+[22/201] END   tests.motion_nav.test_b07_shape_matrix passed 0.375s
+[23/201] START tests.motion_nav.test_b07_step_route
+[23/201] END   tests.motion_nav.test_b07_step_route passed 0.405s
+[24/201] START tests.motion_nav.test_b07_step_runtime
+[24/201] END   tests.motion_nav.test_b07_step_runtime passed 0.376s
+[25/201] START tests.motion_nav.test_b07_step_transition
+[25/201] END   tests.motion_nav.test_b07_step_transition passed 0.372s
+[26/201] START tests.motion_nav.test_b07_support_surfaces
+[26/201] END   tests.motion_nav.test_b07_support_surfaces passed 0.344s
+[27/201] START tests.motion_nav.test_b07_surface_planning
+[27/201] END   tests.motion_nav.test_b07_surface_planning passed 1.825s
+[28/201] START tests.motion_nav.test_b08_ground_modes
+[28/201] END   tests.motion_nav.test_b08_ground_modes passed 1.482s
+[29/201] START tests.motion_nav.test_b09_air_transitions
+[29/201] END   tests.motion_nav.test_b09_air_transitions passed 0.885s
+[30/201] START tests.motion_nav.test_b09r_physics_contracts
+[30/201] END   tests.motion_nav.test_b09r_physics_contracts passed 0.349s
+[31/201] START tests.motion_nav.test_b09r_physics_rollout
+[31/201] END   tests.motion_nav.test_b09r_physics_rollout passed 0.444s
+[32/201] START tests.motion_nav.test_b09r_physics_step
+[32/201] END   tests.motion_nav.test_b09r_physics_step passed 0.508s
+[33/201] START tests.motion_nav.test_b09r_physics_validation
+[33/201] END   tests.motion_nav.test_b09r_physics_validation passed 0.382s
+[34/201] START tests.motion_nav.test_b10_foundation_tools
+[34/201] END   tests.motion_nav.test_b10_foundation_tools passed 0.539s
+[35/201] START tests.motion_nav.test_b10_gap_solver
+[35/201] END   tests.motion_nav.test_b10_gap_solver passed 18.014s
+[36/201] START tests.motion_nav.test_b10_motion_candidate
+[36/201] END   tests.motion_nav.test_b10_motion_candidate passed 7.315s
+[37/201] START tests.motion_nav.test_b10_motion_worker
+[37/201] END   tests.motion_nav.test_b10_motion_worker passed 3.757s
+[38/201] START tests.motion_nav.test_b10_online_motion
+[38/201] END   tests.motion_nav.test_b10_online_motion passed 0.349s
+[39/201] START tests.motion_nav.test_b11_block_placement
+[39/201] END   tests.motion_nav.test_b11_block_placement passed 0.414s
+[40/201] START tests.motion_nav.test_b11_bridge_planning
+[40/201] END   tests.motion_nav.test_b11_bridge_planning passed 0.444s
+[41/201] START tests.motion_nav.test_b11_world_change_navigation
+[41/201] END   tests.motion_nav.test_b11_world_change_navigation passed 1.820s
+[42/201] START tests.motion_nav.test_continuous_descent
+[42/201] END   tests.motion_nav.test_continuous_descent passed 4.718s
+[43/201] START tests.motion_nav.test_continuous_height_execution
+[43/201] END   tests.motion_nav.test_continuous_height_execution passed 0.630s
+[44/201] START tests.motion_nav.test_continuous_height_full_matrix
+[44/201] END   tests.motion_nav.test_continuous_height_full_matrix passed 8.797s
+[45/201] START tests.motion_nav.test_continuous_height_planning
+[45/201] END   tests.motion_nav.test_continuous_height_planning passed 0.696s
+[46/201] START tests.motion_nav.test_d057_route_prefix
+[46/201] END   tests.motion_nav.test_d057_route_prefix passed 0.601s
+[47/201] START tests.motion_nav.test_d058_route_revalidation_benchmark
+[47/201] END   tests.motion_nav.test_d058_route_revalidation_benchmark passed 7.734s
+[48/201] START tests.motion_nav.test_d058_runtime_validation
+[48/201] END   tests.motion_nav.test_d058_runtime_validation passed 5.870s
+[49/201] START tests.motion_nav.test_d058_validation_plan
+[49/201] END   tests.motion_nav.test_d058_validation_plan passed 0.542s
+[50/201] START tests.motion_nav.test_d059_consumers_and_identity
+[50/201] END   tests.motion_nav.test_d059_consumers_and_identity passed 0.540s
+[51/201] START tests.motion_nav.test_d059_terminal_selection_dependencies
+[51/201] END   tests.motion_nav.test_d059_terminal_selection_dependencies passed 0.572s
+[52/201] START tests.motion_nav.test_d059_validation_diagnostics
+[52/201] END   tests.motion_nav.test_d059_validation_diagnostics passed 0.606s
+[53/201] START tests.motion_nav.test_d060_terminal_node_exact_proof
+[53/201] END   tests.motion_nav.test_d060_terminal_node_exact_proof passed 0.442s
+[54/201] START tests.motion_nav.test_d061_long_session_benchmark
+[54/201] END   tests.motion_nav.test_d061_long_session_benchmark passed 2.270s
+[55/201] START tests.motion_nav.test_d062_direct_walk_validation
+[55/201] END   tests.motion_nav.test_d062_direct_walk_validation passed 0.478s
+[56/201] START tests.motion_nav.test_d063_goal_surface_information
+[56/201] END   tests.motion_nav.test_d063_goal_surface_information passed 3.706s
+[57/201] START tests.motion_nav.test_d064_ground_direct_handoff
+[57/201] END   tests.motion_nav.test_d064_ground_direct_handoff passed 0.540s
+[58/201] START tests.motion_nav.test_d094_fabric_timing_metric
+[58/201] END   tests.motion_nav.test_d094_fabric_timing_metric passed 11.996s
+[59/201] START tests.motion_nav.test_d098_windows_trial_wrapper
+[59/201] END   tests.motion_nav.test_d098_windows_trial_wrapper passed 0.225s
+[60/201] START tests.motion_nav.test_d101_continuous_probe
+[60/201] END   tests.motion_nav.test_d101_continuous_probe passed 0.858s
+[61/201] START tests.motion_nav.test_d101_input_stream
+[61/201] END   tests.motion_nav.test_d101_input_stream passed 0.447s
+[62/201] START tests.motion_nav.test_d101_measurement
+[62/201] END   tests.motion_nav.test_d101_measurement passed 1.072s
+[63/201] START tests.motion_nav.test_d102_action_handoff
+[63/201] END   tests.motion_nav.test_d102_action_handoff passed 66.267s
+[64/201] START tests.motion_nav.test_d102_contract_red
+[64/201] END   tests.motion_nav.test_d102_contract_red passed 13.699s
+[65/201] START tests.motion_nav.test_d102_contracts
+[65/201] END   tests.motion_nav.test_d102_contracts passed 0.788s
+[66/201] START tests.motion_nav.test_d102_prepared_proof
+[66/201] END   tests.motion_nav.test_d102_prepared_proof passed 28.555s
+[67/201] START tests.motion_nav.test_d102_receiver
+[67/201] END   tests.motion_nav.test_d102_receiver passed 50.435s
+[68/201] START tests.motion_nav.test_d102_registry_lifecycle
+[68/201] END   tests.motion_nav.test_d102_registry_lifecycle passed 73.105s
+[69/201] START tests.motion_nav.test_d102_runtime_activation
+[69/201] END   tests.motion_nav.test_d102_runtime_activation passed 113.373s
+[70/201] START tests.motion_nav.test_d102_windows_matrix
+[70/201] END   tests.motion_nav.test_d102_windows_matrix passed 60.548s
+[71/201] START tests.motion_nav.test_d102_world_snapshot
+[71/201] END   tests.motion_nav.test_d102_world_snapshot passed 0.603s
+[72/201] START tests.motion_nav.test_d103_observation_hot_path
+[72/201] END   tests.motion_nav.test_d103_observation_hot_path passed 0.193s
+[73/201] START tests.motion_nav.test_d105_ftick
+[73/201] END   tests.motion_nav.test_d105_ftick passed 0.827s
+[74/201] START tests.motion_nav.test_d105_receiver_trust_boundary
+[74/201] END   tests.motion_nav.test_d105_receiver_trust_boundary passed 2.974s
+[75/201] START tests.motion_nav.test_d105_sound_sparse_m0
+[75/201] END   tests.motion_nav.test_d105_sound_sparse_m0 passed 0.569s
+[76/201] START tests.motion_nav.test_d105_t2_evidence
+[76/201] END   tests.motion_nav.test_d105_t2_evidence passed 0.258s
+[77/201] START tests.motion_nav.test_d106_local_snapshot
+[77/201] END   tests.motion_nav.test_d106_local_snapshot passed 3.840s
+[78/201] START tests.motion_nav.test_d107_b10_trace_audit
+[78/201] END   tests.motion_nav.test_d107_b10_trace_audit passed 1.044s
+[79/201] START tests.motion_nav.test_d107_shard_runner
+[79/201] END   tests.motion_nav.test_d107_shard_runner passed 8.910s
+[80/201] START tests.motion_nav.test_d108_receiver_tick_delivery
+[80/201] END   tests.motion_nav.test_d108_receiver_tick_delivery passed 1.103s
+[81/201] START tests.motion_nav.test_d108_snapshot_materialization
+[81/201] END   tests.motion_nav.test_d108_snapshot_materialization passed 2.229s
+[82/201] START tests.motion_nav.test_d112_delivery_baseline
+[82/201] END   tests.motion_nav.test_d112_delivery_baseline passed 0.726s
+[83/201] START tests.motion_nav.test_d112_worker_degradation
+[83/201] END   tests.motion_nav.test_d112_worker_degradation passed 11.532s
+[84/201] START tests.motion_nav.test_d113_delivery_adaptation
+[84/201] END   tests.motion_nav.test_d113_delivery_adaptation passed 59.612s
+[85/201] START tests.motion_nav.test_d113_delivery_metrics
+[85/201] END   tests.motion_nav.test_d113_delivery_metrics passed 3.617s
+[86/201] START tests.motion_nav.test_d113_targeted_probe
+[86/201] END   tests.motion_nav.test_d113_targeted_probe passed 1.136s
+[87/201] START tests.motion_nav.test_d114_b10_formal_driver
+[87/201] END   tests.motion_nav.test_d114_b10_formal_driver passed 10.896s
+[88/201] START tests.motion_nav.test_d116_handoff_timeline
+[88/201] END   tests.motion_nav.test_d116_handoff_timeline passed 13.367s
+[89/201] START tests.motion_nav.test_d116_semantic_dependency_handoff
+[89/201] END   tests.motion_nav.test_d116_semantic_dependency_handoff passed 15.397s
+[90/201] START tests.motion_nav.test_d117_prepared_liveness_monitor
+[90/201] END   tests.motion_nav.test_d117_prepared_liveness_monitor passed 0.350s
+[91/201] START tests.motion_nav.test_d118_momentum_calibration
+[91/201] END   tests.motion_nav.test_d118_momentum_calibration passed 49.835s
+[92/201] START tests.motion_nav.test_d120_momentum_entry_calibration
+[92/201] END   tests.motion_nav.test_d120_momentum_entry_calibration passed 19.850s
+[93/201] START tests.motion_nav.test_d121_handoff_execution
+[93/201] END   tests.motion_nav.test_d121_handoff_execution passed 66.486s
+[94/201] START tests.motion_nav.test_d121_joint_worker_stop
+[94/201] END   tests.motion_nav.test_d121_joint_worker_stop passed 0.131s
+[95/201] START tests.motion_nav.test_d121_momentum_handoff
+[95/201] END   tests.motion_nav.test_d121_momentum_handoff passed 10.665s
+[96/201] START tests.motion_nav.test_d121_successor_binding
+[96/201] END   tests.motion_nav.test_d121_successor_binding passed 29.722s
+[97/201] START tests.motion_nav.test_d121_transport_late
+[97/201] END   tests.motion_nav.test_d121_transport_late passed 10.370s
+[98/201] START tests.motion_nav.test_execution_supervisor
+[98/201] END   tests.motion_nav.test_execution_supervisor passed 0.446s
+[99/201] START tests.motion_nav.test_external_motion
+[99/201] END   tests.motion_nav.test_external_motion passed 0.414s
+[100/201] START tests.motion_nav.test_external_motion_recovery
+[100/201] END   tests.motion_nav.test_external_motion_recovery passed 0.352s
+[101/201] START tests.motion_nav.test_f1_known_world_following
+[101/201] END   tests.motion_nav.test_f1_known_world_following passed 47.802s
+[102/201] START tests.motion_nav.test_f1_known_world_following_fabric
+[102/201] END   tests.motion_nav.test_f1_known_world_following_fabric passed 0.541s
+[103/201] START tests.motion_nav.test_f2_ground_completion_region
+[103/201] END   tests.motion_nav.test_f2_ground_completion_region passed 30.884s
+[104/201] START tests.motion_nav.test_f2_ground_route_gates
+[104/201] END   tests.motion_nav.test_f2_ground_route_gates passed 1.294s
+[105/201] START tests.motion_nav.test_f2_ground_start_window
+[105/201] END   tests.motion_nav.test_f2_ground_start_window passed 0.790s
+[106/201] START tests.motion_nav.test_f2_non_center_ground_route
+[106/201] END   tests.motion_nav.test_f2_non_center_ground_route passed 2.352s
+[107/201] START tests.motion_nav.test_f2r_piecewise_completion
+[107/201] END   tests.motion_nav.test_f2r_piecewise_completion passed 1.824s
+[108/201] START tests.motion_nav.test_f2rec_r0_baseline
+[108/201] END   tests.motion_nav.test_f2rec_r0_baseline passed 2.426s
+[109/201] START tests.motion_nav.test_f2rec_r1_region_geometry
+[109/201] END   tests.motion_nav.test_f2rec_r1_region_geometry passed 0.884s
+[110/201] START tests.motion_nav.test_f2rec_r2_goal_selection
+[110/201] END   tests.motion_nav.test_f2rec_r2_goal_selection passed 1.481s
+[111/201] START tests.motion_nav.test_f2rec_r3_cleanup
+[111/201] END   tests.motion_nav.test_f2rec_r3_cleanup passed 1.574s
+[112/201] START tests.motion_nav.test_f2rec_r4_recovery
+[112/201] END   tests.motion_nav.test_f2rec_r4_recovery passed 2.081s
+[113/201] START tests.motion_nav.test_fixed_route_walk
+[113/201] END   tests.motion_nav.test_fixed_route_walk passed 4.439s
+[114/201] START tests.motion_nav.test_goal_reach_policy
+[114/201] END   tests.motion_nav.test_goal_reach_policy passed 3.039s
+[115/201] START tests.motion_nav.test_ground_calibration
+[115/201] END   tests.motion_nav.test_ground_calibration passed 0.351s
+[116/201] START tests.motion_nav.test_ground_continuation_quality
+[116/201] END   tests.motion_nav.test_ground_continuation_quality passed 0.791s
+[117/201] START tests.motion_nav.test_ground_motion
+[117/201] END   tests.motion_nav.test_ground_motion passed 0.351s
+[118/201] START tests.motion_nav.test_ground_traversal
+[118/201] END   tests.motion_nav.test_ground_traversal passed 0.537s
+[119/201] START tests.motion_nav.test_incremental_motion_closed_loop
+[119/201] END   tests.motion_nav.test_incremental_motion_closed_loop passed 0.885s
+[120/201] START tests.motion_nav.test_incremental_motion_closed_loop_measurement
+[120/201] END   tests.motion_nav.test_incremental_motion_closed_loop_measurement passed 1.635s
+[121/201] START tests.motion_nav.test_incremental_motion_controller
+[121/201] END   tests.motion_nav.test_incremental_motion_controller passed 0.858s
+[122/201] START tests.motion_nav.test_incremental_motion_performance
+[122/201] END   tests.motion_nav.test_incremental_motion_performance passed 0.973s
+[123/201] START tests.motion_nav.test_incremental_motion_proof
+[123/201] END   tests.motion_nav.test_incremental_motion_proof passed 3.265s
+[124/201] START tests.motion_nav.test_incremental_motion_table
+[124/201] END   tests.motion_nav.test_incremental_motion_table passed 0.382s
+[125/201] START tests.motion_nav.test_inline_planning_clock
+[125/201] END   tests.motion_nav.test_inline_planning_clock passed 0.792s
+[126/201] START tests.motion_nav.test_input_responsibility
+[126/201] END   tests.motion_nav.test_input_responsibility passed 0.353s
+[127/201] START tests.motion_nav.test_jump_up
+[127/201] END   tests.motion_nav.test_jump_up passed 1.322s
+[128/201] START tests.motion_nav.test_jump_up_calibration
+[128/201] END   tests.motion_nav.test_jump_up_calibration passed 0.351s
+[129/201] START tests.motion_nav.test_known_map_planning
+[129/201] END   tests.motion_nav.test_known_map_planning passed 1.787s
+[130/201] START tests.motion_nav.test_known_world_follow_driver
+[130/201] END   tests.motion_nav.test_known_world_follow_driver passed 0.412s
+[131/201] START tests.motion_nav.test_motion_baseline_recovery
+[131/201] END   tests.motion_nav.test_motion_baseline_recovery passed 2.193s
+[132/201] START tests.motion_nav.test_motion_benchmarks
+[132/201] END   tests.motion_nav.test_motion_benchmarks passed 2.647s
+[133/201] START tests.motion_nav.test_motion_continuation_quality
+[133/201] END   tests.motion_nav.test_motion_continuation_quality passed 2.382s
+[134/201] START tests.motion_nav.test_motion_residual
+[134/201] END   tests.motion_nav.test_motion_residual passed 0.380s
+[135/201] START tests.motion_nav.test_motion_risk
+[135/201] END   tests.motion_nav.test_motion_risk passed 0.350s
+[136/201] START tests.motion_nav.test_motion_start_delivery
+[136/201] END   tests.motion_nav.test_motion_start_delivery passed 8.402s
+[137/201] START tests.motion_nav.test_navigation_closed_loop
+[137/201] END   tests.motion_nav.test_navigation_closed_loop passed 14.717s
+[138/201] START tests.motion_nav.test_navigation_dead_path_probe
+[138/201] END   tests.motion_nav.test_navigation_dead_path_probe passed 0.443s
+[139/201] START tests.motion_nav.test_navigation_design_metrics
+[139/201] END   tests.motion_nav.test_navigation_design_metrics passed 6.286s
+[140/201] START tests.motion_nav.test_navigation_event_sequences
+[140/201] END   tests.motion_nav.test_navigation_event_sequences passed 5.867s
+[141/201] START tests.motion_nav.test_navigation_handoff
+[141/201] END   tests.motion_nav.test_navigation_handoff passed 0.596s
+[142/201] START tests.motion_nav.test_navigation_interrupt_matrix
+[142/201] END   tests.motion_nav.test_navigation_interrupt_matrix passed 0.381s
+[143/201] START tests.motion_nav.test_navigation_layer_live
+[143/201] END   tests.motion_nav.test_navigation_layer_live passed 0.193s
+[144/201] START tests.motion_nav.test_navigation_lifecycle
+[144/201] END   tests.motion_nav.test_navigation_lifecycle passed 0.444s
+[145/201] START tests.motion_nav.test_navigation_owners
+[145/201] END   tests.motion_nav.test_navigation_owners passed 0.350s
+[146/201] START tests.motion_nav.test_navigation_product_delivery
+[146/201] END   tests.motion_nav.test_navigation_product_delivery passed 3.530s
+[147/201] START tests.motion_nav.test_navigation_product_metrics
+[147/201] END   tests.motion_nav.test_navigation_product_metrics passed 3.308s
+[148/201] START tests.motion_nav.test_navigation_replay_known_map
+[148/201] END   tests.motion_nav.test_navigation_replay_known_map passed 0.162s
+[149/201] START tests.motion_nav.test_navigation_route_handoff
+[149/201] END   tests.motion_nav.test_navigation_route_handoff passed 3.265s
+[150/201] START tests.motion_nav.test_navigation_seed_scan
+[150/201] END   tests.motion_nav.test_navigation_seed_scan passed 0.130s
+[151/201] START tests.motion_nav.test_navigation_session
+[151/201] END   tests.motion_nav.test_navigation_session passed 2.345s
+[152/201] START tests.motion_nav.test_navigation_structure_baseline
+[152/201] END   tests.motion_nav.test_navigation_structure_baseline passed 0.131s
+[153/201] START tests.motion_nav.test_navigation_supervised_interruptions
+[153/201] END   tests.motion_nav.test_navigation_supervised_interruptions passed 13.570s
+[154/201] START tests.motion_nav.test_package_boundaries
+[154/201] END   tests.motion_nav.test_package_boundaries passed 0.410s
+[155/201] START tests.motion_nav.test_planner_worker
+[155/201] END   tests.motion_nav.test_planner_worker passed 4.420s
+[156/201] START tests.motion_nav.test_planning_coordinator
+[156/201] END   tests.motion_nav.test_planning_coordinator passed 0.442s
+[157/201] START tests.motion_nav.test_planning_ownership_gate
+[157/201] END   tests.motion_nav.test_planning_ownership_gate passed 0.224s
+[158/201] START tests.motion_nav.test_post_input_loss_landing_recovery
+[158/201] END   tests.motion_nav.test_post_input_loss_landing_recovery passed 6.875s
+[159/201] START tests.motion_nav.test_probe_handoff_resolution
+[159/201] END   tests.motion_nav.test_probe_handoff_resolution passed 0.564s
+[160/201] START tests.motion_nav.test_public_repository_completeness
+[160/201] END   tests.motion_nav.test_public_repository_completeness passed 78.267s
+[161/201] START tests.motion_nav.test_r27_async_admission
+[161/201] END   tests.motion_nav.test_r27_async_admission passed 4.138s
+[162/201] START tests.motion_nav.test_r28_async_generation
+[162/201] END   tests.motion_nav.test_r28_async_generation passed 1.529s
+[163/201] START tests.motion_nav.test_r28_baseline_alignment
+[163/201] END   tests.motion_nav.test_r28_baseline_alignment passed 0.443s
+[164/201] START tests.motion_nav.test_r28_corner_progress
+[164/201] END   tests.motion_nav.test_r28_corner_progress passed 6.876s
+[165/201] START tests.motion_nav.test_r28_dual_planning
+[165/201] END   tests.motion_nav.test_r28_dual_planning passed 0.566s
+[166/201] START tests.motion_nav.test_r28_generation_formal_chain
+[166/201] END   tests.motion_nav.test_r28_generation_formal_chain passed 3.090s
+[167/201] START tests.motion_nav.test_r28_information_planning_updates
+[167/201] END   tests.motion_nav.test_r28_information_planning_updates passed 0.690s
+[168/201] START tests.motion_nav.test_r28_migration_faults
+[168/201] END   tests.motion_nav.test_r28_migration_faults passed 6.059s
+[169/201] START tests.motion_nav.test_r28_persistent_budget_formal
+[169/201] END   tests.motion_nav.test_r28_persistent_budget_formal passed 13.211s
+[170/201] START tests.motion_nav.test_r28_planning_failure_handoff
+[170/201] END   tests.motion_nav.test_r28_planning_failure_handoff passed 4.354s
+[171/201] START tests.motion_nav.test_r28_planning_history
+[171/201] END   tests.motion_nav.test_r28_planning_history passed 1.030s
+[172/201] START tests.motion_nav.test_r28_planning_retry_successor
+[172/201] END   tests.motion_nav.test_r28_planning_retry_successor passed 0.445s
+[173/201] START tests.motion_nav.test_r28_product_repairs
+[173/201] END   tests.motion_nav.test_r28_product_repairs passed 2.829s
+[174/201] START tests.motion_nav.test_r28_reanchor_handoff
+[174/201] END   tests.motion_nav.test_r28_reanchor_handoff passed 2.337s
+[175/201] START tests.motion_nav.test_r28_screening_retirement
+[175/201] END   tests.motion_nav.test_r28_screening_retirement passed 3.985s
+[176/201] START tests.motion_nav.test_r28_shared_recovery
+[176/201] END   tests.motion_nav.test_r28_shared_recovery passed 2.866s
+[177/201] START tests.motion_nav.test_r28_terminal_approach
+[177/201] END   tests.motion_nav.test_r28_terminal_approach passed 2.366s
+[178/201] START tests.motion_nav.test_r28_world_change_retirement
+[178/201] END   tests.motion_nav.test_r28_world_change_retirement passed 3.388s
+[179/201] START tests.motion_nav.test_reference_baselines
+[179/201] END   tests.motion_nav.test_reference_baselines passed 0.378s
+[180/201] START tests.motion_nav.test_reference_evidence
+[180/201] END   tests.motion_nav.test_reference_evidence passed 0.387s
+[181/201] START tests.motion_nav.test_retry_ledger
+[181/201] END   tests.motion_nav.test_retry_ledger passed 1.002s
+[182/201] START tests.motion_nav.test_route_body_advance
+[182/201] END   tests.motion_nav.test_route_body_advance passed 8.836s
+[183/201] START tests.motion_nav.test_runtime_adapter
+[183/201] END   tests.motion_nav.test_runtime_adapter passed 0.386s
+[184/201] START tests.motion_nav.test_runtime_backend_io
+[184/201] END   tests.motion_nav.test_runtime_backend_io passed 2.703s
+[185/201] START tests.motion_nav.test_runtime_navigation_driver_state
+[185/201] END   tests.motion_nav.test_runtime_navigation_driver_state passed 0.386s
+[186/201] START tests.motion_nav.test_runtime_navigation_state_consumers
+[186/201] END   tests.motion_nav.test_runtime_navigation_state_consumers passed 3.492s
+[187/201] START tests.motion_nav.test_runtime_navigation_verified_handoff
+[187/201] END   tests.motion_nav.test_runtime_navigation_verified_handoff passed 3.362s
+[188/201] START tests.motion_nav.test_s0r_evidence
+[188/201] END   tests.motion_nav.test_s0r_evidence passed 2.181s
+[189/201] START tests.motion_nav.test_segment_entry
+[189/201] END   tests.motion_nav.test_segment_entry passed 0.461s
+[190/201] START tests.motion_nav.test_shape_trials
+[190/201] END   tests.motion_nav.test_shape_trials passed 0.353s
+[191/201] START tests.motion_nav.test_sim_visual_air_query_short_circuit
+[191/201] END   tests.motion_nav.test_sim_visual_air_query_short_circuit passed 1.619s
+[192/201] START tests.motion_nav.test_simulation_isolation
+[192/201] END   tests.motion_nav.test_simulation_isolation passed 3.732s
+[193/201] START tests.motion_nav.test_sound_sparse_motion_proof_d105
+[193/201] END   tests.motion_nav.test_sound_sparse_motion_proof_d105 passed 0.835s
+[194/201] START tests.motion_nav.test_standalone_export
+[194/201] END   tests.motion_nav.test_standalone_export passed 38.302s
+[195/201] START tests.motion_nav.test_task_risk_ledger
+[195/201] END   tests.motion_nav.test_task_risk_ledger passed 0.392s
+[196/201] START tests.motion_nav.test_trajectory_proto_commitment
+[196/201] END   tests.motion_nav.test_trajectory_proto_commitment passed 2.174s
+[197/201] START tests.motion_nav.test_trajectory_proto_contracts
+[197/201] END   tests.motion_nav.test_trajectory_proto_contracts passed 45.683s
+[198/201] START tests.motion_nav.test_trajectory_proto_m0_probe
+[198/201] END   tests.motion_nav.test_trajectory_proto_m0_probe passed 8.072s
+[199/201] START tests.motion_nav.test_trajectory_proto_primitive_matrix
+[199/201] END   tests.motion_nav.test_trajectory_proto_primitive_matrix passed 40.103s
+[200/201] START tests.motion_nav.test_trajectory_proto_reference_search
+[200/201] END   tests.motion_nav.test_trajectory_proto_reference_search passed 3.706s
+[201/201] START tests.motion_nav.test_world_knowledge_geometry
+[201/201] END   tests.motion_nav.test_world_knowledge_geometry passed 3.578s

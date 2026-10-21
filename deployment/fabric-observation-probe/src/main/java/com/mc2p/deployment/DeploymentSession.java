@@ -12,9 +12,12 @@ import java.util.HashMap;
 import java.util.Set;
 
 /** Credentials are consumed here and never retained in the decoded session or error messages. */
-public record DeploymentSession(String episode, String observationSchemaVersion) {
+public record DeploymentSession(String episode, String observationSchemaVersion, String actionSchemaVersion) {
     private static final String SESSION_V2 = "mc2p.deployment_session.v2";
+    private static final String SESSION_V3 = "mc2p.deployment_session.v3";
     private static final String OBSERVATION_V3 = "mc2p.client_observation.v3";
+    private static final String ACTION_V1 = "mc2p.client_action.v1";
+    private static final String ACTION_V2 = "mc2p.client_action.v2";
 
     public static DeploymentSession decode(byte[] payload, String expectedToken) {
         if (payload == null || payload.length == 0 || payload.length > 16384
@@ -37,12 +40,20 @@ public record DeploymentSession(String episode, String observationSchemaVersion)
                 if (reader.peek() != JsonToken.END_DOCUMENT)
                     throw new IllegalArgumentException("invalid session authentication/schema");
                 String schema = fields.get("schema_version");
-                String observationSchema;
+                String observationSchema, actionSchema;
                 if (SESSION_V2.equals(schema)
                         && fields.keySet().equals(Set.of("schema_version", "episode_id", "token",
                                                         "observation_schema_version"))
                         && OBSERVATION_V3.equals(fields.get("observation_schema_version"))) {
                     observationSchema = OBSERVATION_V3;
+                    actionSchema = ACTION_V1;
+                } else if (SESSION_V3.equals(schema)
+                        && fields.keySet().equals(Set.of("schema_version", "episode_id", "token",
+                                                        "observation_schema_version", "action_schema_version"))
+                        && OBSERVATION_V3.equals(fields.get("observation_schema_version"))
+                        && ACTION_V2.equals(fields.get("action_schema_version"))) {
+                    observationSchema = OBSERVATION_V3;
+                    actionSchema = ACTION_V2;
                 } else {
                     throw new IllegalArgumentException("invalid session authentication/schema");
                 }
@@ -50,7 +61,7 @@ public record DeploymentSession(String episode, String observationSchemaVersion)
                         || !MessageDigest.isEqual(expectedToken.getBytes(StandardCharsets.US_ASCII),
                                                   fields.get("token").getBytes(StandardCharsets.UTF_8)))
                     throw new IllegalArgumentException("invalid session authentication/schema");
-                return new DeploymentSession(fields.get("episode_id"), observationSchema);
+                return new DeploymentSession(fields.get("episode_id"), observationSchema, actionSchema);
             }
         } catch (IOException | IllegalStateException error) {
             // Gson error text may contain input paths; never attach raw credential-bearing input.

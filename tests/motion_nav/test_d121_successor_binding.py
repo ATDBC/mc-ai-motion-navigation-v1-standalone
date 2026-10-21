@@ -584,6 +584,44 @@ class FixedPreparationTests(unittest.TestCase):
                 expected_work_identity=self.identity)
         self.assertEqual(self.worker.jobs, [])
 
+    def parent_only_bound_and_position(self):
+        bound = motion_solver.bind_fixed_successor(self.proof, self.request, self.spec,
+            self.snapshot, damage_remaining_points=0.)
+        binding = bound.proof.successor_binding
+        successor = {pos for pos, _ in binding.dependency_versions}
+        position = next(pos for pos, _ in binding.parent_dependency_versions
+                        if pos not in successor and self.source.view().cell(pos).block is None)
+        return bound, position
+
+    def test_parent_only_unknown_dependency_is_rejected_before_prepare(self):
+        from scripts import d120_momentum_entry_calibration as calibration
+        from mc2p.motion_nav.world_model import ObservationStamp
+        self.addCleanup(calibration.build_fixture.cache_clear)
+        bound, position = self.parent_only_bound_and_position()
+        self.source.invalidate(ObservationStamp(self.proof.entry_state.session,
+            105, 105, "d124-parent-only-unknown", 105), (position,))
+        result = GapMotionSolveResult("fixed-current", 1, bound, 0, self.identity)
+        with self.assertRaises(ContractViolation):
+            self.coordinator.prepare_fixed_successor(result, self.request, self.context,
+                self.anchor, self.fixture.context.world, ledger_identity="fixed-ledger",
+                expected_work_identity=self.identity)
+        self.assertEqual(self.worker.jobs, [])
+
+    def test_parent_only_stamp_refresh_remains_eligible_before_prepare(self):
+        from scripts import d120_momentum_entry_calibration as calibration
+        from mc2p.motion_nav.world_model import ObservationStamp
+        self.addCleanup(calibration.build_fixture.cache_clear)
+        bound, position = self.parent_only_bound_and_position()
+        self.source.confirm_air(ObservationStamp(self.proof.entry_state.session,
+            106, 106, "d124-parent-only-stamp", 106), (position,))
+        result = GapMotionSolveResult("fixed-current", 1, bound, 0, self.identity)
+        submitted = self.coordinator.prepare_fixed_successor(result, self.request, self.context,
+            self.anchor, self.fixture.context.world, ledger_identity="fixed-ledger",
+            expected_work_identity=self.identity)
+        self.assertIs(submitted.status, PreparedSubmitStatus.ACCEPTED)
+        self.assertTrue(self.worker.submitted.wait(10))
+        self.assertEqual(len(self.worker.jobs), 1)
+
     def test_worker_death_does_not_invalidate_an_already_applied_local_proof(self):
         self.ready_job()
         self.worker.alive = False

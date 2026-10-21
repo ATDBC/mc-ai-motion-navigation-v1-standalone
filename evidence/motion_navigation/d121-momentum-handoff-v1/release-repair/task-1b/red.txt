@@ -1,0 +1,1065 @@
+test_activation_requires_runtime_actual_binding_and_cannot_invent_effect (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_activation_requires_runtime_actual_binding_and_cannot_invent_effect) ... ok
+test_cli_refuses_absent_index_and_red_without_flag (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_cli_refuses_absent_index_and_red_without_flag) ... FAIL
+test_counts_cannot_substitute_for_matrix_coordinates (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_counts_cannot_substitute_for_matrix_coordinates) ... ok
+test_default_unittest_never_writes_workspace_evidence (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_default_unittest_never_writes_workspace_evidence) ... ok
+test_explicit_run_is_unique_and_g1_reads_only_its_index (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_explicit_run_is_unique_and_g1_reads_only_its_index) ... FAIL
+test_g1_requires_all_indexed_cases_and_linked_events (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_g1_requires_all_indexed_cases_and_linked_events) ... FAIL
+test_historical_failure_cannot_be_promoted (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_historical_failure_cannot_be_promoted) ... ok
+test_missing_raw_or_activation_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_missing_raw_or_activation_cannot_pass) ... FAIL
+test_raw_or_source_tampering_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_raw_or_source_tampering_cannot_pass) ... FAIL
+test_real_g1_native_entry_copies_must_match_independent_parent (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_real_g1_native_entry_copies_must_match_independent_parent) ...
+  test_real_g1_native_entry_copies_must_match_independent_parent (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_real_g1_native_entry_copies_must_match_independent_parent) (field='request_entry') ... ERROR
+  test_real_g1_native_entry_copies_must_match_independent_parent (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_real_g1_native_entry_copies_must_match_independent_parent) (field='request_stream') ... ERROR
+  test_real_g1_native_entry_copies_must_match_independent_parent (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_real_g1_native_entry_copies_must_match_independent_parent) (field='proof_stream') ... ERROR
+  test_real_g1_native_entry_copies_must_match_independent_parent (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_real_g1_native_entry_copies_must_match_independent_parent) (field='native_tail') ... ERROR
+test_resealed_first_receipt_before_activation_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_first_receipt_before_activation_cannot_pass) ... FAIL
+test_resealed_g0_empty_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_empty_payload_cannot_pass) ...
+  test_resealed_g0_empty_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_empty_payload_cannot_pass) (value=None) ... FAIL
+  test_resealed_g0_empty_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_empty_payload_cannot_pass) (value={}) ... FAIL
+  test_resealed_g0_empty_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_empty_payload_cannot_pass) (value=[]) ... FAIL
+  test_resealed_g0_empty_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_empty_payload_cannot_pass) (value='') ... FAIL
+test_resealed_g0_missing_thread_or_reference_facts_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_missing_thread_or_reference_facts_cannot_pass) ...
+  test_resealed_g0_missing_thread_or_reference_facts_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_missing_thread_or_reference_facts_cannot_pass) (field='thread_events') ... FAIL
+  test_resealed_g0_missing_thread_or_reference_facts_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_missing_thread_or_reference_facts_cannot_pass) (field='reference_events') ... FAIL
+test_resealed_g1_case_producer_or_command_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g1_case_producer_or_command_mismatch_cannot_pass) ...
+  test_resealed_g1_case_producer_or_command_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g1_case_producer_or_command_mismatch_cannot_pass) (change='missing') ... FAIL
+  test_resealed_g1_case_producer_or_command_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g1_case_producer_or_command_mismatch_cannot_pass) (change='unittest') ... FAIL
+  test_resealed_g1_case_producer_or_command_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g1_case_producer_or_command_mismatch_cannot_pass) (change='foreign_producer') ... FAIL
+  test_resealed_g1_case_producer_or_command_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g1_case_producer_or_command_mismatch_cannot_pass) (change='bool_exit') ... FAIL
+test_resealed_missing_or_wrong_case_command_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_missing_or_wrong_case_command_cannot_pass) ...
+  test_resealed_missing_or_wrong_case_command_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_missing_or_wrong_case_command_cannot_pass) (wrong=False) ... FAIL
+  test_resealed_missing_or_wrong_case_command_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_missing_or_wrong_case_command_cannot_pass) (wrong=True) ... FAIL
+test_resealed_null_empty_or_scalar_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_empty_or_scalar_payload_cannot_pass) ...
+  test_resealed_null_empty_or_scalar_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_empty_or_scalar_payload_cannot_pass) (value=None) ... FAIL
+  test_resealed_null_empty_or_scalar_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_empty_or_scalar_payload_cannot_pass) (value={}) ... FAIL
+  test_resealed_null_empty_or_scalar_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_empty_or_scalar_payload_cannot_pass) (value=[]) ... FAIL
+  test_resealed_null_empty_or_scalar_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_empty_or_scalar_payload_cannot_pass) (value='') ... FAIL
+  test_resealed_null_empty_or_scalar_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_empty_or_scalar_payload_cannot_pass) (value=1) ... FAIL
+test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) ...
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='generation', value=None) ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='generation', value='') ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='generation', value='foreign') ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='body_owner', value=None) ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='body_owner', value='') ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='body_owner', value='foreign') ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='ledger_identity', value=None) ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='ledger_identity', value='') ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='ledger_identity', value='foreign') ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='session_identity', value=None) ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='session_identity', value='') ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='session_identity', value='foreign') ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='composite_command_identity', value=None) ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='composite_command_identity', value='') ... FAIL
+  test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='composite_command_identity', value='foreign') ... FAIL
+test_resealed_real_g1_branch_entry_cannot_override_independent_parent (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_real_g1_branch_entry_cannot_override_independent_parent) ... ERROR
+test_resealed_release_without_terminal_or_supervisor_events_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_release_without_terminal_or_supervisor_events_cannot_pass) ...
+  test_resealed_release_without_terminal_or_supervisor_events_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_release_without_terminal_or_supervisor_events_cannot_pass) (missing='command_terminal_events') ... FAIL
+  test_resealed_release_without_terminal_or_supervisor_events_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_release_without_terminal_or_supervisor_events_cannot_pass) (missing='supervisor_events') ... FAIL
+  test_resealed_release_without_terminal_or_supervisor_events_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_release_without_terminal_or_supervisor_events_cannot_pass) (missing='supervisor_event_id') ... FAIL
+  test_resealed_release_without_terminal_or_supervisor_events_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_release_without_terminal_or_supervisor_events_cannot_pass) (missing='command_terminal_event_ids') ... FAIL
+test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass) ...
+  test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass) (mutation=<function EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass.<locals>.<lambda> at 0x000001EBB9D7AC00>) ... FAIL
+  test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass) (mutation=<function EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass.<locals>.<lambda> at 0x000001EBB9D7B420>) ... FAIL
+  test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass) (mutation=<function EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass.<locals>.<lambda> at 0x000001EBB9D7AE80>) ... FAIL
+  test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass) (mutation=<function EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass.<locals>.<lambda> at 0x000001EBB9D7ADE0>) ... FAIL
+  test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass) (mutation=<function EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass.<locals>.<lambda> at 0x000001EBB9D78C20>) ... FAIL
+test_resealed_switches_and_empty_event_objects_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_switches_and_empty_event_objects_cannot_pass) ... FAIL
+test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli) ...
+  test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli) (kind='foreign_session') ... FAIL
+  test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli) (kind='foreign_ruleset') ... FAIL
+  test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli) (kind='foreign_schema') ... FAIL
+  test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli) (kind='foreign_position') ... FAIL
+  test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli) (kind='foreign_tick') ... FAIL
+  test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli) (kind='invalid_boundary_index') ... FAIL
+test_explicit_record_runs_frozen_real_producers (tests.motion_nav.test_d102_evidence_contract.RealG1EvidenceTests.test_explicit_record_runs_frozen_real_producers) ... FAIL
+test_verify_red_is_read_only_and_cannot_record (tests.motion_nav.test_d102_evidence_contract.RealG1EvidenceTests.test_verify_red_is_read_only_and_cannot_record) ... FAIL
+
+======================================================================
+ERROR: test_real_g1_native_entry_copies_must_match_independent_parent (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_real_g1_native_entry_copies_must_match_independent_parent) (field='request_entry')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 566, in test_real_g1_native_entry_copies_must_match_independent_parent
+    shutil.copytree(formal.parent, root)
+  File "D:\My_project\mc_ai\.venv\Lib\shutil.py", line 571, in copytree
+    with os.scandir(src) as itr:
+         ^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\d102-formal-v1\\g1\\20261012T1551530188773Z-b35e2558f46543bfb63bd790f794a3fb'
+
+======================================================================
+ERROR: test_real_g1_native_entry_copies_must_match_independent_parent (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_real_g1_native_entry_copies_must_match_independent_parent) (field='request_stream')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 566, in test_real_g1_native_entry_copies_must_match_independent_parent
+    shutil.copytree(formal.parent, root)
+  File "D:\My_project\mc_ai\.venv\Lib\shutil.py", line 571, in copytree
+    with os.scandir(src) as itr:
+         ^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\d102-formal-v1\\g1\\20261012T1551530188773Z-b35e2558f46543bfb63bd790f794a3fb'
+
+======================================================================
+ERROR: test_real_g1_native_entry_copies_must_match_independent_parent (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_real_g1_native_entry_copies_must_match_independent_parent) (field='proof_stream')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 566, in test_real_g1_native_entry_copies_must_match_independent_parent
+    shutil.copytree(formal.parent, root)
+  File "D:\My_project\mc_ai\.venv\Lib\shutil.py", line 571, in copytree
+    with os.scandir(src) as itr:
+         ^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\d102-formal-v1\\g1\\20261012T1551530188773Z-b35e2558f46543bfb63bd790f794a3fb'
+
+======================================================================
+ERROR: test_real_g1_native_entry_copies_must_match_independent_parent (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_real_g1_native_entry_copies_must_match_independent_parent) (field='native_tail')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 566, in test_real_g1_native_entry_copies_must_match_independent_parent
+    shutil.copytree(formal.parent, root)
+  File "D:\My_project\mc_ai\.venv\Lib\shutil.py", line 571, in copytree
+    with os.scandir(src) as itr:
+         ^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\d102-formal-v1\\g1\\20261012T1551530188773Z-b35e2558f46543bfb63bd790f794a3fb'
+
+======================================================================
+ERROR: test_resealed_real_g1_branch_entry_cannot_override_independent_parent (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_real_g1_branch_entry_cannot_override_independent_parent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 532, in test_resealed_real_g1_branch_entry_cannot_override_independent_parent
+    shutil.copytree(formal.parent, root)
+  File "D:\My_project\mc_ai\.venv\Lib\shutil.py", line 571, in copytree
+    with os.scandir(src) as itr:
+         ^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\d102-formal-v1\\g1\\20261012T1551530188773Z-b35e2558f46543bfb63bd790f794a3fb'
+
+======================================================================
+FAIL: test_cli_refuses_absent_index_and_red_without_flag (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_cli_refuses_absent_index_and_red_without_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 372, in test_cli_refuses_absent_index_and_red_without_flag
+    self.assertEqual(verifier.main(["--stage", "G0", "--input", str(path), "--verify-red"]), 0)
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_explicit_run_is_unique_and_g1_reads_only_its_index (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_explicit_run_is_unique_and_g1_reads_only_its_index)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 313, in test_explicit_run_is_unique_and_g1_reads_only_its_index
+    self.assertEqual(verify_stage_report(document, stage="G0"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[59 chars]on',) != ()
+
+First tuple contains 1 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',)
+
+======================================================================
+FAIL: test_g1_requires_all_indexed_cases_and_linked_events (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_g1_requires_all_indexed_cases_and_linked_events)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 335, in test_g1_requires_all_indexed_cases_and_linked_events
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_missing_raw_or_activation_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_missing_raw_or_activation_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 273, in test_missing_raw_or_activation_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G0"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[59 chars]on',) != ()
+
+First tuple contains 1 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',)
+
+======================================================================
+FAIL: test_raw_or_source_tampering_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_raw_or_source_tampering_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 358, in test_raw_or_source_tampering_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G0"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[59 chars]on',) != ()
+
+First tuple contains 1 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',)
+
+======================================================================
+FAIL: test_resealed_first_receipt_before_activation_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_first_receipt_before_activation_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 488, in test_resealed_first_receipt_before_activation_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_g0_empty_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_empty_payload_cannot_pass) (value=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 414, in test_resealed_g0_empty_payload_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G0"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[59 chars]on',) != ()
+
+First tuple contains 1 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',)
+
+======================================================================
+FAIL: test_resealed_g0_empty_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_empty_payload_cannot_pass) (value={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 414, in test_resealed_g0_empty_payload_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G0"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[59 chars]on',) != ()
+
+First tuple contains 1 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',)
+
+======================================================================
+FAIL: test_resealed_g0_empty_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_empty_payload_cannot_pass) (value=[])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 414, in test_resealed_g0_empty_payload_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G0"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[59 chars]on',) != ()
+
+First tuple contains 1 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',)
+
+======================================================================
+FAIL: test_resealed_g0_empty_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_empty_payload_cannot_pass) (value='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 414, in test_resealed_g0_empty_payload_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G0"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[59 chars]on',) != ()
+
+First tuple contains 1 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',)
+
+======================================================================
+FAIL: test_resealed_g0_missing_thread_or_reference_facts_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_missing_thread_or_reference_facts_cannot_pass) (field='thread_events')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 434, in test_resealed_g0_missing_thread_or_reference_facts_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G0"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[59 chars]on',) != ()
+
+First tuple contains 1 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',)
+
+======================================================================
+FAIL: test_resealed_g0_missing_thread_or_reference_facts_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g0_missing_thread_or_reference_facts_cannot_pass) (field='reference_events')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 434, in test_resealed_g0_missing_thread_or_reference_facts_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G0"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[59 chars]on',) != ()
+
+First tuple contains 1 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',)
+
+======================================================================
+FAIL: test_resealed_g1_case_producer_or_command_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g1_case_producer_or_command_mismatch_cannot_pass) (change='missing')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 459, in test_resealed_g1_case_producer_or_command_mismatch_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_g1_case_producer_or_command_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g1_case_producer_or_command_mismatch_cannot_pass) (change='unittest')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 459, in test_resealed_g1_case_producer_or_command_mismatch_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_g1_case_producer_or_command_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g1_case_producer_or_command_mismatch_cannot_pass) (change='foreign_producer')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 459, in test_resealed_g1_case_producer_or_command_mismatch_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_g1_case_producer_or_command_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_g1_case_producer_or_command_mismatch_cannot_pass) (change='bool_exit')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 459, in test_resealed_g1_case_producer_or_command_mismatch_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_missing_or_wrong_case_command_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_missing_or_wrong_case_command_cannot_pass) (wrong=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 442, in test_resealed_missing_or_wrong_case_command_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G0"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[59 chars]on',) != ()
+
+First tuple contains 1 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',)
+
+======================================================================
+FAIL: test_resealed_missing_or_wrong_case_command_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_missing_or_wrong_case_command_cannot_pass) (wrong=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 442, in test_resealed_missing_or_wrong_case_command_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G0"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[59 chars]on',) != ()
+
+First tuple contains 1 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',)
+
+======================================================================
+FAIL: test_resealed_null_empty_or_scalar_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_empty_or_scalar_payload_cannot_pass) (value=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 406, in test_resealed_null_empty_or_scalar_payload_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_empty_or_scalar_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_empty_or_scalar_payload_cannot_pass) (value={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 406, in test_resealed_null_empty_or_scalar_payload_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_empty_or_scalar_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_empty_or_scalar_payload_cannot_pass) (value=[])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 406, in test_resealed_null_empty_or_scalar_payload_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_empty_or_scalar_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_empty_or_scalar_payload_cannot_pass) (value='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 406, in test_resealed_null_empty_or_scalar_payload_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_empty_or_scalar_payload_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_empty_or_scalar_payload_cannot_pass) (value=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 406, in test_resealed_null_empty_or_scalar_payload_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='generation', value=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='generation', value='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='generation', value='foreign')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='body_owner', value=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='body_owner', value='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='body_owner', value='foreign')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='ledger_identity', value=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='ledger_identity', value='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='ledger_identity', value='foreign')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='session_identity', value=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='session_identity', value='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='session_identity', value='foreign')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='composite_command_identity', value=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='composite_command_identity', value='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_null_or_mismatched_activation_identity_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_null_or_mismatched_activation_identity_cannot_pass) (field='composite_command_identity', value='foreign')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 481, in test_resealed_null_or_mismatched_activation_identity_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_release_without_terminal_or_supervisor_events_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_release_without_terminal_or_supervisor_events_cannot_pass) (missing='command_terminal_events')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 500, in test_resealed_release_without_terminal_or_supervisor_events_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_release_without_terminal_or_supervisor_events_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_release_without_terminal_or_supervisor_events_cannot_pass) (missing='supervisor_events')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 500, in test_resealed_release_without_terminal_or_supervisor_events_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_release_without_terminal_or_supervisor_events_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_release_without_terminal_or_supervisor_events_cannot_pass) (missing='supervisor_event_id')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 500, in test_resealed_release_without_terminal_or_supervisor_events_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_release_without_terminal_or_supervisor_events_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_release_without_terminal_or_supervisor_events_cannot_pass) (missing='command_terminal_event_ids')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 500, in test_resealed_release_without_terminal_or_supervisor_events_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass) (mutation=<function EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass.<locals>.<lambda> at 0x000001EBB9D7AC00>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 524, in test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass) (mutation=<function EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass.<locals>.<lambda> at 0x000001EBB9D7B420>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 524, in test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass) (mutation=<function EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass.<locals>.<lambda> at 0x000001EBB9D7AE80>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 524, in test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass) (mutation=<function EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass.<locals>.<lambda> at 0x000001EBB9D7ADE0>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 524, in test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass) (mutation=<function EvidenceContractTests.test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass.<locals>.<lambda> at 0x000001EBB9D78C20>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 524, in test_resealed_request_ruleset_input_and_dependency_mismatch_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_switches_and_empty_event_objects_cannot_pass (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_switches_and_empty_event_objects_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 421, in test_resealed_switches_and_empty_event_objects_cannot_pass
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli) (kind='foreign_session')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 606, in test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli) (kind='foreign_ruleset')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 606, in test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli) (kind='foreign_schema')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 606, in test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli) (kind='foreign_position')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 606, in test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli) (kind='foreign_tick')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 606, in test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli (tests.motion_nav.test_d102_evidence_contract.EvidenceContractTests.test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli) (kind='invalid_boundary_index')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 606, in test_resealed_tail_origin_and_boundary_mismatch_cannot_pass_api_or_cli
+    self.assertEqual(verify_stage_report(document, stage="G1"), ())
+AssertionError: Tuples differ: ('historical evidence bytes changed: evide[111 chars]ion') != ()
+
+First tuple contains 2 additional elements.
+First extra element 0:
+'historical evidence bytes changed: evidence/motion_navigation/continuous-motion-d101-v1/manifest.json'
+
++ ()
+- ('historical evidence bytes changed: '
+-  'evidence/motion_navigation/continuous-motion-d101-v1/manifest.json',
+-  'previous stage has not passed evidence validation')
+
+======================================================================
+FAIL: test_explicit_record_runs_frozen_real_producers (tests.motion_nav.test_d102_evidence_contract.RealG1EvidenceTests.test_explicit_record_runs_frozen_real_producers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 37, in test_explicit_record_runs_frozen_real_producers
+    path = verifier.record_contracts(Path(folder) / "run", verify_red=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\verify_prepared_motion_d102.py", line 1074, in record_contracts
+    return _record_g1_contracts(output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\verify_prepared_motion_d102.py", line 1114, in _record_g1_contracts
+    predecessor=_copy_g0_predecessor(output), case_count=len(frozen["g1_case_ids"]), cases=[])
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\verify_prepared_motion_d102.py", line 1084, in _copy_g0_predecessor
+    raise ValueError("signed G0 predecessor evidence failed validation")
+ValueError: signed G0 predecessor evidence failed validation
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 39, in test_explicit_record_runs_frozen_real_producers
+    self.fail(f"the explicit G1 producer run is missing: {error}")
+AssertionError: the explicit G1 producer run is missing: signed G0 predecessor evidence failed validation
+
+======================================================================
+FAIL: test_verify_red_is_read_only_and_cannot_record (tests.motion_nav.test_d102_evidence_contract.RealG1EvidenceTests.test_verify_red_is_read_only_and_cannot_record)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d102_evidence_contract.py", line 32, in test_verify_red_is_read_only_and_cannot_record
+    self.assertEqual(verifier.main(["--verify-red"]), 0)
+AssertionError: 1 != 0
+
+----------------------------------------------------------------------
+Ran 24 tests in 8.145s
+
+FAILED (failures=56, errors=5)

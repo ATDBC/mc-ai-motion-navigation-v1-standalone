@@ -1,0 +1,54 @@
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: D:/My_project/mc_ai/.tmp/d121-revision-worktree/artifacts/surface-cache/native-build
+适用于 .NET Framework MSBuild 版本 17.14.40+3e7442088
+
+  surface_cache.vcxproj -> D:\My_project\mc_ai\.tmp\d121-revision-worktree\artifacts\surface-cache\native-build\Release\surface_cache.dll
+JNI cache smoke passed
+.............................................................................F......F.........
+======================================================================
+FAIL: test_d120_compact_evidence_preserves_limits_history_and_source_identity (tests.motion_nav.test_standalone_export.StandaloneExportTests.test_d120_compact_evidence_preserves_limits_history_and_source_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_standalone_export.py", line 417, in test_d120_compact_evidence_preserves_limits_history_and_source_identity
+    self.assertEqual(hashlib.sha256((self.root/name).read_bytes().replace(b"\r\n",b"\n")).hexdigest(),expected,name)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'cf4769f8b3e462adc1b15d155b77fb31cc53b8325a1a86cdc0e8a1a85cb06cde' != '751ee25357aea854c982cff0a3a7a7df6f872f1626235987721894462bd09b09'
+- cf4769f8b3e462adc1b15d155b77fb31cc53b8325a1a86cdc0e8a1a85cb06cde
++ 751ee25357aea854c982cff0a3a7a7df6f872f1626235987721894462bd09b09
+ : scripts/probe_fabric_deployment_observation.py
+
+======================================================================
+FAIL: test_exported_first_party_modules_all_import (tests.motion_nav.test_standalone_export.StandaloneExportTests.test_exported_first_party_modules_all_import)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_standalone_export.py", line 878, in test_exported_first_party_modules_all_import
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        result.returncode, 0, result.stdout + result.stderr,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 1 != 0 : Traceback (most recent call last):
+  File "<string>", line 16, in <module>
+    importlib.import_module(module)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "D:\Admin\Programs\Python\Python3\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1406, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1371, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1342, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 938, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 759, in exec_module
+  File "<frozen importlib._bootstrap>", line 491, in _call_with_frames_removed
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\.tmp\standalone-export-test-abf81cafd0144e4592669149495b6a57\scripts\surface_depth_probe\native.py", line 5, in <module>
+    import numpy as np
+ModuleNotFoundError: No module named 'numpy'
+
+
+----------------------------------------------------------------------
+Ran 94 tests in 199.110s
+
+FAILED (failures=2)

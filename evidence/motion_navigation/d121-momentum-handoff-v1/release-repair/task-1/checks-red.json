@@ -1,0 +1,62 @@
+[
+  {
+    "module": "tests.motion_nav.test_action_entry_handoff_repair",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_action_entry_handoff_repair",
+      "-v"
+    ],
+    "cwd": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree",
+    "started_utc": "2026-10-20T01:26:14.694685+00:00",
+    "duration_seconds": 2.905999999959022,
+    "exit_code": 1,
+    "log": "test_action_entry_handoff_repair-red.json"
+  },
+  {
+    "module": "tests.motion_nav.test_f2rec_r0_baseline",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_f2rec_r0_baseline",
+      "-v"
+    ],
+    "cwd": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree",
+    "started_utc": "2026-10-20T01:26:17.613250+00:00",
+    "duration_seconds": 2.202999999979511,
+    "exit_code": 1,
+    "log": "test_f2rec_r0_baseline-red.json"
+  },
+  {
+    "module": "tests.motion_nav.test_f2rec_r1_region_geometry",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_f2rec_r1_region_geometry",
+      "-v"
+    ],
+    "cwd": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree",
+    "started_utc": "2026-10-20T01:26:19.811337+00:00",
+    "duration_seconds": 0.4690000000409782,
+    "exit_code": 1,
+    "log": "test_f2rec_r1_region_geometry-red.json"
+  },
+  {
+    "module": "tests.motion_nav.test_reference_baselines",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_reference_baselines",
+      "-v"
+    ],
+    "cwd": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree",
+    "started_utc": "2026-10-20T01:26:20.277695+00:00",
+    "duration_seconds": 0.3279999999795109,
+    "exit_code": 1,
+    "log": "test_reference_baselines-red.json"
+  }
+]

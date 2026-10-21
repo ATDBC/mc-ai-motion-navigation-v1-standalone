@@ -9,7 +9,11 @@ import unittest
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.physics_1_21 import step
-from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
+from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET, CalculationStatus
+from mc2p.motion_nav.physics_adapter import PhysicsWorldView
+from mc2p.motion_nav.world_model import (
+    Aabb, BlockGeometry, CellKnowledge, ObservationStamp, WorldKnowledge,
+)
 from mc2p.motion_nav.online_motion import project_movement_command
 from mc2p.motion_nav.motion_solver import (
     AirTransitionSolveRequest, GapSolveRequest, LandingRegion, MotionCommandTick,
@@ -100,15 +104,54 @@ class ActionContinuitySolverLimitsTests(unittest.TestCase):
         solved = solve_one_cell_gap(
             anchor, world, replace(request, recovery_horizon_ticks=1),
         )
-        replayed = revalidate_gap_motion(
-            replace(proof, recovery_horizon_ticks=1),
-            anchor, world, request.execution_window,
-        )
-
         self.assertIs(solved.status, SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
         self.assertIn("release_recovery_not_safe", solved.reasons)
+        # A shorter limit cannot be attached to an already published longer tail.
+        with self.assertRaises(ContractViolation):
+            replace(proof, recovery_horizon_ticks=1)
+
+        # Narrow the landing ledge and remove the block beyond it. The exact
+        # main commands still land, but the final neutral stop slides off.
+        changed = WorldKnowledge(world.session)
+        stamp = ObservationStamp(world.session, 1, 1, "test-change", 1)
+        air, blocks = [], {}
+        for x in range(-4, 5):
+            for y in range(40, 71):
+                for z in range(-4, 5):
+                    cell = (x, y, z)
+                    fact = world.cell(cell)
+                    if fact.knowledge is CellKnowledge.AIR or cell == (0, 63, 3):
+                        air.append(cell)
+                    elif fact.knowledge is CellKnowledge.BLOCK:
+                        blocks[cell] = fact.block
+        blocks[(0, 63, 2)] = BlockGeometry(
+            "minecraft:stone", "boxes", (Aabb(0., 0., 0., 1., 1., .5),),
+        )
+        changed.confirm_air(stamp, tuple(air))
+        changed.observe_blocks(stamp, blocks)
+        changed_world = PhysicsWorldView(changed.view(), JAVA_1_21_RULESET)
+        self.assertIn((0, 63, 2), proof.world_dependencies)
+        self.assertNotEqual(changed_world.cell((0, 63, 2)).block,
+                            world.cell((0, 63, 2)).block)
+        state = anchor.physics_state
+        for command, expected in zip(proof.commands, proof.trajectory[1:]):
+            projected = project_movement_command(
+                state, command.movement,
+                movement_yaw_radians=command.required_movement_yaw_radians,
+            )
+            calculated = step(state, projected.tick_input, changed_world,
+                              JAVA_1_21_RULESET)
+            self.assertIs(calculated.status, CalculationStatus.OK)
+            self.assertEqual(calculated.next_state, expected)
+            state = calculated.next_state
+
+        replayed = revalidate_gap_motion(
+            proof, anchor, changed_world, request.execution_window,
+        )
+        self.assertIs(replayed.status, SolveStatus.NEEDS_STATE)
         self.assertIsNone(replayed.proof)
         self.assertIn("start_window_release_recovery_not_safe", replayed.reasons)
+        self.assertIn("final_exit_stop_tail_not_safe", replayed.reasons)
 
     def test_each_request_keeps_its_original_recovery_limit_when_omitted(self):
         anchor, world, gap_request = self.moving_gap()

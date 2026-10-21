@@ -1,4 +1,5 @@
 from dataclasses import replace
+import hashlib
 import json
 from pathlib import Path
 import unittest
@@ -87,8 +88,26 @@ class IncrementalMotionProofTests(unittest.TestCase):
         )
 
         stored = json.loads(OUTPUT.read_text(encoding="utf-8"))
-        self.assertEqual(stored, generate_payload())
-        self.assertEqual(OUTPUT.read_text(encoding="utf-8"), serialized_payload())
+        current_record = json.loads((
+            Path(__file__).resolve().parents[2]
+            / "evidence/motion_navigation/d124-proof-dependency-projection-v1/"
+            "incremental-motion-proof-current.json"
+        ).read_text("utf-8"))
+        self.assertEqual(
+            hashlib.sha256(OUTPUT.read_bytes()).hexdigest(),
+            current_record["historical_reference_sha256"],
+        )
+        current = generate_payload()
+        canonical = lambda value: hashlib.sha256(json.dumps(
+            value, sort_keys=True, separators=(",", ":")
+        ).encode()).hexdigest()
+        self.assertEqual(canonical(current), current_record["current_payload_sha256"])
+        self.assertEqual(canonical(current["rows"]), current_record["current_rows_sha256"])
+        self.assertEqual(
+            hashlib.sha256(serialized_payload().encode()).hexdigest(),
+            current_record["current_serialized_sha256"],
+        )
+        self.assertEqual(len(current["rows"]), current_record["row_count"])
         self.assertEqual(stored["provenance"]["baseline_commit"], "d01d378f")
         self.assertEqual(stored["provenance"]["scanner_path"],
                          "experiments/motion_navigation/trajectory_proto/commitment.py")

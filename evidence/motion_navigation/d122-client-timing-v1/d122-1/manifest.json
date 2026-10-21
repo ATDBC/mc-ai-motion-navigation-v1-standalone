@@ -1,0 +1,44 @@
+{
+  "schema": "mc2p.d122-1-manifest.v1",
+  "source_base": "fa2d3127",
+  "platform": "Windows",
+  "scope": "Python contract/Runtime/handshake and CalculatorBackend only",
+  "checks": {
+    "python_direct_and_adjacent": 204,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "mutations_detected": 6,
+    "v1_paired_requests_identical": 120
+  },
+  "not_run": [
+    "Java v2",
+    "D121 producer integration",
+    "full Windows shards",
+    "standalone full checks",
+    "Fabric",
+    "performance acceptance"
+  ],
+  "code_sha256": {
+    "mc2p/backends/client_behavior_payload.py": "188607ea647f0c5686b203e516146b6e37dc5ceea06d73ee7ed4a7fbd5953acf",
+    "mc2p/backends/fabric_behavior.py": "07a50812745a7afa36e5ad9b465f7c824fcb116479ad1791d5a71296d6393be5",
+    "mc2p/contracts/action_receipt.py": "a63ae3e0043813aeb6acf1867f0792e647af99141737921b48c47cdf58aa45a8",
+    "mc2p/contracts/action_v1.py": "00c2d9eedb4447ef94ec61837e346f3d4c2e0a2e742f8d551298718a4e4bfdad",
+    "mc2p/motion_nav/online_motion.py": "eb8dda031ea67e0ea70dbd45425be1bd2b7c0bf6437d798543f3bb5df7881750",
+    "mc2p/runtime/arbiter_v1.py": "86bec50410ea7b361260634c4e560399de340dd3ebd66a645b0c4bc1bbaf1834",
+    "mc2p/runtime/backend_v1.py": "ad112bc7dfc677ae3292cbb856a58f47a31aa9ec1e16a778575e9e32348ccfe6",
+    "mc2p/runtime/player_runtime_v1.py": "13122a0829d1f0e18afb94d12a5a8ca74436cb588e489b0c535e35d80c0eb6ad",
+    "scripts/d122_python_contract_probe.py": "2143f0b9e34202a230a0cd4cdb19ac34c9ba348ebc2ea81f986fbcb3e6c4f215",
+    "scripts/navigation_design_metrics.py": "29d09a05c211e95197394f44bcc4d2c442086822cccb48327e9f3b420aac1b90",
+    "tests/motion_nav/test_navigation_design_metrics.py": "9fe8b3406c0950343b56cd6a4382db17fe9d7f8d9ffd492ad02352d28c7e2c4f",
+    "tests/sim/backend.py": "7dad66e602abd1ce581f2b7a63690d33088fa9d56c69cba3cb95f78d2c48b763",
+    "tests/sim/client_timing.py": "e7c4dec5212ad3499e903ea7679771459f8aebd85b2da30faefa4fb2b7523178",
+    "tests/test_d122_python_timing.py": "15995a79e3c14fa95468605e0f13ba16396e27840de89d35fa93c2898763f217"
+  },
+  "evidence_sha256": {
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1/mutations-and-v1-pair.json": "447defc8b28f47670757e534722019225897fb47d2dd28a27393c94ef78be1b1",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1/python-adjacent.txt": "ba4856c73d0c1074f12041d4f89932866fcd9000f482662cd07c7f9bca5d11e6",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1/README.md": "b8773aa0848fa4b8cfd4c1fad49e114da83e939b9da34acefac5855602509ca1",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1/red-before-projection.txt": "ac26268e0d75369fb0ed831c1bd2aa3a4413642adc52477c191a3431ebd87e21"
+  }
+}

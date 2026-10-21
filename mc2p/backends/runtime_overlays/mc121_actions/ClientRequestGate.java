@@ -32,6 +32,25 @@ public final class ClientRequestGate {
         return null;
     }
 
+    /** Consumes request identity once without replacing the currently sampled lease. */
+    public String admitPending(String requestedEpisode, long sequence, long observation,
+                               long latestObservation, long budget, int ticks) {
+        return validate(requestedEpisode, sequence, observation, latestObservation, budget, ticks);
+    }
+
+    /** Activates an already admitted pending request without revalidating sequence/observation. */
+    public boolean activatePending(String requestedEpisode, long sequence, long deadlineNs,
+                                   int ticks, long now) {
+        requireOwnerThread();
+        if (!java.util.Objects.equals(episode, requestedEpisode) || sequence != lastSequence
+                || deadlineNs <= now || ticks < 1 || ticks > 20) return false;
+        leaseOwner = sequence;
+        leaseStart = now;
+        leaseBudget = deadlineNs - now;
+        ticksRemaining = ticks;
+        return true;
+    }
+
     public String validate(String requestedEpisode, long sequence, long observation,
                            long latestObservation, long budget, int ticks) {
         requireOwnerThread();

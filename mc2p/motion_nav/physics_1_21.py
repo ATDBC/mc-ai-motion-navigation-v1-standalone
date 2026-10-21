@@ -5,7 +5,7 @@ from dataclasses import replace
 import math
 from struct import Struct
 
-from mc2p.motion_nav.geometry import required_cells_for_sweep
+from mc2p.motion_nav.geometry import QueryStatus, occupied_cells_for_sweep
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.physics_types import (
     CalculationStatus, MotionSegment, PhysicsRuleset, PhysicsState,
@@ -177,8 +177,7 @@ def _adjust_for_sneaking(
             body.min_y,
             body.max_z + offset_z,
         )
-        cells = required_cells_for_sweep(probe, (0.0, 0.0, 0.0))
-        query = world.shapes(cells)
+        query = world.shapes_for_sweep(probe, (0.0, 0.0, 0.0))
         dependencies.update(query.dependencies)
         missing.update(query.missing_cells)
         unsupported.update(query.unsupported_cells)
@@ -219,45 +218,42 @@ def _has_near_ground_support(
         body.min_x, body.min_y - step_height - 1.0e-5, body.min_z,
         body.max_x, body.min_y, body.max_z,
     )
-    cells = required_cells_for_sweep(probe, (0.0, 0.0, 0.0))
-    query = world.shapes(cells)
+    query = world.shapes_for_sweep(probe, (0.0, 0.0, 0.0))
     if query.missing_cells or query.unsupported_cells:
         return None, query.dependencies, query.missing_cells, query.unsupported_cells
     return _intersects_any(probe, query.boxes), query.dependencies, (), ()
 
 
-def _boxes_touch_or_overlap(first: Aabb, second: Aabb) -> bool:
-    overlaps = (
-        first.max_x >= second.min_x - _EPSILON and first.min_x <= second.max_x + _EPSILON,
-        first.max_y >= second.min_y - _EPSILON and first.min_y <= second.max_y + _EPSILON,
-        first.max_z >= second.min_z - _EPSILON and first.min_z <= second.max_z + _EPSILON,
-    )
-    strict = (
-        _overlap(first.min_x, first.max_x, second.min_x, second.max_x),
-        _overlap(first.min_y, first.max_y, second.min_y, second.max_y),
-        _overlap(first.min_z, first.max_z, second.min_z, second.max_z),
-    )
-    return all(overlaps) and sum(strict) >= 2
-
-
 def _contacts_unmodeled_material(
-        body: Aabb, applied: tuple[float, float, float],
-        cells: tuple[tuple[int, int, int], ...], world: PhysicsWorldView) -> bool:
+        body: Aabb, applied: tuple[float, float, float], world: PhysicsWorldView,
+        *, include_support: bool,
+        ) -> tuple[bool, tuple[tuple[int, int, int], ...],
+                   tuple[tuple[int, int, int], ...]]:
+    """Check vanilla's body-cell material callback range, not collision owners."""
     final_body = body.moved(*applied)
+    cells = occupied_cells_for_sweep(final_body, (0.0, 0.0, 0.0))
+    missing = []
     for position in cells:
         fact = world.cell(position)
+        if fact.knowledge is CellKnowledge.UNKNOWN:
+            missing.append(position)
+            continue
         if fact.knowledge is not CellKnowledge.BLOCK or fact.block is None:
             continue
         block = fact.block
         if block.material_key in _ORDINARY_MATERIALS:
             continue
-        boxes = block.world_boxes(position)
-        if not boxes:
-            x, y, z = position
-            boxes = (Aabb(x, y, z, x + 1, y + 1, z + 1),)
-        if any(_boxes_touch_or_overlap(final_body, obstacle) for obstacle in boxes):
-            return True
-    return False
+        return True, cells, tuple(sorted(missing))
+    dependencies = set(cells)
+    if include_support:
+        support = world.support(final_body, vertical_tolerance=1.0e-5)
+        dependencies.update(support.dependencies)
+        missing.extend(support.missing_cells)
+        if (support.status is QueryStatus.UNSUPPORTED
+                or any(material not in _ORDINARY_MATERIALS
+                       for material in support.support_materials)):
+            return True, tuple(sorted(dependencies)), tuple(sorted(set(missing)))
+    return False, tuple(sorted(dependencies)), tuple(sorted(set(missing)))
 
 
 def _intersects_any(body: Aabb, obstacles: tuple[Aabb, ...]) -> bool:
@@ -281,7 +277,7 @@ def _try_taller_pose(state: PhysicsState, world: PhysicsWorldView,
     dependencies = set()
     for pose in candidates:
         box = _pose_candidate_box(state, _POSE_HEIGHTS[pose])
-        query = world.shapes(required_cells_for_sweep(box, (0.0, 0.0, 0.0)))
+        query = world.shapes_for_sweep(box, (0.0, 0.0, 0.0))
         dependencies.update(query.dependencies)
         if query.missing_cells:
             return None, tuple(sorted(dependencies)), query.missing_cells, ()
@@ -471,8 +467,7 @@ def step(state: PhysicsState, tick_input: TickInput, world: PhysicsWorldView,
             events.append("sneak_edge_clipped")
             requested = adjusted
 
-    collision_cells = required_cells_for_sweep(working.body_box, requested)
-    query = world.shapes(collision_cells)
+    query = world.shapes_for_sweep(working.body_box, requested)
     dependencies.update(query.dependencies)
     if query.missing_cells:
         return StepResult(CalculationStatus.NEEDS_WORLD,
@@ -496,12 +491,11 @@ def step(state: PhysicsState, tick_input: TickInput, world: PhysicsWorldView,
             and (working.on_ground or downward_contact)):
         vertical_base = working.body_box.moved(
             0, base[1] if downward_contact else 0.0, 0)
-        step_cells = required_cells_for_sweep(
-            vertical_base,
-            (requested[0], working.step_height_blocks, requested[2]),
-        )
-        combined_cells = tuple(sorted(set(collision_cells) | set(step_cells)))
-        step_query = world.shapes(combined_cells)
+        step_query = world.shapes_for_sweeps((
+            (working.body_box, requested),
+            (vertical_base, (
+                requested[0], working.step_height_blocks, requested[2])),
+        ))
         dependencies.update(step_query.dependencies)
         if step_query.missing_cells:
             return StepResult(CalculationStatus.NEEDS_WORLD,
@@ -514,8 +508,21 @@ def step(state: PhysicsState, tick_input: TickInput, world: PhysicsWorldView,
     applied, stepped = _resolve_with_step(
         working.body_box, requested, step_query.boxes,
         working.step_height_blocks, working.on_ground, base=base)
-    if _contacts_unmodeled_material(
-            working.body_box, applied, step_query.dependencies, world):
+    unmodeled_contact, contact_dependencies, contact_missing = \
+        _contacts_unmodeled_material(
+            working.body_box, applied, world,
+            include_support=(requested[1] < 0.0
+                             and not math.isclose(
+                                 requested[1], applied[1], abs_tol=_EPSILON)),
+        )
+    dependencies.update(contact_dependencies)
+    if contact_missing:
+        return StepResult(
+            CalculationStatus.NEEDS_WORLD,
+            dependencies=tuple(sorted(dependencies)),
+            missing_cells=contact_missing,
+        )
+    if unmodeled_contact:
         return StepResult(
             CalculationStatus.UNSUPPORTED,
             dependencies=tuple(sorted(dependencies)),

@@ -9,7 +9,7 @@ from enum import StrEnum
 import math
 import time
 
-from mc2p.contracts.action_v1 import MovementTickWindowV1, MovementV1
+from mc2p.contracts.action_v1 import MovementTickWindowV1, MovementV1, SafeDefaultV1
 from mc2p.contracts.action_v1 import LookV1
 from mc2p.contracts.common import ContractViolation, require_identifier, require_nonnegative_int
 from mc2p.motion_nav.body_control import StopCause, BodyControlPhase
@@ -53,7 +53,7 @@ from mc2p.motion_nav.prepared_motion import (
     PreparedMotionHandle, ProofConsumerIdentity, ProofReleaseEvidence, ProofUse,
     PreparedProofUsePort, ReferenceRejectReason, ReferenceResult, ReferenceStatus,
     PreparedActionHandoff, PreparedHandoffApproval, PreparedHandoffQueryPort,
-    PreparedHandoffStatus, PreparedQueryStatus,
+    PreparedHandoffStatus, PreparedQueryStatus, PreparedActivationRegistryPort,
 )
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.route_validation import RouteProgressEvidence
@@ -85,6 +85,7 @@ class ActionRouteDecision:
     ground_handoff_disposition: GroundHandoffDisposition = GroundHandoffDisposition.NOT_REQUESTED
     route_progress_evidence: RouteProgressEvidence | None = None
     failure_cause: StopCause | None = None
+    safe_default: SafeDefaultV1 | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -251,6 +252,12 @@ class ActionRouteExecutor:
         self._completion_token = object()
         self._completion_epoch = 0
         self._pending_completion_candidate_cleanup: set[int] = set()
+
+    @property
+    def activation_registry(self) -> PreparedActivationRegistryPort | None:
+        """Expose the existing activation service without granting replacement."""
+        registry = getattr(self, "_prepared_result_inbox", None)
+        return registry if isinstance(registry, PreparedActivationRegistryPort) else None
 
     @property
     def prepared_controller(self) -> VerifiedMotionExecutor | None:
@@ -1247,6 +1254,7 @@ class ActionRouteExecutor:
                 requires_verified_motion: bool = False,
                 ground_handoff_disposition=GroundHandoffDisposition.NOT_REQUESTED,
                 route_progress_evidence: RouteProgressEvidence | None = None,
+                safe_default: SafeDefaultV1 | None = None,
                 ) -> ActionRouteDecision:
         return ActionRouteDecision(
             self.state, movement, look, lease, self.action_index, reason, missing,
@@ -1257,6 +1265,7 @@ class ActionRouteExecutor:
             route_progress_evidence=route_progress_evidence,
             failure_cause=(self._final_action_failure_cause
                            if self.state in {ActionRouteState.FAILED, ActionRouteState.NEEDS_REPLAN} else None),
+            safe_default=safe_default,
         )
 
     def prepare_ground_handoff(self, target: GroundHandoffTarget | None) -> None:
@@ -1450,6 +1459,12 @@ class ActionRouteExecutor:
                     and self.prepared_successor_required):
                 self._pending_action_boundary_index = self.action_index + 1
                 verified = replace(verified, reason="prepared_action_boundary")
+            safe_default = (
+                self._controller.prearmed_exit_default(verified)
+                if (self.prepared_successor_required
+                    and input_ledger is not None
+                    and input_ledger.action_timing_v2) else None
+            )
             return self._result(
                 started, verified.movement or MovementV1(),
                 max(1, verified.input_lease_ticks), verified.reason,
@@ -1466,6 +1481,7 @@ class ActionRouteExecutor:
                     verified.latest_movement_tick
                     if verified.submittable_as_verified_command else None
                 ),
+                safe_default=safe_default,
             )
         if type(action) is WalkSegment:
             entry_look = self._upcoming_entry_look(

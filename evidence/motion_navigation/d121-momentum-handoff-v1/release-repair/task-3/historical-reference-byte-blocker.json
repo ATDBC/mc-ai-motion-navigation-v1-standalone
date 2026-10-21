@@ -1,0 +1,18 @@
+{
+  "path": "evidence/motion_navigation/continuous-motion-d101-v1/manifest.json",
+  "worktree": {
+    "sha256": "338be861d46f40a365cf4cd8e203de50ec0be6d8e2d09f279d020bec30f3f409",
+    "crlf": 0,
+    "lf": 201
+  },
+  "main_workspace": {
+    "sha256": "f3189c60dff31c701c53bf199250e8bcf3d6931bd04e375d688fb5abd4640395",
+    "crlf": 201,
+    "lf": 201
+  },
+  "public_3889d10": {
+    "sha256": "f3189c60dff31c701c53bf199250e8bcf3d6931bd04e375d688fb5abd4640395",
+    "crlf": 201,
+    "lf": 201
+  }
+}

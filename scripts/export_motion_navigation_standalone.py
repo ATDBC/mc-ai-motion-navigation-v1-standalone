@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import argparse
 import ast
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 import fnmatch
 import hashlib
 import importlib.util
@@ -14,7 +14,7 @@ import re
 import shutil
 import subprocess
 import sys
-from typing import Iterable, Mapping
+from typing import Callable, Iterable, Mapping
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -51,6 +51,14 @@ class VerificationReport:
     missing_files: tuple[str, ...]
     extra_files: tuple[str, ...]
     changed_files: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ByteReconciliationReport:
+    reused: tuple[str, ...]
+    current: tuple[str, ...]
+    added: tuple[str, ...]
+    deleted: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -277,9 +285,16 @@ def _write_hashes(root: Path) -> None:
 
 
 def export_tree(root: Path, *, clean: bool,
-                manifest: ExportManifest | None = None) -> Path:
+                manifest: ExportManifest | None = None,
+                byte_base_root: Path | None = None,
+                byte_report_sink: Callable[[ByteReconciliationReport], None] | None = None) -> Path:
     selected = manifest or load_manifest()
     target = _guard_export_target(Path(root))
+    base = Path(byte_base_root).resolve() if byte_base_root is not None else None
+    if base is not None:
+        if base == target or target in base.parents:
+            raise ExportViolation("byte base cannot be inside the export target")
+        _verify_hashes(base)
     if target.exists():
         if not clean:
             raise ExportViolation(f"export target already exists: {target}")
@@ -301,7 +316,15 @@ def export_tree(root: Path, *, clean: bool,
         json.dumps(metadata, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8", newline="\n",
     )
+    if base is not None:
+        report = _reconcile_export_bytes(target, base)
+    else:
+        report = ByteReconciliationReport(
+            (), tuple(sorted(path.as_posix() for path in files)), (), (),
+        )
     _write_hashes(target)
+    if byte_report_sink is not None:
+        byte_report_sink(report)
     return target
 
 
@@ -309,8 +332,8 @@ def _parse_hashes(path: Path) -> dict[str, str]:
     expected: dict[str, str] = {}
     try:
         lines = path.read_text("utf-8").splitlines()
-    except OSError as error:
-        raise ExportViolation(f"missing {HASH_FILE}") from error
+    except (OSError, UnicodeDecodeError) as error:
+        raise ExportViolation(f"missing or unreadable {HASH_FILE}") from error
     for line in lines:
         digest, separator, name = line.partition("  ")
         if (not separator or re.fullmatch(r"[0-9a-f]{64}", digest) is None
@@ -325,9 +348,8 @@ def _parse_hashes(path: Path) -> dict[str, str]:
     return expected
 
 
-def verify_tree(root: Path, *,
-                manifest: ExportManifest | None = None) -> VerificationReport:
-    selected = manifest or load_manifest()
+def _verify_hashes(root: Path) -> VerificationReport:
+    """Check the tree against its own hash list, without today's export policy."""
     target = Path(root).resolve()
     if not target.is_dir():
         raise ExportViolation(f"standalone tree is missing: {target}")
@@ -347,17 +369,68 @@ def verify_tree(root: Path, *,
         name for name in set(expected).intersection(actual_paths)
         if hashlib.sha256(actual_paths[name].read_bytes()).hexdigest() != expected[name]
     ))
-    required_missing = tuple(sorted(
-        path.as_posix() for path in selected.required_paths
-        if not (target / Path(path)).is_file()
-    ))
-    missing = tuple(sorted(set(missing).union(required_missing)))
     report = VerificationReport(len(actual_paths), missing, extra, changed)
     if missing or extra or changed:
         raise ExportViolation(
             "standalone tree differs: "
             f"missing={missing}, extra={extra}, changed={changed}"
         )
+    return report
+
+
+def _reconcile_export_bytes(target: Path, base: Path) -> ByteReconciliationReport:
+    # The base has already passed its own hash manifest. Only CRLF/LF are
+    # interchangeable; UTF-8 BOMs, bare CR and all other whitespace stay literal.
+    excluded = {HASH_FILE, METADATA_FILE}
+    base_paths = set(_parse_hashes(base / HASH_FILE)) | {HASH_FILE}
+    current_paths = {
+        path.relative_to(target).as_posix()
+        for path in target.rglob("*") if path.is_file()
+    } | {HASH_FILE}
+    common = base_paths & current_paths
+    reused = []
+    for name in sorted(common - excluded):
+        current = (target / name).read_bytes()
+        previous = (base / name).read_bytes()
+        if b"\0" in current or b"\0" in previous:
+            continue
+        try:
+            current.decode("utf-8")
+            previous.decode("utf-8")
+        except UnicodeDecodeError:
+            continue
+        if current.replace(b"\r\n", b"\n") == previous.replace(b"\r\n", b"\n"):
+            (target / name).write_bytes(previous)
+            reused.append(name)
+    return ByteReconciliationReport(
+        tuple(reused), tuple(sorted(common - set(reused))),
+        tuple(sorted(current_paths - base_paths)),
+        tuple(sorted(base_paths - current_paths)),
+    )
+
+
+def reconcile_export_bytes(root: Path, byte_base_root: Path) -> ByteReconciliationReport:
+    """Reuse only EOL-equivalent UTF-8 bytes from a verified previous export."""
+    target, base = Path(root).resolve(), Path(byte_base_root).resolve()
+    if target == base:
+        raise ExportViolation("byte base must differ from the export target")
+    _verify_hashes(base)
+    report = _reconcile_export_bytes(target, base)
+    _write_hashes(target)
+    return report
+
+
+def verify_tree(root: Path, *,
+                manifest: ExportManifest | None = None) -> VerificationReport:
+    selected = manifest or load_manifest()
+    target = Path(root).resolve()
+    report = _verify_hashes(target)
+    required_missing = tuple(sorted(
+        path.as_posix() for path in selected.required_paths
+        if not (target / Path(path)).is_file()
+    ))
+    if required_missing:
+        raise ExportViolation(f"standalone tree differs: missing={required_missing}")
     requirements = (target / "requirements.txt").read_text("utf-8")
     if re.search(r"(?m)^psutil(?:==|>=|~=)", requirements) is None:
         raise ExportViolation("standalone requirements do not declare psutil")
@@ -401,6 +474,7 @@ def _parser() -> argparse.ArgumentParser:
     export = subcommands.add_parser("export")
     export.add_argument("--root", type=Path, required=True)
     export.add_argument("--clean", action="store_true")
+    export.add_argument("--byte-base-root", type=Path)
     verify = subcommands.add_parser("verify")
     verify.add_argument("--root", type=Path, required=True)
     subcommands.add_parser("check-java")
@@ -411,8 +485,15 @@ def main(argv: list[str] | None = None) -> int:
     arguments = _parser().parse_args(argv)
     try:
         if arguments.command == "export":
-            root = export_tree(arguments.root, clean=arguments.clean)
+            reports: list[ByteReconciliationReport] = []
+            root = export_tree(
+                arguments.root, clean=arguments.clean,
+                byte_base_root=arguments.byte_base_root,
+                byte_report_sink=reports.append,
+            )
             print(f"STANDALONE_EXPORT_ROOT={root}")
+            if arguments.byte_base_root is not None:
+                print(json.dumps({"byte_reconciliation": asdict(reports[0])}, ensure_ascii=False))
         elif arguments.command == "verify":
             report = verify_tree(arguments.root)
             print(f"STANDALONE_EXPORT_OK files={report.file_count}")

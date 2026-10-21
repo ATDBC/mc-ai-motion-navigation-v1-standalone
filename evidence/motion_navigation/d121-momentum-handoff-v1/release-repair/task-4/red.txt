@@ -1,0 +1,14 @@
+test_transport_dispositions_do_not_claim_unperformed_protocol_rejection (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_transport_dispositions_do_not_claim_unperformed_protocol_rejection) ... FAIL
+
+======================================================================
+FAIL: test_transport_dispositions_do_not_claim_unperformed_protocol_rejection (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_transport_dispositions_do_not_claim_unperformed_protocol_rejection)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d121_transport_late.py", line 73, in test_transport_dispositions_do_not_claim_unperformed_protocol_rejection
+    self.assertIsNone(self.never["protocol_prevented_expired_application"])
+AssertionError: True is not None
+
+----------------------------------------------------------------------
+Ran 1 test in 9.777s
+
+FAILED (failures=1)

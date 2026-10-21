@@ -1,0 +1,13 @@
+F
+======================================================================
+FAIL: test_movement_winner_owns_both_timing_fields (tests.test_d122_python_timing.ContractAndWireTests.test_movement_winner_owns_both_timing_fields)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_python_timing.py", line 61, in test_movement_winner_owns_both_timing_fields
+    self.assertEqual(decision.action.first_effect_window, intent.movement_tick_window)
+AssertionError: None != MovementTickWindowV1(earliest_tick=8, latest_tick=8)
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

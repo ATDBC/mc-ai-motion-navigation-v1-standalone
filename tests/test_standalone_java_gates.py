@@ -88,6 +88,7 @@ class StandaloneJavaGateTests(unittest.TestCase):
                     "-encoding", "UTF-8", "-d", directory,
                     str(stub),
                     str(source_root / "ClientRequestGate.java"),
+                    str(source_root / "ClientTimingSchedule.java"),
                     str(source_root / "ClientBehaviorInput.java"),
                     str(harness_root / "ClientBehaviorInputTest.java"),
                 ],

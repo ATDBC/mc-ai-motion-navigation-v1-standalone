@@ -9,7 +9,7 @@ from mc2p.motion_nav.physics_types import (
 )
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
 from mc2p.motion_nav.world_model import (
-    BlockGeometry, CellFact, CellKnowledge, ObservationStamp, WorldKnowledge,
+    Aabb, BlockGeometry, CellFact, CellKnowledge, ObservationStamp, WorldKnowledge,
     WorldSessionId, WorldView,
 )
 from tests.observation_v3_fixtures import valid_snapshot_v3
@@ -113,16 +113,20 @@ class B09RPhysicsContractsTests(unittest.TestCase):
                     stamp=self.frame.body.stamp,
                     block=BlockGeometry.full_cube("minecraft:stone"),
                 ),
+                (0, 64, 0): CellFact(
+                    CellKnowledge.AIR, stamp=self.frame.body.stamp),
+                (0, 65, 0): CellFact(
+                    CellKnowledge.AIR, stamp=self.frame.body.stamp),
             },
         )
 
-        query = PhysicsWorldView(view, JAVA_1_21_RULESET).shapes(
-            (hidden_owner, support),
+        query = PhysicsWorldView(view, JAVA_1_21_RULESET).shapes_for_sweep(
+            Aabb(.2, 64., .2, .8, 65.8, .8), (0., -.08, 0.),
         )
 
         self.assertEqual(query.missing_cells, ())
         self.assertEqual(len(query.boxes), 1)
-        self.assertIn(hidden_owner, query.dependencies)
+        self.assertNotIn(hidden_owner, query.dependencies)
         self.assertIn(support, query.dependencies)
 
     def test_physics_world_reuses_an_identical_shape_query(self):

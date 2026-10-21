@@ -1,6 +1,7 @@
 """Immutable native client execution evidence; dispatch is not server confirmation."""
 from dataclasses import dataclass, fields
 from typing import TypeAlias
+from enum import StrEnum
 
 from mc2p.contracts.common import ContractViolation, require_identifier, require_nonnegative_int
 
@@ -31,7 +32,7 @@ class ClientInputApplicationV1:
             require_identifier(self.episode_id, "episode id")
             require_nonnegative_int(self.request_sequence_id, "request sequence id")
         require_nonnegative_int(self.sampled_at_jvm_ns, "input sample time")
-        if self.state not in {"leased", "neutral", "disallowed", "expired", "lease_exhausted"}:
+        if self.state not in {"leased", "neutral", "disallowed", "expired", "lease_exhausted", "default_active"}:
             raise ContractViolation("invalid input application state")
         for name in ("forward", "strafe"):
             value = getattr(self, name)
@@ -40,7 +41,7 @@ class ClientInputApplicationV1:
         for name in ("jump", "sneak", "sprint"):
             if type(getattr(self, name)) is not bool:
                 raise ContractViolation(f"{name} must be boolean")
-        if self.state in {"leased", "neutral"} and self.episode_id is None:
+        if self.state in {"leased", "neutral", "default_active"} and self.episode_id is None:
             raise ContractViolation("active input application requires an owner")
         if (self.state in {"disallowed", "expired", "lease_exhausted"}
                 and (float(self.forward) != 0.0 or float(self.strafe) != 0.0
@@ -185,7 +186,74 @@ class ClientBehaviorReceiptV3:
         return cls(**data)
 
 
-ClientBehaviorReceipt: TypeAlias = ClientBehaviorReceiptV2 | ClientBehaviorReceiptV3
+class ClientTimingStatusV1(StrEnum):
+    FALLBACK_ARMED = "fallback_armed"
+    WINDOW_PENDING = "window_pending"
+    WINDOW_APPLIED = "window_applied"
+    WINDOW_MISSED = "window_missed"
+    DEFAULT_ACTIVE = "default_active"
+    DEFAULT_EXHAUSTED = "default_exhausted"
+
+
+@dataclass(frozen=True, slots=True)
+class ClientTimingEventV1:
+    status: ClientTimingStatusV1
+    movement_tick_id: int
+    episode_id: str
+    request_sequence_id: int
+
+    def __post_init__(self) -> None:
+        if type(self.status) is not ClientTimingStatusV1:
+            raise ContractViolation("timing status must be typed")
+        require_nonnegative_int(self.movement_tick_id, "timing movement tick")
+        require_identifier(self.episode_id, "timing episode")
+        require_nonnegative_int(self.request_sequence_id, "timing request sequence")
+
+    @classmethod
+    def from_mapping(cls, value: object) -> "ClientTimingEventV1":
+        if type(value) is not dict or set(value) != {f.name for f in fields(cls)}:
+            raise ContractViolation("invalid timing event fields")
+        data = dict(value)
+        try:
+            data["status"] = ClientTimingStatusV1(data["status"])
+        except (ValueError, TypeError) as error:
+            raise ContractViolation("unsupported timing event status") from error
+        return cls(**data)
+
+
+@dataclass(frozen=True, slots=True)
+class ClientBehaviorReceiptV4(ClientBehaviorReceiptV3):
+    timing_events: tuple[ClientTimingEventV1, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.schema_version != "mc2p.client_action_receipt.v4":
+            raise ContractViolation("invalid behavior receipt schema")
+        ClientBehaviorReceiptV3(**{
+            f.name: ("mc2p.client_action_receipt.v3" if f.name == "schema_version"
+                     else getattr(self, f.name)) for f in fields(ClientBehaviorReceiptV3)
+        })
+        if (type(self.timing_events) is not tuple or len(self.timing_events) > 64
+                or any(type(item) is not ClientTimingEventV1 for item in self.timing_events)):
+            raise ContractViolation("invalid timing event batch")
+        ticks = tuple(item.movement_tick_id for item in self.timing_events)
+        if ticks != tuple(sorted(ticks)) or (ticks and ticks[-1] > self.input_samples):
+            raise ContractViolation("timing events must follow observed movement ticks")
+
+    @classmethod
+    def from_mapping(cls, value: object) -> "ClientBehaviorReceiptV4":
+        if type(value) is not dict or set(value) != {f.name for f in fields(cls)}:
+            raise ContractViolation("invalid v4 behavior receipt fields")
+        data = dict(value)
+        if type(data["input_applications"]) is not list or type(data["timing_events"]) is not list:
+            raise ContractViolation("v4 receipt batches must be lists")
+        data["input_applications"] = tuple(ClientInputApplicationV1.from_mapping(item)
+                                            for item in data["input_applications"])
+        data["timing_events"] = tuple(ClientTimingEventV1.from_mapping(item)
+                                      for item in data["timing_events"])
+        return cls(**data)
+
+
+ClientBehaviorReceipt: TypeAlias = ClientBehaviorReceiptV2 | ClientBehaviorReceiptV3 | ClientBehaviorReceiptV4
 
 
 def behavior_receipt_from_mapping(value: object) -> ClientBehaviorReceipt:
@@ -196,4 +264,6 @@ def behavior_receipt_from_mapping(value: object) -> ClientBehaviorReceipt:
         return ClientBehaviorReceiptV2.from_mapping(value)
     if schema == "mc2p.client_action_receipt.v3":
         return ClientBehaviorReceiptV3.from_mapping(value)
+    if schema == "mc2p.client_action_receipt.v4":
+        return ClientBehaviorReceiptV4.from_mapping(value)
     raise ContractViolation("unsupported behavior receipt schema")

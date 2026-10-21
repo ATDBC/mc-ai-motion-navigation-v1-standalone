@@ -1,0 +1,11 @@
+test_future_pending_does_not_replace_default_and_response_is_held (tests.test_d122_python_timing.CalculatorTimingTests.test_future_pending_does_not_replace_default_and_response_is_held) ... ok
+test_higher_pending_replaces_only_pending_and_resets_clear_old_inputs (tests.test_d122_python_timing.SamplingTableTests.test_higher_pending_replaces_only_pending_and_resets_clear_old_inputs) ... ok
+test_accepted_cancel_retires_target_default_and_cancel_record (tests.test_d122_python_timing_repair.TimingRepairTests.test_accepted_cancel_retires_target_default_and_cancel_record) ... ok
+test_unaccepted_cancel_does_not_retire_default (tests.test_d122_python_timing_repair.TimingRepairTests.test_unaccepted_cancel_does_not_retire_default) ... ok
+test_replaced_pending_finishes_even_when_its_successor_misses (tests.test_d122_python_timing_repair.TimingRepairTests.test_replaced_pending_finishes_even_when_its_successor_misses) ... ok
+test_fallback_armed_and_window_pending_are_not_applications (tests.motion_nav.test_d122_formal_timing.D122FormalTimingProjectionTests.test_fallback_armed_and_window_pending_are_not_applications) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.016s
+
+OK

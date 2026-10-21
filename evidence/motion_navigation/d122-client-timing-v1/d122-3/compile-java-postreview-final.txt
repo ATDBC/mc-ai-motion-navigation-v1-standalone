@@ -1,0 +1,7 @@
+STATUS: INVALID_ENVIRONMENT_COMMAND
+ENTERED_GRADLE: false
+NOTE: Captured from the first overlay command before the corrected repository-root invocation.
+
+Resolve-Path: Cannot find path 'D:\My_project\mc_ai\.tmp\d121-revision-worktree\deployment\fabric-observation-probe\.venv\Library\lib\jvm' because it does not exist.
+Get-ChildItem: Cannot find path 'D:\My_project\mc_ai\.tmp\d121-revision-worktree\deployment\fabric-observation-probe\.gradle\wrapper\dists\gradle-8.8-bin' because it does not exist.
+Exception: Gradle 8.8 not found

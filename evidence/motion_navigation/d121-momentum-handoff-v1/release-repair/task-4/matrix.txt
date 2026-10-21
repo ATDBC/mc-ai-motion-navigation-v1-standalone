@@ -1,0 +1,1 @@
+{"result": "FAILED_STOPPED", "runs": [{"policy": "timely_l1", "outcome": "TIMELY_SUCCESS", "expected": 27, "actual": 27}, {"policy": "late_l2", "outcome": "RED_EXPIRED_JUMP_PHYSICALLY_APPLIED", "expected": 27, "actual": 28}, {"policy": "never_applied", "outcome": "RED_LOST_SUCCESSOR_BODY_UNRESOLVED", "expected": 27, "actual": null}]}

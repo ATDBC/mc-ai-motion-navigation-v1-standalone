@@ -30,6 +30,17 @@ POLICIES = ("timely_l1", "late_l2", "never_applied")
 L = 26
 EXPECTED_TICK = L + 1
 
+
+class TransportDisposition(str, Enum):
+    APPLIED_IN_WINDOW = "applied_in_window"
+    APPLIED_OUTSIDE_WINDOW = "applied_outside_window"
+    NOT_DELIVERED = "not_delivered"
+
+
+class ExpiredApplicationPrevention(str, Enum):
+    NOT_PREVENTED = "not_prevented"
+    NOT_APPLICABLE = "not_applicable"
+
 # Test comparison only. Production proof validation still checks every identity.
 SEMANTIC_RUNTIME_FIELDS = frozenset({
     "async_identity", "job_token", "snapshot_lease_token", "ledger_id",
@@ -385,6 +396,16 @@ def run_case(policy: str, *, direction_index: int = 0, max_frames: int = 60) -> 
             and applications[0][2].jump
         )
         final_record = case.runtime.input_ledger.record(target_sequence)
+        disposition = (
+            TransportDisposition.NOT_DELIVERED if actual_tick is None else
+            TransportDisposition.APPLIED_IN_WINDOW if actual_tick == EXPECTED_TICK else
+            TransportDisposition.APPLIED_OUTSIDE_WINDOW
+        )
+        prevention = (
+            ExpiredApplicationPrevention.NOT_PREVENTED
+            if disposition is TransportDisposition.APPLIED_OUTSIDE_WINDOW else
+            ExpiredApplicationPrevention.NOT_APPLICABLE
+        )
         if policy == "timely_l1":
             outcome = (
                 "TIMELY_SUCCESS" if actual_tick == EXPECTED_TICK
@@ -405,7 +426,7 @@ def run_case(policy: str, *, direction_index: int = 0, max_frames: int = 60) -> 
                 else "RED_LOST_SUCCESSOR_BODY_UNRESOLVED"
             )
         return {
-            "schema": "mc2p.d121-transport-late-case.v1",
+            "schema": "mc2p.d121-transport-late-case.v2",
             "policy": policy,
             "direction_index": direction_index,
             "L": L,
@@ -426,8 +447,12 @@ def run_case(policy: str, *, direction_index: int = 0, max_frames: int = 60) -> 
             "actual_effect_tick": actual_tick,
             "actual_movement": actual_movement,
             "expired_jump_physically_applied": expired_jump,
+            "transport_disposition": disposition.value,
+            "expired_application_prevention": prevention.value,
+            # Compatibility field: null means no expired-application rejection
+            # was exercised. It is not evidence of a successful protocol guard.
             "protocol_prevented_expired_application": (
-                policy != "late_l2" or not expired_jump
+                False if prevention is ExpiredApplicationPrevention.NOT_PREVENTED else None
             ),
             "final_target_ledger": _ledger_value(final_record),
             "terminal_failure": terminal_failure,
@@ -478,7 +503,7 @@ def run_matrix() -> dict[str, object]:
         and never["outcome"] == "LOST_SUCCESSOR_SAFELY_BOUNDED"
     )
     return {
-        "schema": "mc2p.d121-transport-late-matrix.v1",
+        "schema": "mc2p.d121-transport-late-matrix.v2",
         "result": "PASS" if gate_passed else "FAILED_STOPPED",
         "same_successor_action_and_window": same_submission,
         "same_control_semantics": same_semantics,

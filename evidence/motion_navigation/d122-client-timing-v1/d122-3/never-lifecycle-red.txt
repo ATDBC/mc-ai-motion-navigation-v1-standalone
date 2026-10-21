@@ -1,0 +1,14 @@
+test_never_transport_failure_closes_the_formal_driver_lifecycle (tests.motion_nav.test_d122_formal_timing.D122FormalTimingProjectionTests.test_never_transport_failure_closes_the_formal_driver_lifecycle) ... FAIL
+
+======================================================================
+FAIL: test_never_transport_failure_closes_the_formal_driver_lifecycle (tests.motion_nav.test_d122_formal_timing.D122FormalTimingProjectionTests.test_never_transport_failure_closes_the_formal_driver_lifecycle)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_formal_timing.py", line 22, in test_never_transport_failure_closes_the_formal_driver_lifecycle
+    self.assertIsNone(row["error"])
+AssertionError: {'type': 'ContractViolation', 'message': 'formal Runtime must be ready', 'release_error': {'type': 'ContractViolation', 'message': 'prepared navigation must be adopted or discarded'}} is not None
+
+----------------------------------------------------------------------
+Ran 1 test in 2.717s
+
+FAILED (failures=1)

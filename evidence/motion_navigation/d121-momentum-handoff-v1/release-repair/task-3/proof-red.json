@@ -1,0 +1,12 @@
+{
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation",
+    "-v"
+  ],
+  "exit_code": 1,
+  "duration_seconds": 0.4417262999340892,
+  "output": "test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation) ... ERROR\n\n======================================================================\nERROR: test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\tests\\motion_nav\\test_action_continuity_solver_limits.py\", line 104, in test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation\n    replace(proof, recovery_horizon_ticks=1),\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\.venv\\Lib\\dataclasses.py\", line 1503, in replace\n    return obj.__class__(**changes)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<string>\", line 35, in __init__\n  File \"D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\mc2p\\motion_nav\\motion_solver.py\", line 756, in __post_init__\n    raise ContractViolation(\"verified fallback exceeds its declaration or route limits\")\nmc2p.contracts.common.ContractViolation: verified fallback exceeds its declaration or route limits\n\n----------------------------------------------------------------------\nRan 1 test in 0.070s\n\nFAILED (errors=1)\n"
+}

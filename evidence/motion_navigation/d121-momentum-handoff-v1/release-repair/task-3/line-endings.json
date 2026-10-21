@@ -1,0 +1,34 @@
+[
+  {
+    "path": "mc2p/motion_nav/action_route_executor.py",
+    "head_crlf": 0,
+    "working_crlf": 0,
+    "head_lone_lf": 1781,
+    "working_lone_lf": 1787,
+    "working_sha256": "70ad5b2fda4f13771315ea55cf3762a03467fc77117a979d9166b0262ff52fdc"
+  },
+  {
+    "path": "mc2p/motion_nav/route_body_controller.py",
+    "head_crlf": 0,
+    "working_crlf": 0,
+    "head_lone_lf": 399,
+    "working_lone_lf": 399,
+    "working_sha256": "48131c6af49607e1158ad775c7f771d4bbbae5c71934fe310f3df01a3bc05252"
+  },
+  {
+    "path": "tests/motion_nav/test_action_continuity_solver_limits.py",
+    "head_crlf": 0,
+    "working_crlf": 0,
+    "head_lone_lf": 450,
+    "working_lone_lf": 493,
+    "working_sha256": "ed031522956dda309277f0288d84484b4b12fa82c48b6f94c6b6a047cdd338f5"
+  },
+  {
+    "path": "tests/motion_nav/test_navigation_session.py",
+    "head_crlf": 0,
+    "working_crlf": 0,
+    "head_lone_lf": 2442,
+    "working_lone_lf": 2457,
+    "working_sha256": "89f1dd81e7c12d52bec95a71ebdff744d5c36f279990110758a16b212cd5edd5"
+  }
+]

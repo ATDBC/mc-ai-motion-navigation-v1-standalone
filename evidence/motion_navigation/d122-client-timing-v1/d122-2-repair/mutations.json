@@ -1,0 +1,81 @@
+{
+  "schema_version": "mc2p.d122-java-mutations.v1",
+  "cases": [
+    {
+      "name": "late_window_check",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "rejected_pending_clears_default",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "default_duration_shortened",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "pending_payload_reactivated",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "activation_rejection_committed",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "successor_default_dropped",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "stale_sneak_projection",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "lease_replayed_without_new_prepare",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "future_response_released_early",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "fallback_armed_repeated",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "default_cut_by_wall_expiry",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "default_relation_not_checked_at_admission",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "default_relation_not_checked_at_activation",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "permission_revoke_hides_pending",
+      "detected": true,
+      "phase": "assertion"
+    },
+    {
+      "name": "safe_default_budget_overflow",
+      "detected": true,
+      "phase": "assertion"
+    }
+  ],
+  "all_detected": true
+}

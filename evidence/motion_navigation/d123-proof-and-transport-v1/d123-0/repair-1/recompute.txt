@@ -1,0 +1,1 @@
+{"rows": 396, "statuses": {"PASS": 52, "FACT_MISMATCH": 160, "NEEDS_WORLD": 100, "NEEDS_WORLD_AND_FACT_MISMATCH": 84}, "d120": {"manifest_sha256": "89c5ee269da0b8ac969d69be781a589c8f28449faf0b153fe69a6b2c2a433dd6", "entrances": 972, "suffixes": 2916, "all_exactly_equal": true, "old_success_regressions": 0}}

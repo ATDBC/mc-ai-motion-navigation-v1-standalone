@@ -1,0 +1,28 @@
+{
+  "schema": "d122-4-fabric-smoke-v4-stop-v1",
+  "status": "INVALID_ENVIRONMENT_STOPPED",
+  "stage": "artifact_classpath_audit_before_fabric",
+  "created_utc": "2026-10-20T11:24:42.3021744Z",
+  "launcher_summary_sha256": "4d653144541e9c3551360a12d40fe8d2dcfb0a903df7ea3da5e23810f21b0e42",
+  "stderr_sha256": "4e6e77fb14edab5704cfdfe35f7f0e020f4eac4f037fd33a73af3e23a2fefa94",
+  "build": {
+    "gradle": "success",
+    "inspect_probe": "failed",
+    "failure": "compile classpath contains a symlink/reparse point"
+  },
+  "reparse_point": {
+    "path": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle",
+    "link_type": "Junction",
+    "target": [
+      "D:\\My_project\\mc_ai\\.gradle"
+    ]
+  },
+  "fabric": {
+    "source_run": null,
+    "server_started": false,
+    "client_started": false,
+    "smoke_trials_run": 0,
+    "full_matrix_started": false
+  },
+  "action": "stopped_without_retry_or_behavior_change"
+}

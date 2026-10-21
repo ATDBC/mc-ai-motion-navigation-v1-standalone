@@ -1,0 +1,1 @@
+STANDALONE_EXPORT_ROOT=D:\My_project\mc_ai\.tmp\d121-revision-worktree\.tmp\d123-1-stop-standalone

@@ -1,0 +1,128 @@
+.....F...F.......................F........................................................................................................E....FF.....F...FFFF.F.......F..........
+======================================================================
+ERROR: test_next_fabric_run_binds_all_frozen_production_semantics (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_next_fabric_run_binds_all_frozen_production_semantics)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 257, in test_next_fabric_run_binds_all_frozen_production_semantics
+    binding = probe._production_semantic_binding()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\d122_fabric_timing.py", line 1160, in _production_semantic_binding
+    raise ValueError(f"D122-3 production semantic drift: {name}")
+ValueError: D122-3 production semantic drift: mc2p/motion_nav/prepared_motion_proof.py
+
+======================================================================
+FAIL: test_full_cube_support_shields_unknown_collision_owner_below_it (tests.motion_nav.test_b07_support_surfaces.B07SupportSurfaceTests.test_full_cube_support_shields_unknown_collision_owner_below_it)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_b07_support_surfaces.py", line 40, in test_full_cube_support_shields_unknown_collision_owner_below_it
+    self.assertIn((0, -2, 0), result.dependencies)
+AssertionError: (0, -2, 0) not found in ((0, -1, 0), (0, 0, 0), (0, 1, 0))
+
+======================================================================
+FAIL: test_top_slab_shields_bounded_unknown_collision_owner_below_it (tests.motion_nav.test_b07_support_surfaces.B07SupportSurfaceTests.test_top_slab_shields_bounded_unknown_collision_owner_below_it)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_b07_support_surfaces.py", line 57, in test_top_slab_shields_bounded_unknown_collision_owner_below_it
+    self.assertIs(result.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.NEEDS_INFORMATION: 'needs_information'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_four_forward_unknown_air_confirmations_keep_formal_route_running (tests.motion_nav.test_d058_runtime_validation.D058RuntimeValidationTests.test_four_forward_unknown_air_confirmations_keep_formal_route_running)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d058_runtime_validation.py", line 1223, in test_four_forward_unknown_air_confirmations_keep_formal_route_running
+    self.assertTrue(all(
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_actor_unknown_and_known_mismatch_are_typed_and_keep_positions (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_actor_unknown_and_known_mismatch_are_typed_and_keep_positions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d123_actor_calibration.py", line 46, in test_actor_unknown_and_known_mismatch_are_typed_and_keep_positions
+    self.assertEqual(result["status"], "NEEDS_WORLD")
+AssertionError: 'PASS' != 'NEEDS_WORLD'
+- PASS
++ NEEDS_WORLD
+
+
+======================================================================
+FAIL: test_all_four_directions_retain_67_and_all_12_lower_cells (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_all_four_directions_retain_67_and_all_12_lower_cells)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d123_actor_calibration.py", line 34, in test_all_four_directions_retain_67_and_all_12_lower_cells
+    self.assertEqual(len(manifest["facts"]), 67)
+AssertionError: 58 != 67
+
+======================================================================
+FAIL: test_four_rotations_have_a_full_cube_blocker_without_dropping_dependencies (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_four_rotations_have_a_full_cube_blocker_without_dropping_dependencies)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d123_actor_calibration.py", line 99, in test_four_rotations_have_a_full_cube_blocker_without_dropping_dependencies
+    self.assertEqual(len(geometry["required"]), 67)
+AssertionError: 58 != 67
+
+======================================================================
+FAIL: test_adjacent_pair_cube_retains_both_mismatches (tests.motion_nav.test_d123_dependency_gate_repair.D123DependencyGateRepairTests.test_adjacent_pair_cube_retains_both_mismatches)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d123_dependency_gate_repair.py", line 42, in test_adjacent_pair_cube_retains_both_mismatches
+    self.assertEqual(outcome["status"], repair.DependencyGateStatus.FACT_MISMATCH)
+AssertionError: <DependencyGateStatus.PASS: 'PASS'> != <DependencyGateStatus.FACT_MISMATCH: 'FACT_MISMATCH'>
+
+======================================================================
+FAIL: test_protected_air_matches_expected_fixture_and_passes (tests.motion_nav.test_d123_dependency_gate_repair.D123DependencyGateRepairTests.test_protected_air_matches_expected_fixture_and_passes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d123_dependency_gate_repair.py", line 21, in test_protected_air_matches_expected_fixture_and_passes
+    self.assertEqual((outcome["known_count"], outcome["unknown_count"], outcome["mismatch_count"]), (67, 0, 0))
+AssertionError: Tuples differ: (58, 0, 0) != (67, 0, 0)
+
+First differing element 0:
+58
+67
+
+- (58, 0, 0)
+?  ^^
+
++ (67, 0, 0)
+?  ^^
+
+
+======================================================================
+FAIL: test_protected_cube_is_known_but_mismatched_and_rejected (tests.motion_nav.test_d123_dependency_gate_repair.D123DependencyGateRepairTests.test_protected_cube_is_known_but_mismatched_and_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d123_dependency_gate_repair.py", line 26, in test_protected_cube_is_known_but_mismatched_and_rejected
+    self.assertEqual(outcome["status"], repair.DependencyGateStatus.FACT_MISMATCH)
+AssertionError: <DependencyGateStatus.PASS: 'PASS'> != <DependencyGateStatus.FACT_MISMATCH: 'FACT_MISMATCH'>
+
+======================================================================
+FAIL: test_protected_unknown_is_not_mismatch_or_air_and_rejected (tests.motion_nav.test_d123_dependency_gate_repair.D123DependencyGateRepairTests.test_protected_unknown_is_not_mismatch_or_air_and_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d123_dependency_gate_repair.py", line 33, in test_protected_unknown_is_not_mismatch_or_air_and_rejected
+    self.assertEqual(outcome["status"], repair.DependencyGateStatus.NEEDS_WORLD)
+AssertionError: <DependencyGateStatus.PASS: 'PASS'> != <DependencyGateStatus.NEEDS_WORLD: 'NEEDS_WORLD'>
+
+======================================================================
+FAIL: test_unknown_and_mismatch_have_distinct_typed_combined_status (tests.motion_nav.test_d123_dependency_gate_repair.D123DependencyGateRepairTests.test_unknown_and_mismatch_have_distinct_typed_combined_status)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d123_dependency_gate_repair.py", line 49, in test_unknown_and_mismatch_have_distinct_typed_combined_status
+    self.assertEqual(outcome["status"], repair.DependencyGateStatus.NEEDS_WORLD_AND_FACT_MISMATCH)
+AssertionError: <DependencyGateStatus.PASS: 'PASS'> != <DependencyGateStatus.NEEDS_WORLD_AND_FACT_MISMATCH: 'NEEDS_WOR[17 chars]TCH'>
+
+======================================================================
+FAIL: test_independent_reference_signatures_are_reproducible (tests.motion_nav.test_incremental_motion_proof.IncrementalMotionProofTests.test_independent_reference_signatures_are_reproducible)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_incremental_motion_proof.py", line 90, in test_independent_reference_signatures_are_reproducible
+    self.assertEqual(stored, generate_payload())
+AssertionError: {'gen[908 chars]5', '61170da0ade43d4356458186aecf0494ee12c8830[40330 chars]-v2'} != {'gen[908 chars]5', '9d86dd9c1e40f084b61f3799bd33cd81baae2ccd5[40330 chars]-v2'}
+Diff is 71803 characters long. Set self.maxDiff to None to see it.
+
+----------------------------------------------------------------------
+Ran 178 tests in 29.292s
+
+FAILED (failures=12, errors=1)
+ERROR conda.cli.main_run:execute(148): `conda run python -m unittest tests.motion_nav.test_b07_support_surfaces tests.motion_nav.test_d058_validation_plan tests.motion_nav.test_d058_runtime_validation tests.motion_nav.test_d058_route_revalidation_benchmark tests.motion_nav.test_d122_fabric_timing tests.motion_nav.test_d123_actor_calibration tests.motion_nav.test_d123_dependency_gate_repair tests.motion_nav.test_incremental_motion_proof` failed. (See above for error)

@@ -1,0 +1,9 @@
+{
+  "schema": "mc2p.d124-current-harness-semantic-hashes.v1",
+  "normalization": "CRLF_TO_LF",
+  "status": "current",
+  "previous_d122_harness_record_sha256": "ad36f06153c4f81575b777d2ff83f6eb9701cd57940feae5c59c23313d2010b9",
+  "files": {
+    "scripts/d122_fabric_timing.py": "747c7d58e71b6c09168ffe9daa71f8e3b7e46077af2746465d4822fb20ac9a67"
+  }
+}

@@ -1,0 +1,1 @@
+{"status": "PARTIAL_STOPPED", "directions": [{"direction": 0, "continuous_blocked": 9, "never_visible": 12}, {"direction": 1, "continuous_blocked": 9, "never_visible": 12}, {"direction": 2, "continuous_blocked": 9, "never_visible": 12}, {"direction": 3, "continuous_blocked": 9, "never_visible": 12}], "new_fabric_runs": 0, "movement_trials": 0}

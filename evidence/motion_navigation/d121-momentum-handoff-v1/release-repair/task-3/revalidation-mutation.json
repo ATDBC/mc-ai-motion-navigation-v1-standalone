@@ -1,0 +1,8 @@
+{
+  "mutation": "Revalidation recovery uses the original world instead of the changed landing support",
+  "detected": true,
+  "tests_run": 1,
+  "failures": 1,
+  "errors": 0,
+  "output": "test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation) ... FAIL\n\n======================================================================\nFAIL: test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\tests\\motion_nav\\test_action_continuity_solver_limits.py\", line 151, in test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation\n    self.assertIs(replayed.status, SolveStatus.NEEDS_STATE)\nAssertionError: <SolveStatus.SOLVED: 'solved'> is not <SolveStatus.NEEDS_STATE: 'needs_state'>\n\n----------------------------------------------------------------------\nRan 1 test in 0.132s\n\nFAILED (failures=1)\n"
+}

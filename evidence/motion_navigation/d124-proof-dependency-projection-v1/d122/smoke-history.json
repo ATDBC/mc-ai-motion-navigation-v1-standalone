@@ -1,0 +1,77 @@
+{
+  "schema": "mc2p.d122-smoke-history.v1",
+  "rows": [
+    {
+      "version": 1,
+      "status": "failed",
+      "return_code": 1,
+      "source_run": null,
+      "source_status": null,
+      "failure_type": null,
+      "trial_count": 0
+    },
+    {
+      "version": 2,
+      "status": "failed",
+      "return_code": 1,
+      "source_run": null,
+      "source_status": null,
+      "failure_type": null,
+      "trial_count": 0
+    },
+    {
+      "version": 3,
+      "status": "failed",
+      "return_code": 1,
+      "source_run": null,
+      "source_status": null,
+      "failure_type": null,
+      "trial_count": 0
+    },
+    {
+      "version": 4,
+      "status": "failed",
+      "return_code": 1,
+      "source_run": null,
+      "source_status": null,
+      "failure_type": null,
+      "trial_count": 0
+    },
+    {
+      "version": 5,
+      "status": "failed",
+      "return_code": 1,
+      "source_run": "20261020T113015069455Z-9339b944",
+      "source_status": "failed",
+      "failure_type": "ValueError",
+      "trial_count": 0
+    },
+    {
+      "version": 6,
+      "status": "failed",
+      "return_code": 1,
+      "source_run": "20261020T113255672053Z-4500b836",
+      "source_status": "failed",
+      "failure_type": "ModuleNotFoundError",
+      "trial_count": 0
+    },
+    {
+      "version": 7,
+      "status": "failed",
+      "return_code": 1,
+      "source_run": "20261020T113835759757Z-d5255eb7",
+      "source_status": "failed",
+      "failure_type": "RuntimeError",
+      "trial_count": 0
+    },
+    {
+      "version": 8,
+      "status": "failed",
+      "return_code": 1,
+      "source_run": "20261020T115158638012Z-bc79106d",
+      "source_status": "failed",
+      "failure_type": "RuntimeError",
+      "trial_count": 0
+    }
+  ]
+}

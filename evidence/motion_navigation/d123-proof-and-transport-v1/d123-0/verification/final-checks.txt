@@ -1,0 +1,151 @@
+test_body_inside_lower_space_restores_unknown_requirement (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_body_inside_lower_space_restores_unknown_requirement) ... ok
+test_exact_d120_data_absent_never_becomes_small_success (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_exact_d120_data_absent_never_becomes_small_success) ... ok
+test_maximum_extent_material_read_is_independent_of_collision (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_maximum_extent_material_read_is_independent_of_collision) ... ok
+test_overlays_leave_frozen_source_unchanged (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_overlays_leave_frozen_source_unchanged) ... ok
+test_physics_equivalence_does_not_remove_dependency_gate (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_physics_equivalence_does_not_remove_dependency_gate) ... ok
+test_unknown_under_air_rejects_parent_and_successor (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_unknown_under_air_rejects_parent_and_successor) ... ok
+test_current_evidence_hashes_and_972_exact_comparison (tests.motion_nav.test_d123_dependency_probe.D123EvidenceTests.test_current_evidence_hashes_and_972_exact_comparison) ... ok
+test_final_classification_checks_successor_and_independent_material_reads (tests.motion_nav.test_d123_dependency_probe.D123EvidenceTests.test_final_classification_checks_successor_and_independent_material_reads) ... ok
+test_actual_world_missing_target_support_and_unknown_never_pass (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_actual_world_missing_target_support_and_unknown_never_pass) ... ok
+test_four_direction_nominal_results_are_rotation_consistent (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_four_direction_nominal_results_are_rotation_consistent) ... ok
+test_full_south_joint_coverage_and_no_continuous_claim (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_full_south_joint_coverage_and_no_continuous_claim) ... ok
+test_intermediate_support_loss_is_not_hidden_by_later_landing (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_intermediate_support_loss_is_not_hidden_by_later_landing) ... ok
+test_manifest_freezes_full_cartesian_product_and_suffix_limits (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_manifest_freezes_full_cartesian_product_and_suffix_limits) ... ok
+test_manifest_rejects_changed_hash_and_reforged_shape (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_manifest_rejects_changed_hash_and_reforged_shape) ... ok
+test_nominal_entry_is_actual_first_landed_post_state (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_nominal_entry_is_actual_first_landed_post_state) ... ok
+test_nominal_suffixes_keep_l1_l2_distinct_and_fail_controls (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_nominal_suffixes_keep_l1_l2_distinct_and_fail_controls) ... ok
+test_offsets_are_applied_to_physics_in_local_axes (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_offsets_are_applied_to_physics_in_local_axes) ... ok
+test_post_state_cannot_be_replaced_by_pre_state (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_post_state_cannot_be_replaced_by_pre_state) ... ok
+test_raw_entry_yaw_uses_shortest_difference_across_north_wrap (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_raw_entry_yaw_uses_shortest_difference_across_north_wrap) ... ok
+test_raw_inside_bounds_without_suffix_replay_does_not_pass (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_raw_inside_bounds_without_suffix_replay_does_not_pass) ... ok
+test_reported_offsets_without_physical_change_are_detected (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_reported_offsets_without_physical_change_are_detected) ... ok
+test_unknown_and_unsupported_never_pass (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_unknown_and_unsupported_never_pass) ... ok
+test_valid_landed_post_state_preserves_tick_and_yaw_units (tests.motion_nav.test_d120_momentum_entry_calibration.D120EntryCalibrationTests.test_valid_landed_post_state_preserves_tick_and_yaw_units) ... ok
+test_component_runs_same_three_trials_and_full_summary_as_fabric (tests.motion_nav.test_d120_momentum_entry_calibration.D120LaunchGateTests.test_component_runs_same_three_trials_and_full_summary_as_fabric) ... ok
+test_formal_command_has_d120_identity_and_both_sidecars (tests.motion_nav.test_d120_momentum_entry_calibration.D120LaunchGateTests.test_formal_command_has_d120_identity_and_both_sidecars) ... ok
+test_frozen_d120_manifests_are_separate_from_d118 (tests.motion_nav.test_d120_momentum_entry_calibration.D120LaunchGateTests.test_frozen_d120_manifests_are_separate_from_d118) ... ok
+test_full_cannot_launch_without_signed_south (tests.motion_nav.test_d120_momentum_entry_calibration.D120LaunchGateTests.test_full_cannot_launch_without_signed_south) ... ok
+test_health_missing_decrease_damage_and_dropped_events_are_rejected (tests.motion_nav.test_d120_momentum_entry_calibration.D120LaunchGateTests.test_health_missing_decrease_damage_and_dropped_events_are_rejected) ... ok
+test_launch_refuses_missing_prerequisite_before_subprocess (tests.motion_nav.test_d120_momentum_entry_calibration.D120LaunchGateTests.test_launch_refuses_missing_prerequisite_before_subprocess) ... ok
+test_offline_main_seals_a_verifiable_result_index (tests.motion_nav.test_d120_momentum_entry_calibration.D120LaunchGateTests.test_offline_main_seals_a_verifiable_result_index) ... ok
+test_only_initial_reset_health_may_precede_first_movement_tick (tests.motion_nav.test_d120_momentum_entry_calibration.D120LaunchGateTests.test_only_initial_reset_health_may_precede_first_movement_tick) ... ok
+test_prerequisite_hashes_bind_content_but_not_elapsed_clock (tests.motion_nav.test_d120_momentum_entry_calibration.D120LaunchGateTests.test_prerequisite_hashes_bind_content_but_not_elapsed_clock) ... ok
+test_probe_modes_are_mutually_exclusive_before_environment_launch (tests.motion_nav.test_d120_momentum_entry_calibration.D120LaunchGateTests.test_probe_modes_are_mutually_exclusive_before_environment_launch) ... usage: python.exe -m unittest [-h] [--seed {21001,21002,21003}]
+                              [--server-port SERVER_PORT]
+                              [--ipc-port IPC_PORT]
+                              [--timeout-seconds TIMEOUT_SECONDS]
+                              [--launch-json LAUNCH_JSON] [--container-probe]
+                              [--mining-probe] [--time-diagnostics]
+                              [--physics-tick-diagnostics]
+                              [--ftick-diagnostics] [--visibility-probe]
+                              [--b02-air-probe] [--b03-fixed-route-probe]
+                              [--b03-shape-probe] [--b04-known-map-probe]
+                              [--r25-planning-information-probe]
+                              [--b05-jump-calibration-probe]
+                              [--b05-jump-route-probe]
+                              [--b05-jump-acceptance-probe]
+                              [--b06-ordinary-material-probe]
+                              [--b07-step-probe] [--b08-ground-modes-probe]
+                              [--b09-air-motion-probe]
+                              [--d118-motion-calibration-probe]
+                              [--d118-full-matrix]
+                              [--d120-motion-calibration-probe]
+                              [--d120-full-matrix]
+                              [--d122-client-timing-probe]
+                              [--d122-full-matrix] [--b10-gap-solver-probe]
+                              [--b10-targeted-probe {coordinator-worker-delay-5-0-0}]
+                              [--continuous-height-probe]
+                              [--continuous-height-full-matrix]
+                              [--navigation-review20-probe]
+                              [--b11-world-change-probe]
+                              [--input-buffer-idle-probe]
+                              [--c1-fixed-melee-probe]
+                              [--c1-moving-melee-probe]
+                              [--c1-external-motion-probe]
+                              [--c1r-control-frame-probe]
+                              [--b12a-attack-evidence-probe]
+                              [--b12b-partial-combat-probe]
+                              [--surface-cost-probe]
+python.exe -m unittest: error: probe scenarios are mutually exclusive
+usage: python.exe -m unittest [-h] [--seed {21001,21002,21003}]
+                              [--server-port SERVER_PORT]
+                              [--ipc-port IPC_PORT]
+                              [--timeout-seconds TIMEOUT_SECONDS]
+                              [--launch-json LAUNCH_JSON] [--container-probe]
+                              [--mining-probe] [--time-diagnostics]
+                              [--physics-tick-diagnostics]
+                              [--ftick-diagnostics] [--visibility-probe]
+                              [--b02-air-probe] [--b03-fixed-route-probe]
+                              [--b03-shape-probe] [--b04-known-map-probe]
+                              [--r25-planning-information-probe]
+                              [--b05-jump-calibration-probe]
+                              [--b05-jump-route-probe]
+                              [--b05-jump-acceptance-probe]
+                              [--b06-ordinary-material-probe]
+                              [--b07-step-probe] [--b08-ground-modes-probe]
+                              [--b09-air-motion-probe]
+                              [--d118-motion-calibration-probe]
+                              [--d118-full-matrix]
+                              [--d120-motion-calibration-probe]
+                              [--d120-full-matrix]
+                              [--d122-client-timing-probe]
+                              [--d122-full-matrix] [--b10-gap-solver-probe]
+                              [--b10-targeted-probe {coordinator-worker-delay-5-0-0}]
+                              [--continuous-height-probe]
+                              [--continuous-height-full-matrix]
+                              [--navigation-review20-probe]
+                              [--b11-world-change-probe]
+                              [--input-buffer-idle-probe]
+                              [--c1-fixed-melee-probe]
+                              [--c1-moving-melee-probe]
+                              [--c1-external-motion-probe]
+                              [--c1r-control-frame-probe]
+                              [--b12a-attack-evidence-probe]
+                              [--b12b-partial-combat-probe]
+                              [--surface-cost-probe]
+python.exe -m unittest: error: D120 full matrix requires --d120-motion-calibration-probe
+usage: python.exe -m unittest [-h] [--seed {21001,21002,21003}]
+                              [--server-port SERVER_PORT]
+                              [--ipc-port IPC_PORT]
+                              [--timeout-seconds TIMEOUT_SECONDS]
+                              [--launch-json LAUNCH_JSON] [--container-probe]
+                              [--mining-probe] [--time-diagnostics]
+                              [--physics-tick-diagnostics]
+                              [--ftick-diagnostics] [--visibility-probe]
+                              [--b02-air-probe] [--b03-fixed-route-probe]
+                              [--b03-shape-probe] [--b04-known-map-probe]
+                              [--r25-planning-information-probe]
+                              [--b05-jump-calibration-probe]
+                              [--b05-jump-route-probe]
+                              [--b05-jump-acceptance-probe]
+                              [--b06-ordinary-material-probe]
+                              [--b07-step-probe] [--b08-ground-modes-probe]
+                              [--b09-air-motion-probe]
+                              [--d118-motion-calibration-probe]
+                              [--d118-full-matrix]
+                              [--d120-motion-calibration-probe]
+                              [--d120-full-matrix]
+                              [--d122-client-timing-probe]
+                              [--d122-full-matrix] [--b10-gap-solver-probe]
+                              [--b10-targeted-probe {coordinator-worker-delay-5-0-0}]
+                              [--continuous-height-probe]
+                              [--continuous-height-full-matrix]
+                              [--navigation-review20-probe]
+                              [--b11-world-change-probe]
+                              [--input-buffer-idle-probe]
+                              [--c1-fixed-melee-probe]
+                              [--c1-moving-melee-probe]
+                              [--c1-external-motion-probe]
+                              [--c1r-control-frame-probe]
+                              [--b12a-attack-evidence-probe]
+                              [--b12b-partial-combat-probe]
+                              [--surface-cost-probe]
+python.exe -m unittest: error: D118 calibration requires time, physics tick and F-TICK diagnostics
+ok
+test_runtime_summary_fails_on_actual_observation_health_drop (tests.motion_nav.test_d120_momentum_entry_calibration.D120LaunchGateTests.test_runtime_summary_fails_on_actual_observation_health_drop) ... ok
+
+----------------------------------------------------------------------
+Ran 34 tests in 30.358s
+
+OK
+{"directions": 4, "elapsed_seconds": 0.006939299870282412, "failure": null, "four_direction_limit": 120000, "main_physics_steps": 4, "manifest_sha256": "89c5ee269da0b8ac969d69be781a589c8f28449faf0b153fe69a6b2c2a433dd6", "raw_gate_status": "passed", "sample_count": 4, "schema_version": "mc2p.d120-offline-summary.v1", "scope": "finite_samples_only_not_production_permission", "sound_envelope": "unverified", "status": "passed", "suffix_count": 4}

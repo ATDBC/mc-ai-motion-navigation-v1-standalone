@@ -201,8 +201,21 @@ class ExecutionSupervisor:
             fresh = None if anchor is None else control.executor.stage_prepared_action(frame, anchor)
             if fresh != proposal:
                 reason = PreparedHandoffRejectReason.ENTRY
-            elif any(not input_application_has_finished(record, by_tick=proposal.entry_state.movement_tick_id)
-                     for record in proposal.conflicting_commands):
+            elif any(
+                    not input_application_has_finished(
+                        record, by_tick=proposal.entry_state.movement_tick_id,
+                    )
+                    and not (
+                        proposal.current_command is record.action
+                        and proposal.permitted_window is not None
+                        and proposal.permitted_window.earliest_start_tick
+                            == proposal.permitted_window.latest_start_tick
+                        and ledger.prearmed_default_can_be_replaced(
+                            record,
+                            at_tick=proposal.permitted_window.earliest_start_tick,
+                        )
+                    )
+                    for record in proposal.conflicting_commands):
                 reason = PreparedHandoffRejectReason.COMMANDS
         if reason is not None:
             return PreparedHandoffApproval(PreparedHandoffStatus.REJECTED, proposal, reason=reason)

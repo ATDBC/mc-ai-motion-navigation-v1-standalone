@@ -1,0 +1,24 @@
+{
+  "command": ".venv/python.exe -m unittest tests.motion_nav.test_standalone_export -q",
+  "platform": "Windows",
+  "checks": 28,
+  "passed": 26,
+  "failures": 2,
+  "errors": 0,
+  "skipped": 0,
+  "unmigrated_current_fingerprints": [
+    {
+      "test": "test_d121_historical_s1_and_current_preparation_semantics_are_separate",
+      "file": "mc2p/runtime/player_runtime_v1.py",
+      "actual_byte_sha256": "13122a0829d1f0e18afb94d12a5a8ca74436cb588e489b0c535e35d80c0eb6ad",
+      "frozen_byte_sha256": "1ff08c28669ec5ff258eccdf8245846667ac450998eebdf8782f2ec7b8666c87"
+    },
+    {
+      "test": "test_f2_export_matches_frozen_production_fingerprints",
+      "file": "mc2p/motion_nav/online_motion.py",
+      "actual_semantic_sha256": "2862f0cdcd761d6394740b55d9cf5e6df46535ae8f2ed2870ebd48bbe3d728d9",
+      "frozen_semantic_sha256": "420d0e21ea0263b746a00d45aab09aa8db2fe5c9228dc1ea47a1b26b9d614838"
+    }
+  ],
+  "boundary": "Intermediate D122-1 slice; current fingerprint migration and formal v2 construction remain D122-3. Historical evidence was not rewritten."
+}

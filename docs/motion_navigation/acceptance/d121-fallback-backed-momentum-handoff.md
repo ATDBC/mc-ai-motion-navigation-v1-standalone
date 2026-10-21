@@ -11,7 +11,7 @@
 - D120 的 972 个入口只作有限样本回归，`sound_envelope` 继续为 `unverified`；
 - 规划组合边、生产四格 profile 和正式能力保持未授权。
 
-本次授权修订继续 D121，不新开 D122。历史 direct-copy 表达的失败及 `s2/stop.json` 保持原样；它只说明重复完整图的替代方案超限，不能替代修订方案的验收。
+当时授权的组件修订继续 D121。现已按 Task 5 门槛停止；D122 尚未开始，须在发布修复通过后另行决定。历史 direct-copy 表达的失败及 `s2/stop.json` 保持原样；它只说明重复完整图的替代方案超限，不能替代修订方案的验收。
 
 修订方案不使用联合证明消息。安全使用 S1 已证明的精确出口 fallback；Task 2 已建立明确许可下的 D120 固定第一跳组件证明，普通生产请求仍要求每个边界都有立即安全尾段。Task 3 已完成后继可行性绑定；Task 4 的显式入口才可接纳执行，普通接纳器继续拒绝。后继完整证明继续走 D117 prepared 消息和原生命周期。两份完整证明各自在既有消息中只出现一次；摘要在后台或准备阶段计算，控制帧及 `L` 帧只作比较。
 
@@ -121,11 +121,13 @@ S1 当时测得标准证明序列化体积约为：一格跨隙 92,392 bytes、�
 
 这次失败证明测试侧的 direct-copy 表达不适合现有 2 MiB 消息边界。预算异常检查只验证 worker／receiver 的有类型失败映射。它没有运行生产联合 payload，没有否定 S1 的 fallback 证明，也没有证明“摘要／引用”方案可行。临时生产实现已撤回，没有修改 Session、规划器、Java、动作 profile、worker 上限或 Runtime 输入出口。
 
-复现命令：
+历史复现只能在公开提交 `3889d10e298fec57ce7b0a82a63bef331c431bb7` 的独立检出中运行。当前验收和公开快照已撤出 direct-copy 脚本，下面命令不适用于当前目录；不要为复现恢复生产中的旧表达。
 
 ```powershell
-.\.venv\python.exe -m unittest tests.motion_nav.test_d121_joint_worker_stop -v
-.\.venv\python.exe scripts\d121_joint_worker_stop_probe.py --output <新的输出路径>
+git -C <公开仓库本地路径> worktree add --detach <历史检出目录> 3889d10e298fec57ce7b0a82a63bef331c431bb7
+Set-Location <历史检出目录>
+& "<Python 3.11 解释器绝对路径>" -m unittest tests.motion_nav.test_d121_joint_worker_stop -v
+& "<Python 3.11 解释器绝对路径>" scripts\d121_joint_worker_stop_probe.py --output <新的输出路径>
 ```
 
 冻结证据为 [`s2/stop.json`](../../../evidence/motion_navigation/d121-momentum-handoff-v1/s2/stop.json)。脚本拒绝覆盖已有证据。
@@ -299,3 +301,20 @@ Windows受影响与相邻检查126/126通过，耗时222.177 s，包含最初6�
 ## 6. 停止与签署
 
 当前状态为 `PARTIAL／STOPPED`。Task 4 及时组件执行保持 PASS；Task 5 transport 门槛为 `FAILED／STOPPED`，完整 D121 不签署。历史失败证据保留；修改 action contract／wire／Java 的后续工作须另行决定，当前没有继续实现。
+
+## 发布修复 Task 4：诊断与入口更正（2026-10-20）
+
+新的 Task 5 诊断使用 v2 schema，分别记录 `applied_in_window`、`applied_outside_window` 和 `not_delivered`。及时和未送达都没有执行“协议在物理前拒绝过期输入”的检查，因此 `expired_application_prevention=not_applicable`，兼容字段 `protocol_prevented_expired_application=null`。null 不表示成功；晚到后仍应用则明确为 `not_prevented` 和 false。
+
+原 Task 5 证据不回写。新结果追加到 `evidence/motion_navigation/d121-momentum-handoff-v1/release-repair/task-4/`；三场的物理、输入和停止结论保持不变，聚合仍为 `FAILED_STOPPED`。公开入口统一为 `PARTIAL／STOPPED`；D122 尚未开始，必须先完成发布修复的全量 Windows 与独立快照门禁。
+
+
+## D121 发布修复最终 Windows 门禁（2026-10-20）
+
+源码树正序、逆序各 202/202 模块、2662 项通过；独立公开快照正序、逆序各 201/201 模块、2638 项通过。四轮均为零失败、错误、超时、跳过和清理失败，单模块上限保持 300 秒。公开快照按既有清单排除依赖非公开 G0/G1 原始证据的 24 项模块；该模块在源码两轮均已运行并通过。
+
+首次完整正序因隔离 worktree 缺少仓库相对 `.venv/python.exe` 而无效。失败报告原样保留，使用忽略的 junction 指向已有正式环境后，独立模块 7/7，再从头重跑完整正序；没有修改测试或历史命令。
+
+公开字节基线由 `3889d10e` 的 Git 对象独立解包，并先校验自身 `SHA256SUMS.txt`。1614 个历史纯行尾改写中，1611 个恢复原字节；另外三个是本轮真实修改的导出器和 Task 3 的两个测试，按当前内容保留。最终纯行尾噪声为 0，四个冻结输入及 48 个旧 Task 5 文件的字节哈希一致。Task 1b、Task 4 和最终证据均实际导出。
+
+当前生产语义记录以 `0e3b37d0` 为基准，覆盖 12 个 D121 生产文件；后续没有生产逻辑或测试变化。最终数字、完整命令、逐模块结果和导出复核见 `evidence/motion_navigation/d121-momentum-handoff-v1/release-repair/final/`。最终只读独立审查已 PASS，未发现新的 P0／P1，允许进入 D122；持久摘要见同目录 `independent-review.json`，它是审查结论记录，不是新增命令原始输出。D121 保持 PARTIAL／STOPPED，Task 5 真实传输失败不改写。没有新增 Fabric 或 Java 运行；D122 已另写决定和计划，代码尚未开始。

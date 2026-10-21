@@ -1,0 +1,18 @@
+{
+  "scope": "Task 5 preflight evidence and export checks only",
+  "source_base_commit": "0e3b37d07575d04ab0f51a4b0d7e6d5749b14dbe",
+  "platform": "Windows",
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_standalone_export",
+    "-q"
+  ],
+  "tests": 28,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duration_seconds": 36.756,
+  "production_logic_changed": false
+}

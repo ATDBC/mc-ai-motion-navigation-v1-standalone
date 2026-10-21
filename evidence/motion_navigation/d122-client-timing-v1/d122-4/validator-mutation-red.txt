@@ -1,0 +1,103 @@
+...FFFFFE....EFFFFF..
+======================================================================
+ERROR: test_duration_and_timing_events_are_typed_and_request_owned (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_duration_and_timing_events_are_typed_and_request_owned)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 100, in test_duration_and_timing_events_are_typed_and_request_owned
+    armed["fallback_armed_event"]["request_sequence_id"] += 1
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'fallback_armed_event'
+
+======================================================================
+ERROR: test_never_requires_registered_transport_loss_and_attempted_window (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_never_requires_registered_transport_loss_and_attempted_window)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 70, in test_never_requires_registered_transport_loss_and_attempted_window
+    row["error"] = dict(probe.NEVER_TRANSPORT_ERROR)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'scripts.d122_fabric_timing' has no attribute 'NEVER_TRANSPORT_ERROR'
+
+======================================================================
+FAIL: test_duration_and_timing_events_are_typed_and_request_owned (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_duration_and_timing_events_are_typed_and_request_owned) (duration=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 96, in test_duration_and_timing_events_are_typed_and_request_owned
+    self.assertIn("default_duration_not_positive_int",
+AssertionError: 'default_duration_not_positive_int' not found in ('late_did_not_run_default',)
+
+======================================================================
+FAIL: test_duration_and_timing_events_are_typed_and_request_owned (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_duration_and_timing_events_are_typed_and_request_owned) (duration=-1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 96, in test_duration_and_timing_events_are_typed_and_request_owned
+    self.assertIn("default_duration_not_positive_int",
+AssertionError: 'default_duration_not_positive_int' not found in ('late_did_not_run_default',)
+
+======================================================================
+FAIL: test_duration_and_timing_events_are_typed_and_request_owned (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_duration_and_timing_events_are_typed_and_request_owned) (duration=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 96, in test_duration_and_timing_events_are_typed_and_request_owned
+    self.assertIn("default_duration_not_positive_int",
+AssertionError: 'default_duration_not_positive_int' not found in ('late_did_not_run_default',)
+
+======================================================================
+FAIL: test_duration_and_timing_events_are_typed_and_request_owned (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_duration_and_timing_events_are_typed_and_request_owned) (duration=1.5)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 96, in test_duration_and_timing_events_are_typed_and_request_owned
+    self.assertIn("default_duration_not_positive_int",
+AssertionError: 'default_duration_not_positive_int' not found in ('late_did_not_run_default',)
+
+======================================================================
+FAIL: test_duration_and_timing_events_are_typed_and_request_owned (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_duration_and_timing_events_are_typed_and_request_owned) (duration=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 96, in test_duration_and_timing_events_are_typed_and_request_owned
+    self.assertIn("default_duration_not_positive_int",
+AssertionError: 'default_duration_not_positive_int' not found in ('late_did_not_run_default',)
+
+======================================================================
+FAIL: test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state) (expected='raw_component_case_failed')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 64, in test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state
+    self.assertIn(expected, probe.validate_trial_result(row))
+AssertionError: 'raw_component_case_failed' not found in ()
+
+======================================================================
+FAIL: test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state) (expected='unexpected_trial_error')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 64, in test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state
+    self.assertIn(expected, probe.validate_trial_result(row))
+AssertionError: 'unexpected_trial_error' not found in ()
+
+======================================================================
+FAIL: test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state) (expected='timely_driver_not_success')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 64, in test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state
+    self.assertIn(expected, probe.validate_trial_result(row))
+AssertionError: 'timely_driver_not_success' not found in ()
+
+======================================================================
+FAIL: test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state) (expected='timely_goal_not_satisfied')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 64, in test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state
+    self.assertIn(expected, probe.validate_trial_result(row))
+AssertionError: 'timely_goal_not_satisfied' not found in ()
+
+======================================================================
+FAIL: test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state) (expected='unexpected_trial_error')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 64, in test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state
+    self.assertIn(expected, probe.validate_trial_result(row))
+AssertionError: 'unexpected_trial_error' not found in ()
+
+----------------------------------------------------------------------
+Ran 12 tests in 11.184s
+
+FAILED (failures=10, errors=2)

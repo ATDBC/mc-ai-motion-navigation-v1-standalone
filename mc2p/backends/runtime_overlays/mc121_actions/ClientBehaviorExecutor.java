@@ -33,6 +33,7 @@ public final class ClientBehaviorExecutor {
     private boolean onClientThread;
     private boolean dispatching;
     private boolean requestAdmitted;
+    private boolean requestTimingInstalledThisCall;
     private long keyboardCallbacks, mouseCallbacks;
     private long handledScreenRenderAttempts, handledScreenRenderCompletions;
     private ClientBehaviorInput input;
@@ -42,6 +43,14 @@ public final class ClientBehaviorExecutor {
     private ClientMiningDriver miningDriver;
     private boolean miningEnabled;
     private PendingAttack pendingAttack;
+    private String actionSchemaVersion = "mc2p.client_action.v1";
+
+    public void configureActionSchema(MinecraftClient client, String schema) {
+        requireClientThread(client);
+        if (!java.util.Set.of("mc2p.client_action.v1", "mc2p.client_action.v2").contains(schema))
+            throw new IllegalArgumentException("unsupported action schema");
+        actionSchemaVersion = schema;
+    }
 
     public void keyboardCallback() { if (dispatching) keyboardCallbacks++; }
     public void mouseCallback() { if (dispatching) mouseCallbacks++; }
@@ -57,6 +66,7 @@ public final class ClientBehaviorExecutor {
             gate.reset();
             latestObservation = -1;
             lastRequest = null;
+            requestTimingInstalledThisCall = false;
             status = "idle";
             reason = "none";
             keyboardCallbacks = mouseCallbacks = 0;
@@ -104,8 +114,17 @@ public final class ClientBehaviorExecutor {
 
     public void execute(MinecraftClient client, byte[] payload) {
         requireClientThread(client);
+        requestTimingInstalledThisCall = false;
+        try {
+            executeOnce(client, payload);
+        } finally {
+            requestTimingInstalledThisCall = false;
+        }
+    }
+
+    private void executeOnce(MinecraftClient client, byte[] payload) {
         requestAdmitted = false;
-        ClientActionRequest action = ClientActionRequest.decode(payload);
+        ClientActionRequest action = ClientActionRequest.decode(payload, actionSchemaVersion);
         lastRequest = action;
         executionThread = Thread.currentThread().getName();
         onClientThread = client.isOnThread();
@@ -114,13 +133,67 @@ public final class ClientBehaviorExecutor {
                 action.episode(), action.observation(), action.sequence(), now);
         long budget = ClientRequestGate.remainingBudget(action.budgetNs(), action.observationBudgetNs(),
                                                          now - observationAnchorNs);
+        boolean windowed = action.firstEffectWindow() != null;
+        long nextMovementTick = (input != null && inputPlayer == client.player && inputPlayer.input == input)
+                ? input.sampleCount() + 1L : 1L;
+        boolean timedAdmission = action.cancel() == null && (windowed || action.safeDefault() != null);
+        ClientTimingAdmission.Result timingAdmission = timedAdmission
+                ? ClientTimingAdmission.admit(gate, action, latestObservation, budget, now, nextMovementTick)
+                : null;
         String denied = action.cancel() == null
-                ? gate.admit(action.episode(), action.sequence(), action.observation(), latestObservation,
-                             budget, action.ticks(), now)
+                ? (timedAdmission ? timingAdmission.denial()
+                   : gate.admit(action.episode(), action.sequence(), action.observation(), latestObservation,
+                                budget, action.ticks(), now))
                 : gate.validate(action.episode(), action.sequence(), action.observation(), latestObservation,
                                 budget, action.ticks());
-        if (denied != null) { reject(denied); return; }
+        if (denied != null) {
+            reject(denied, windowed
+                    ? ClientTimingAdmission.RejectionDisposition.HOLD_INCUMBENT
+                    : ClientTimingAdmission.RejectionDisposition.NONE);
+            return;
+        }
         requestAdmitted = true;
+        if (windowed) {
+            if (input == null) acquireInput(client);
+            if (client.player == null || client.world == null || client.interactionManager == null) {
+                reject("no_world", ClientTimingAdmission.RejectionDisposition.HARD_RELEASE); return;
+            }
+            if (!client.player.isAlive()) {
+                reject("player_dead", ClientTimingAdmission.RejectionDisposition.HARD_RELEASE); return;
+            }
+            boolean controls = action.forward() != 0 || action.strafe() != 0 || action.jump() || action.sneak()
+                    || action.sprint() || action.yawDelta() != 0 || action.pitchDelta() != 0;
+            if (controls && client.currentScreen != null) {
+                reject("screen_conflict", ClientTimingAdmission.RejectionDisposition.HARD_RELEASE); return;
+            }
+            if (controls && !ClientOperationCompatibility.allowsControls(action.operationKind())) {
+                reject("unsupported_control_operation_combination"); return;
+            }
+            long deadlineNs = timingAdmission.deadlineNs();
+            var window = action.firstEffectWindow();
+            ClientTimingSchedule.DefaultPlan nextDefault = null;
+            if (action.safeDefault() != null) {
+                if (budget < action.requiredSafeDefaultBudgetNs(input.sampleCount() + 1L)) {
+                    reject("safe_default_budget_insufficient",
+                            ClientTimingAdmission.RejectionDisposition.HOLD_INCUMBENT); return;
+                }
+                var fallback = action.safeDefault();
+                var movement = fallback.movement();
+                nextDefault = new ClientTimingSchedule.DefaultPlan(fallback.activationTick(),
+                        new ClientTimingSchedule.Movement(movement.forward(), movement.strafe(), movement.jump(),
+                                movement.sneak(), movement.sprint()),
+                        fallback.validForTicks(), fallback.wallBudgetNs());
+            }
+            input.stageWindowed(action.episode(), action.sequence(), input.sampleCount(),
+                    window.earliestTick(), window.latestTick(),
+                    deadlineNs, action.ticks(), action.forward(), action.strafe(), action.jump(), action.sneak(),
+                    action.sprint(), action, nextDefault);
+            requestTimingInstalledThisCall = true;
+            status = "pending_confirmation";
+            reason = "window_pending";
+            requestAdmitted = false;
+            return;
+        }
         pendingAttack = null;
         if (action.cancel() == null && input != null) input.beginSnapshot();
         if (action.cancel() == null && !action.operationKind().equals("mine_block")) stopMining();
@@ -129,9 +202,11 @@ public final class ClientBehaviorExecutor {
         }
         if (!client.player.isAlive()) { reject("player_dead"); return; }
         if (action.cancel() != null) {
-            boolean owned = gate.cancel(action.cancel());
+            boolean timingOwned = input != null && input.timingOwns(action.cancel());
+            boolean owned = gate.cancel(action.cancel()) || timingOwned;
             if (owned) pendingAttack = null;
             if (owned && input != null) {
+                input.clearTiming();
                 input.bindAcceptedRequest(action.episode(), action.sequence());
                 input.clear();
             }
@@ -151,7 +226,32 @@ public final class ClientBehaviorExecutor {
         dispatching = true;
         try {
             acquireInput(client);
+            if (action.safeDefault() != null) {
+                var fallback = action.safeDefault();
+                long required = action.requiredSafeDefaultBudgetNs(input.sampleCount() + 1L);
+                if (budget < required) { reject("safe_default_budget_insufficient"); return; }
+                var movement = fallback.movement();
+                input.armDefault(action.episode(), action.sequence(), fallback.activationTick(),
+                        movement.forward(), movement.strafe(), movement.jump(), movement.sneak(), movement.sprint(),
+                        fallback.validForTicks(), fallback.wallBudgetNs());
+                requestTimingInstalledThisCall = true;
+            } else {
+                input.clearTiming();
+            }
             input.set(action.forward(), action.strafe(), action.jump(), action.sneak(), action.sprint());
+            dispatchAcceptedEffects(client, action);
+            input.bindDispatchedRequest(action.episode(), action.sequence(), status);
+        } finally {
+            dispatching = false;
+        }
+    }
+
+    private void dispatchAcceptedEffects(MinecraftClient client, ClientActionRequest action) {
+            applyLook(client, action);
+            dispatchOperation(client, action);
+    }
+
+    private void applyLook(MinecraftClient client, ClientActionRequest action) {
             if (action.yawDelta() != 0 || action.pitchDelta() != 0) {
                 client.player.setYaw(MathHelper.wrapDegrees(client.player.getYaw() + action.yawDelta()));
                 client.player.setPitch(MathHelper.clamp(client.player.getPitch() + action.pitchDelta(), -90, 90));
@@ -159,6 +259,11 @@ public final class ClientBehaviorExecutor {
                 ClientControlDiagnostics.lookApplied(
                         client, action.episode(), action.sequence(), System.nanoTime());
             }
+    }
+
+    private void dispatchOperation(MinecraftClient client, ClientActionRequest action) {
+            boolean controls = action.forward() != 0 || action.strafe() != 0 || action.jump() || action.sneak()
+                    || action.sprint() || action.yawDelta() != 0 || action.pitchDelta() != 0;
             switch (action.operationKind()) {
                 case "neutral" -> { status = "executed"; reason = controls ? "controls_applied" : "neutral"; }
                 case "open_inventory" -> {
@@ -198,18 +303,49 @@ public final class ClientBehaviorExecutor {
                 case "attack_entity" -> stageAttack(client, action, action.operation());
                 default -> reject("unsupported_operation");
             }
+    }
+
+    private boolean activateTimedEffects(MinecraftClient client, Object payload) {
+        if (!(payload instanceof ClientActionRequest action))
+            throw new IllegalStateException("missing pending action payload");
+        lastRequest = action;
+        // The schedule owns rollback until this callback returns true. Rejection
+        // must not clear the incumbent fallback through reject().
+        requestAdmitted = false;
+        dispatching = true;
+        try {
+            if (client.player == null || client.world == null || client.interactionManager == null) {
+                reject("no_world"); return false;
+            }
+            if (!client.player.isAlive()) { reject("player_dead"); return false; }
+            boolean controls = action.forward() != 0 || action.strafe() != 0 || action.jump() || action.sneak()
+                    || action.sprint() || action.yawDelta() != 0 || action.pitchDelta() != 0;
+            if (controls && client.currentScreen != null) { reject("screen_conflict"); return false; }
+            dispatchOperation(client, action);
+            if (status.equals("rejected") || status.equals("operation_rejected")) return false;
+            applyLook(client, action);
             input.bindDispatchedRequest(action.episode(), action.sequence(), status);
+            return true;
         } finally {
+            requestAdmitted = false;
             dispatching = false;
         }
     }
 
     private void reject(String code) {
+        reject(code, ClientTimingAdmission.RejectionDisposition.NONE);
+    }
+
+    private void reject(String code, ClientTimingAdmission.RejectionDisposition disposition) {
         pendingAttack = null;
         status = "rejected";
         reason = code;
-        if (requestAdmitted && lastRequest != null && input != null) {
-            input.rejectAdmittedRequest(lastRequest.sequence());
+        if (lastRequest != null && input != null) {
+            boolean timingInstalled = input.rejectTimingForRequest(
+                    lastRequest.sequence(), requestTimingInstalledThisCall);
+            if (!timingInstalled && disposition == ClientTimingAdmission.RejectionDisposition.HOLD_INCUMBENT)
+                input.holdRejectedResponseForFallback();
+            if (requestAdmitted) input.rejectAdmittedRequest(lastRequest.sequence());
         }
         requestAdmitted = false;
     }
@@ -345,18 +481,28 @@ public final class ClientBehaviorExecutor {
                 && client.currentScreen == null,
                 () -> ClientObservationCollector.diagnosticSampleClock().sampledAtMonotonicNs(),
                 () -> dispatchPendingAttack(client),
+                payload -> activateTimedEffects(client, payload),
                 sample -> {
                     if (sample.episodeId() != null) ClientControlDiagnostics.inputConsumed(
                             client, sample.episodeId(), sample.requestSequenceId(),
                             sample.sampledAtJvmNs(), sample.state(), sample.forward(),
                             sample.strafe(), sample.jump(), sample.sneak(), sample.sprint());
                 });
+        input.setTimingRejectionObserver(this::rejectTiming);
         inputPlayer.input = input;
+    }
+
+    private void rejectTiming(String code) {
+        pendingAttack = null;
+        status = "rejected";
+        reason = code;
+        requestAdmitted = false;
     }
 
     private void releaseInput() {
         pendingAttack = null;
         if (input != null) input.clear();
+        if (input != null) input.clearTiming();
         if (inputPlayer != null && inputPlayer.input == input) inputPlayer.input = previousInput;
         input = null; inputPlayer = null; previousInput = null;
     }
@@ -400,7 +546,8 @@ public final class ClientBehaviorExecutor {
             }
         }
         JsonObject result = new JsonObject();
-        result.addProperty("schema_version", "mc2p.client_action_receipt.v3");
+        result.addProperty("schema_version", actionSchemaVersion.equals("mc2p.client_action.v2")
+                ? "mc2p.client_action_receipt.v4" : "mc2p.client_action_receipt.v3");
         result.addProperty("generation_id", generation);
         result.addProperty("execution_path", "client_behavior_v1");
         result.add("episode_id", lastRequest == null ? JsonNull.INSTANCE
@@ -445,6 +592,19 @@ public final class ClientBehaviorExecutor {
             applications.add(applied);
         }
         result.add("input_applications", applications);
+        if (actionSchemaVersion.equals("mc2p.client_action.v2")) {
+            var timingEvents = new JsonArray();
+            for (var event : input == null ? java.util.List.<ClientTimingSchedule.Event>of()
+                                           : input.drainTimingEvents()) {
+                var item = new JsonObject();
+                item.addProperty("status", event.status());
+                item.addProperty("movement_tick_id", event.movementTickId());
+                item.addProperty("episode_id", event.episodeId());
+                item.addProperty("request_sequence_id", event.requestSequenceId());
+                timingEvents.add(item);
+            }
+            result.add("timing_events", timingEvents);
+        }
         if (lastRequest != null) {
             var lastSample = input == null ? null : input.lastSample();
             ClientFtickDiagnostics.observationSent(
@@ -459,6 +619,6 @@ public final class ClientBehaviorExecutor {
     /** A transport must not acknowledge a coupled operation before its input sample. */
     public boolean receiptReady() {
         gate.requireOwnerThread();
-        return pendingAttack == null;
+        return pendingAttack == null && (input == null || input.timingResponseReady());
     }
 }

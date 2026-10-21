@@ -1,0 +1,14 @@
+E
+======================================================================
+ERROR: test_v8_summary_binds_the_final_preflight_hash (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_v8_summary_binds_the_final_preflight_hash)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 133, in test_v8_summary_binds_the_final_preflight_hash
+    reference = probe.preflight_reference(path)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'scripts.d122_fabric_timing' has no attribute 'preflight_reference'
+
+----------------------------------------------------------------------
+Ran 1 test in 7.970s
+
+FAILED (errors=1)

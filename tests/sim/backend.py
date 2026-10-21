@@ -141,8 +141,14 @@ class CalculatorBackend:
 
     def __init__(self, clock: list[int], scene: Scene, start: tuple[float, float, float],
                  yaw_degrees: float = 0.0, *, perturbations: Perturbations | None = None,
-                 episode: str = "episode-sim") -> None:
+                 episode: str = "episode-sim", action_timing_v2: bool = False) -> None:
         self.clock = clock
+        from tests.sim.client_timing import ClientTimingSampler
+        self._client_timing = ClientTimingSampler(episode) if action_timing_v2 else None
+        self.negotiated_action_schema = ("mc2p.client_action.v2" if action_timing_v2
+                                         else "mc2p.client_action.v1")
+        self._timing_event_cursor = 0
+        self.response_timing = []
         self.scene = scene
         self.episode = episode
         self.perturbations = perturbations or Perturbations()
@@ -365,6 +371,10 @@ class CalculatorBackend:
 
     # ----- Runtime backend protocol -----------------------------------------
     def reset(self, request):
+        if self._client_timing is not None:
+            self._client_timing.reset(request.episode_id)
+            self.episode = request.episode_id
+            self._pending_actions.clear()
         return ResetResultV0(request.request_id, request.episode_id, True,
                              replace(self.observation(), episode_id=request.episode_id))
 
@@ -441,10 +451,43 @@ class CalculatorBackend:
     def step(self, action, deadline, *, observation_request=None):
         if type(action) is not ActionSnapshotV1:
             raise AssertionError("wrong action type")
+        if (self._client_timing is None
+                and (action.first_effect_window is not None or action.safe_default is not None)):
+            from mc2p.backends.client_behavior_payload import ActionCapabilityUnsupported
+            raise ActionCapabilityUnsupported("calculator action timing v2 was not negotiated")
         self.actions.append(action)
         self.sequence += 1
         self.clock[0] += 50_000_000
         applied_request, receipt_request, sample_state = self._sample_command(action)
+        response_start_tick = self.movement_tick
+        hold_deadline = min(deadline, action.deadline_monotonic_ns, self.clock[0] + 30_000_000_000)
+        # Like the deployment loop, keep physics advancing without manufacturing
+        # intermediate synchronous observations while a response is held.
+        while self._client_timing is not None and (
+                not self._client_timing.response_ready
+                or any(item[1].request_sequence_id == action.request_sequence_id
+                       for item in self._pending_actions)):
+            if (self.clock[0] + 50_000_000 >= hold_deadline
+                    and self._client_timing.default_parent is None):
+                raise TimeoutError("calculator client response hold exceeded deadline")
+            self.clock[0] += 50_000_000
+            applied_request, receipt_request, sample_state = self._sample_command(None)
+        if self._client_timing is not None:
+            self.response_timing.append({"request_sequence_id": action.request_sequence_id,
+                "waited_ticks": self.movement_tick - response_start_tick,
+                "waited_ns": (self.movement_tick - response_start_tick) * 50_000_000})
+        return self._step_response(action, observation_request, sample_state)
+
+    def _step_response(
+        self,
+        action: ActionSnapshotV1,
+        observation_request,
+        sample_state: str,
+        *,
+        status: str | None = None,
+        reason: str | None = None,
+    ) -> BackendStepResultV1:
+        """Build the one formal response after client-side sampling settles."""
         observation = replace(
             self.observation(request_sequence_id=action.request_sequence_id,
                              air_positions=() if observation_request is None
@@ -471,7 +514,10 @@ class CalculatorBackend:
                    if sample["movement_tick_id"] not in
                    self._omitted_sample_ticks]
         self._receipt_sample_cursor = len(self._sample_records)
-        receipt = behavior_receipt_from_mapping({
+        if self._client_timing is not None and len(samples) > 64:
+            self._omitted_sample_ticks.update(item["movement_tick_id"] for item in samples[:-64])
+            samples = samples[-64:]
+        receipt_value_mapping = {
             **receipt_value(
                 episode_id=action.episode_id, generation_id=self.sequence,
                 request_sequence_id=action.request_sequence_id,
@@ -485,7 +531,18 @@ class CalculatorBackend:
                 self.movement_tick
             ),
             "input_applications": samples,
-        })
+        }
+        if status is not None:
+            receipt_value_mapping["status"] = status
+        if reason is not None:
+            receipt_value_mapping["reason"] = reason
+        if self._client_timing is not None:
+            from dataclasses import asdict
+            receipt_value_mapping.update(schema_version="mc2p.client_action_receipt.v4",
+                timing_events=[asdict(event) for event in
+                    self._client_timing.events[self._timing_event_cursor:]])
+            self._timing_event_cursor = len(self._client_timing.events)
+        receipt = behavior_receipt_from_mapping(receipt_value_mapping)
         return BackendStepResultV1(observation, 0, False, False, receipt)
 
     def free_tick(self) -> None:
@@ -517,6 +574,8 @@ class CalculatorBackend:
     def _sample_command(
         self, action: ActionSnapshotV1 | None,
     ) -> tuple[int | None, int | None, str]:
+        if self._client_timing is not None:
+            return self._sample_timed_command(action)
         tick = self.movement_tick + 1
         if action is not None:
             delayed = (
@@ -589,8 +648,48 @@ class CalculatorBackend:
         })
         return movement_owner, applied_request, sample_state
 
+    @property
+    def timing_admissions(self):
+        return 0 if self._client_timing is None else self._client_timing.admissions
+
+    def _sample_timed_command(self, action):
+        tick = self.movement_tick + 1
+        if action is not None:
+            delayed = self._external_perturbations_enabled() and tick in self.perturbations.late_ticks
+            arrival_tick = tick + int(delayed)
+            if delayed:
+                self._record_perturbation_dispatch("late_input", tick)
+                self._record_perturbation("late_input", tick)
+            self.submitted_commands.append((action.request_sequence_id, action.movement,
+                                            arrival_tick, action.deadline_monotonic_ns))
+            self._pending_actions.append((arrival_tick, action))
+        ready = [item for item in self._pending_actions if item[0] <= tick]
+        self._pending_actions = [item for item in self._pending_actions if item[0] > tick]
+        for _, request in sorted(ready, key=lambda item: item[1].request_sequence_id):
+            self._client_timing.admit(request, tick, self.clock[0], self.sequence - 1)
+        selected = self._client_timing.sample(tick, self.clock[0])
+        self.advance(selected.movement, selected.look.yaw_delta_degrees, selected.look.pitch_delta_degrees)
+        sequence = None if selected.owner is None else selected.owner.request_sequence_id
+        active = selected.state in {"neutral", "leased", "default_active"}
+        self.applied_commands.append((tick, sequence if active else None, selected.movement))
+        self.sample_states.append(selected.state)
+        sampled = self.sampled_inputs[-1]
+        self._sample_records.append({
+            "schema_version": "mc2p.input-application.v1", "movement_tick_id": self.movement_tick,
+            "episode_id": None if selected.owner is None else selected.owner.episode_id,
+            "request_sequence_id": sequence, "sampled_at_jvm_ns": self.movement_tick,
+            "state": selected.state, "forward": sampled.forward, "strafe": sampled.strafe,
+            "jump": sampled.jump, "sneak": sampled.sneak, "sprint": sampled.sprint})
+        self.command_events.append({"tick": tick,
+            "ready": tuple(item[1].request_sequence_id for item in ready),
+            "accepted": ready[-1][1].request_sequence_id if ready else None,
+            "superseded": (), "sample_state": selected.state,
+            "applied_request": sequence if active else None, "receipt_request": sequence})
+        return sequence if active else None, sequence, selected.state
+
     def close(self):
-        pass
+        if self._client_timing is not None:
+            self._client_timing.clear()
 
 
 def _air_result(value):

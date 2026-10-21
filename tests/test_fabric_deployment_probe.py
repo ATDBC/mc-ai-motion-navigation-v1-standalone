@@ -301,7 +301,8 @@ class FabricDeploymentProbeTests(unittest.TestCase):
 
     def test_java_probe_routes_negotiated_v3_steps_and_consumes_each_profile_once(self):
         source = (ROOT / "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/DeploymentObservationProbe.java").read_text("utf-8")
-        self.assertIn("DeploymentStepV3.decode(frame)", source)
+        self.assertIn("DeploymentStepV3.decode(frame, actionSchemaVersion)", source)
+        self.assertIn("executor.configureActionSchema(client, actionSchemaVersion)", source)
         self.assertIn("ClientObservationCollector.collectV3", source)
         self.assertIn("DeploymentSampleEncoder.encode", source)
         encoder = (ROOT / "deployment/fabric-observation-probe/src/main/java/"

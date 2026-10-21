@@ -1,0 +1,15 @@
+{
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d121_handoff_execution",
+    "tests.motion_nav.test_navigation_design_metrics",
+    "tests.motion_nav.test_standalone_export",
+    "-q"
+  ],
+  "platform": "win32",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "exit_code": 1,
+  "elapsed_seconds": 134.1406135559082
+}

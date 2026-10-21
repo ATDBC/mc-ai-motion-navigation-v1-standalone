@@ -1,0 +1,5 @@
+{
+  "output_encoding": "utf-8",
+  "raw_output_sha256": "1ee792c014d6f88677af00443057d2c2b0dd9d4e21649c549cadfaeb4094257c",
+  "output": "test_catalog_rejects_duplicate_ids_and_unsafe_paths (tests.motion_nav.test_reference_baselines.ReferenceBaselineTests.test_catalog_rejects_duplicate_ids_and_unsafe_paths) ... ok\r\ntest_repository_catalog_keeps_three_distinct_references_and_four_scenes (tests.motion_nav.test_reference_baselines.ReferenceBaselineTests.test_repository_catalog_keeps_three_distinct_references_and_four_scenes) ... ok\r\ntest_snapshot_verification_detects_hash_mismatch_and_unexpected_files (tests.motion_nav.test_reference_baselines.ReferenceBaselineTests.test_snapshot_verification_detects_hash_mismatch_and_unexpected_files) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 3 tests in 0.229s\r\n\r\nOK\r\n"
+}

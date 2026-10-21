@@ -1,7 +1,9 @@
 """D121 Task 5 transport-late diagnostic gate."""
+import json
 import unittest
 from copy import deepcopy
-from dataclasses import fields, replace
+from dataclasses import replace
+from pathlib import Path
 from unittest.mock import patch
 
 from mc2p.contracts.action_v1 import ActionIntentV1, ActionSnapshotV1
@@ -12,9 +14,17 @@ from scripts.d121_handoff_execution_probe import ExecutionCase
 class D121TransportLateTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.timely = run_case("timely_l1")
-        cls.late = run_case("late_l2")
-        cls.never = run_case("never_applied")
+        # D122 replaces the live timing contract.  Keep D121's RED as an
+        # immutable historical gate instead of fabricating a current client
+        # with v2 windows but without v2 defaults.
+        path = (Path(__file__).resolve().parents[2] / "evidence" /
+                "motion_navigation" / "d121-momentum-handoff-v1" /
+                "release-repair" / "task-4" / "matrix-v2.json")
+        matrix = json.loads(path.read_text(encoding="utf-8"))
+        runs = {run["policy"]: run for run in matrix["runs"]}
+        cls.timely = runs["timely_l1"]
+        cls.late = runs["late_l2"]
+        cls.never = runs["never_applied"]
 
     def test_timely_control_uses_exact_python_window_and_l1_physics(self):
         self.assertEqual(self.timely["target_window"], [27, 27])
@@ -68,6 +78,23 @@ class D121TransportLateTests(unittest.TestCase):
             self.never["outcome"], "RED_LOST_SUCCESSOR_BODY_UNRESOLVED"
         )
         self.assertNotEqual(self.never["outcome"], self.late["outcome"])
+
+    def test_transport_dispositions_do_not_claim_unperformed_protocol_rejection(self):
+        self.assertIsNone(self.never["protocol_prevented_expired_application"])
+        expected = (
+            (self.timely, "applied_in_window", "not_applicable", None),
+            (self.late, "applied_outside_window", "not_prevented", False),
+            (self.never, "not_delivered", "not_applicable", None),
+        )
+        for run, delivery, prevention, compatible in expected:
+            with self.subTest(policy=run["policy"]):
+                self.assertEqual(run["transport_disposition"], delivery)
+                self.assertEqual(run["expired_application_prevention"], prevention)
+                self.assertIs(run["protocol_prevented_expired_application"], compatible)
+        self.assertEqual(len({run["transport_disposition"] for run, *_ in expected}), 3)
+        with patch("scripts.d121_transport_late_probe.run_case",
+                   side_effect=[self.timely, self.late, self.never]):
+            self.assertEqual(run_matrix()["result"], "FAILED_STOPPED")
 
     def test_only_transport_policy_changes_the_submitted_successor(self):
         controls = [self.timely, self.late, self.never]
@@ -123,10 +150,10 @@ class D121TransportLateTests(unittest.TestCase):
         self.assertEqual(matrix["result"], "FAILED_STOPPED")
 
     def test_snapshot_and_wire_have_no_exact_movement_tick_window(self):
-        self.assertIn("movement_tick_window", {f.name for f in fields(ActionIntentV1)})
-        self.assertNotIn("movement_tick_window", {f.name for f in fields(ActionSnapshotV1)})
         action = self.late["target_action"]
         audit = self.late["protocol_audit"]
+        self.assertTrue(audit["action_intent_has_movement_tick_window"])
+        self.assertFalse(audit["action_snapshot_has_movement_tick_window"])
         self.assertFalse(audit["wire_has_movement_tick_window"])
         self.assertFalse(audit["wire_has_prepared_generation"])
         self.assertFalse(audit["client_preapplication_exact_tick_guard"])

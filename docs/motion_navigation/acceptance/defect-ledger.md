@@ -285,3 +285,10 @@ Linux 复核来源：`bee34bd:reviews/2026-10-15-d110-review.md` 的 E40、E53�
 | 编号 | 严重度 | 当前事实 | 当前处理 |
 |---|---|---|---|
 | D118-PHYSICS-01 | P1，D119 已关闭 | 根因是 `physics_1_21` 用 `height > epsilon` 排除了原版允许的 0 高度 step 候选。D119 已按 Java `float` 语义恢复 `height >= 0`、排除 `height == baseY` 并限制最大台阶高度；0 高度候选不发布 `step_up` | D118 raw 只读重放覆盖 7 个 trial、273 个 tick，离散差异 0；源码树和独立公开快照正逆完整门禁全绿。D118-0 保持历史 FAILED／STOPPED，历史证据不回写；入口包络仍未验证，D118 full matrix、连续两跳、生产接入和 D118-1—D118-5 仍未授权 |
+
+### D122 客户端时序与失联边界（2026-10-20）
+
+| 编号 | 严重度 | 当前事实 | 当前处理 |
+|---|---|---|---|
+| D122-OBS-01 | P1，打开 | D122-4 v8 的 67 个 proof 依赖中只有 55 个由 actor 确认，10 个被遮挡、2 个位于视野外。fixture 放置 AIR 不等于 actor 知道 AIR | D122-4 在第一场协议 trial 前停止，真实样本 0／3，36 场未跑。后续只能取得真实观察，或另立 proof 语义决定缩小必要依赖；禁止 UNKNOWN 当 AIR。D123-1 已按固定视点停止：四方向 1248 个只读 native 样本均无 lower-cell visible air，9 格／方向具有完整遮挡论证；转头不能补齐 67 个依赖。没有新 Fabric 或 actor 校准通过结论，观察位置规划／新增 sensing 需要后续独立决定。 |
+| D122-TRANSPORT-01 | P1，打开 | successor-only loss 若由 backend `TimeoutError` 表达，Runtime 会返回 typed `DEADLINE_EXCEEDED` 并进入 failed；driver 停在 stopping，source 未释放。父 physics sidecar能证明默认后的身体，但旧 Runtime observation 不能证明健康 | validator 保持 fail-closed。后续另立决定区分“单请求丢失但通道仍活”和“通道失联”：前者需要 typed rejection、新观察和责任收尾；后者执行默认后报告 `BODY_RESPONSIBILITY_UNRESOLVED` 或对应 typed 终态。不能靠改 row、复用旧 observation 或把 source 清理写成正常释放 |

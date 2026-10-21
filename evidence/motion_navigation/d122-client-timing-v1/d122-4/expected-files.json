@@ -1,0 +1,44 @@
+{
+  "schema_version": "mc2p.d122-fabric-expected-files.v1",
+  "production_files": [],
+  "harness_files": [
+    "scripts/build_fabric_deployment_probe.py",
+    "scripts/d122_fabric_timing.py",
+    "scripts/d122_formal_timing_probe.py",
+    "scripts/fabric_deployment_launch.py",
+    "scripts/fabric_deployment_sandbox.py",
+    "scripts/probe_fabric_deployment_observation.py"
+  ],
+  "test_files": [
+    "tests/motion_nav/test_d122_fabric_timing.py",
+    "tests/test_deployment_classpath.py",
+    "tests/test_deployment_launch.py",
+    "tests/test_deployment_sandbox.py"
+  ],
+  "release_files": [
+    "config/motion-navigation/standalone-export-v1.json",
+    "tests/motion_nav/test_standalone_export.py"
+  ],
+  "documentation_files": [
+    "AGENTS.md",
+    "docs/motion_navigation/acceptance/d122-client-timing-and-safe-default.md",
+    "docs/motion_navigation/acceptance/defect-ledger.md",
+    "docs/motion_navigation/architecture/client-first-effect-window-and-safe-default-v2.md",
+    "docs/motion_navigation/decisions/0122-enforce-first-effect-window-and-prearm-safe-default.md",
+    "docs/motion_navigation/stages/d122-client-timing-and-safe-default-plan.md",
+    "packaging/motion-navigation-standalone/AGENTS.md",
+    "packaging/motion-navigation-standalone/README.md"
+  ],
+  "forbidden_production_scope": [
+    "mc2p/motion_nav/navigation_session.py",
+    "mc2p/motion_nav/known_map_planner.py",
+    "mc2p/motion_nav/physics_1_21.py"
+  ],
+  "note": "D122-4 may add only Fabric/component harness, verified acceptance-cache selection, checks, evidence and release metadata. Any new production-code requirement stops the stage.",
+  "historical_evidence": [
+    "component-preflight.json"
+  ],
+  "current_evidence": [
+    "component-preflight-review-fixes.json"
+  ]
+}

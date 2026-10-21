@@ -56,13 +56,15 @@ def _install_manual_route(session, route, frame, anchor, ledger):
 
 
 class ExecutionCase:
-    def __init__(self, *, direction_index=0, worker=None):
+    def __init__(self, *, direction_index=0, worker=None,
+                 step_window_ns=500_000_000,
+                 action_timing_v2=False):
         from scripts import d120_momentum_entry_calibration as calibration
         request, fixture, template, spec, old_snapshot = fixed_case(direction_index)
         solids = {pos: fact.block.material_key for pos, fact in old_snapshot.facts if fact.block is not None}
         self.clock = [100_000_000]
         self.backend = CalculatorBackend(self.clock, Scene(solids, ((-14,14),(60,70),(-14,14))),
-            template.entry_state.position)
+            template.entry_state.position, action_timing_v2=action_timing_v2)
         self.backend.state = replace(template.entry_state, session=self.backend._truth_session)
         self.backend.movement_tick = 0
         self.trace = _RecordingTrace()
@@ -74,7 +76,11 @@ class ExecutionCase:
         self.session = NavigationSession("d121", NavigationSessionProfiles.load(CONFIG),
             planner_worker=InlinePlannerWorker(), motion_worker=self.worker, clock_ns=lambda:self.clock[0])
         self.session._motion_result_inbox.attach_worker(self.worker)
-        self.driver = RuntimeNavigationDriver(self.runtime, self.session, clock_ns=lambda:self.clock[0])
+        self.step_window_ns = step_window_ns
+        self.driver = RuntimeNavigationDriver(
+            self.runtime, self.session, clock_ns=lambda:self.clock[0],
+            step_window_ns=step_window_ns,
+        )
         x, z = calibration.frozen._local_to_world(fixture.context.origin, direction_index, .5, 6.5)
         self.driver.start("fixed-goal", 1, _goal((x,64,z)), self.clock[0],
             planning_policy=GoalPlanningPolicy.PROVED_LOCAL_DIRECT_THEN_BACKGROUND)
@@ -148,8 +154,12 @@ class ExecutionCase:
 
     def tick(self, *, dispatch_transform=None):
         if dispatch_transform is None:
-            return self.driver.tick(BehaviorProfileV0(),self.clock[0]+500_000_000)
-        proposals = self.driver.prepare_proposals(self.clock[0]+500_000_000)
+            return self.driver.tick(
+                BehaviorProfileV0(), self.clock[0] + self.step_window_ns,
+            )
+        proposals = self.driver.prepare_proposals(
+            self.clock[0] + self.step_window_ns,
+        )
         deadline = self.driver._prepared_deadline_ns
         dispatches = dispatch_transform(self.driver.prepared_streams)
         result = self.runtime.control_frame(self.driver._task(deadline), BehaviorProfileV0(),

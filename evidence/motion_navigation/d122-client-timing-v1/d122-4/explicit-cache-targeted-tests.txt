@@ -1,0 +1,35 @@
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: D:/My_project/mc_ai/.tmp/d121-revision-worktree/artifacts/surface-cache/native-build
+适用于 .NET Framework MSBuild 版本 17.14.40+3e7442088
+
+  surface_cache.vcxproj -> D:\My_project\mc_ai\.tmp\d121-revision-worktree\artifacts\surface-cache\native-build\Release\surface_cache.dll
+JNI cache smoke passed
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: D:/My_project/mc_ai/.tmp/d121-revision-worktree/artifacts/surface-cache/native-build
+适用于 .NET Framework MSBuild 版本 17.14.40+3e7442088
+
+  surface_cache.vcxproj -> D:\My_project\mc_ai\.tmp\d121-revision-worktree\artifacts\surface-cache\native-build\Release\surface_cache.dll
+JNI cache smoke passed
+........E...
+======================================================================
+ERROR: test_real_offline_build_contains_shared_client_only_classes_and_provenance (tests.test_deployment_project.DeploymentProjectTests.test_real_offline_build_contains_shared_client_only_classes_and_provenance)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_deployment_project.py", line 22, in test_real_offline_build_contains_shared_client_only_classes_and_provenance
+    evidence = inspect_probe(self.jar)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py", line 134, in inspect_probe
+    verified_classpath_files = inspect_classpath(
+                               ^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py", line 84, in inspect_classpath
+    raise ValueError("compile classpath escaped approved cache roots or is duplicated")
+ValueError: compile classpath escaped approved cache roots or is duplicated
+
+----------------------------------------------------------------------
+Ran 12 tests in 34.381s
+
+FAILED (errors=1)

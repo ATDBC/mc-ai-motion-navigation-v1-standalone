@@ -1,0 +1,65 @@
+..E...EE.....
+======================================================================
+ERROR: test_container_server_loads_only_the_fresh_hash_verified_fixture (tests.test_deployment_sandbox.DeploymentSandboxTests.test_container_server_loads_only_the_fresh_hash_verified_fixture)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_deployment_sandbox.py", line 99, in test_container_server_loads_only_the_fresh_hash_verified_fixture
+    result = prepare_scenario(root, seed=21001, port=25597, container_probe=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\probe_fabric_deployment_observation.py", line 982, in prepare_scenario
+    result = {"server": prepare_server(run_dir / "server", seed=seed, port=port,
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\fabric_deployment_sandbox.py", line 66, in prepare_server
+    source = select_server_jar()
+             ^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\fabric_deployment_sandbox.py", line 26, in select_server_jar
+    gradle_home = select_probe_gradle_home(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py", line 53, in select_probe_gradle_home
+    _reject_reparse_ancestors(selected)
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py", line 36, in _reject_reparse_ancestors
+    raise ValueError("Gradle home or an ancestor is a symlink/reparse point")
+ValueError: Gradle home or an ancestor is a symlink/reparse point
+
+======================================================================
+ERROR: test_new_vanilla_server_has_verified_jar_loopback_only_and_no_actor_commands (tests.test_deployment_sandbox.DeploymentSandboxTests.test_new_vanilla_server_has_verified_jar_loopback_only_and_no_actor_commands)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_deployment_sandbox.py", line 35, in test_new_vanilla_server_has_verified_jar_loopback_only_and_no_actor_commands
+    evidence = prepare_server(target, seed=21001, port=25597)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\fabric_deployment_sandbox.py", line 66, in prepare_server
+    source = select_server_jar()
+             ^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\fabric_deployment_sandbox.py", line 26, in select_server_jar
+    gradle_home = select_probe_gradle_home(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py", line 53, in select_probe_gradle_home
+    _reject_reparse_ancestors(selected)
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py", line 36, in _reject_reparse_ancestors
+    raise ValueError("Gradle home or an ancestor is a symlink/reparse point")
+ValueError: Gradle home or an ancestor is a symlink/reparse point
+
+======================================================================
+ERROR: test_only_declared_local_fixture_world_names_can_change_server_world (tests.test_deployment_sandbox.DeploymentSandboxTests.test_only_declared_local_fixture_world_names_can_change_server_world)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_deployment_sandbox.py", line 68, in test_only_declared_local_fixture_world_names_can_change_server_world
+    evidence = prepare_server(target, seed=21001, port=25597,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\fabric_deployment_sandbox.py", line 66, in prepare_server
+    source = select_server_jar()
+             ^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\fabric_deployment_sandbox.py", line 26, in select_server_jar
+    gradle_home = select_probe_gradle_home(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py", line 53, in select_probe_gradle_home
+    _reject_reparse_ancestors(selected)
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py", line 36, in _reject_reparse_ancestors
+    raise ValueError("Gradle home or an ancestor is a symlink/reparse point")
+ValueError: Gradle home or an ancestor is a symlink/reparse point
+
+----------------------------------------------------------------------
+Ran 13 tests in 1.024s
+
+FAILED (errors=3)

@@ -1,0 +1,1 @@
+{"cause":"surface-effect constants were matched as Java double tokens, but javap reports the actual float tokens 0.500001f and 1.0E-5f","error":"Minecraft 1.21 rule audit incomplete","production_behavior_changed":false,"schema":"mc2p.d124-targeted-failure.v1","stage":"dynamic-boundary-audit","status":"FAILED"}

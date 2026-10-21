@@ -1,0 +1,54 @@
+{
+  "schema": "d122-4-environment-stop-v1",
+  "status": "INVALID_ENVIRONMENT_STOPPED",
+  "stage": "pre_fabric_offline_remapjar",
+  "created_utc": "2026-10-20T11:22:24.6958389Z",
+  "component_preflight": {
+    "status": "passed",
+    "trials": "3/3",
+    "file": "component-preflight.json"
+  },
+  "targeted_checks": {
+    "status": "passed_after_preserved_harness_red",
+    "direct": "21/21",
+    "handshake_outer": "28/28",
+    "files": [
+      "targeted-red.txt",
+      "targeted-tests.txt",
+      "handshake-and-outer-tests.txt"
+    ]
+  },
+  "cache_copy": {
+    "authorized_source": "D:/My_project/mc_ai/.tmp/d113-worktree/.gradle",
+    "destination": "D:/My_project/mc_ai/.tmp/d121-revision-worktree/.gradle",
+    "selected": "org.lwjgl 3.3.3 Windows native jars missing in destination",
+    "file_count": 24,
+    "bytes": 7488760,
+    "manifest_sha256": "ebb20eab8a2e2aba8756f6ea349091bd60ce40a6e2c7c797486501e20d734bde",
+    "result_sha256": "84ffdf778adedf7e339202b0a0924be2de64c6d1eee4d02ee821ee6507b9e03a",
+    "source_modified": false,
+    "build_scripts_modified": false
+  },
+  "remapjar": {
+    "status": "failed",
+    "exit_code": 1,
+    "offline": true,
+    "task": "remapJar --rerun-tasks",
+    "failure_task": "compileJava",
+    "failure_location": "deployment/fabric-observation-probe/build.gradle:46",
+    "failure": "'other' has different root",
+    "raw": "remapjar-after-cache-copy.txt"
+  },
+  "fabric": {
+    "v4_started": false,
+    "smoke_trials_run": 0,
+    "full_matrix_started": false,
+    "full_trials_run": 0,
+    "reason": "offline remapJar prerequisite failed"
+  },
+  "notes": [
+    "fabric-smoke-v1 through v3 are INVALID_ENVIRONMENT launcher/build attempts and are not smoke results",
+    "an earlier relative-path command preparation error did not start Gradle and is not counted as the remapJar attempt",
+    "no production behavior was changed to bypass the environment failure"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "snapshot": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\d121-task5-final\\snapshot-final",
+  "verified_files": 2853,
+  "tested_code_files_unchanged": 574,
+  "frozen_files_verified": 4,
+  "old_task5_files_unchanged": 48,
+  "repair_final_files_exported": 21,
+  "pure_eol_churn": 0,
+  "byte_base_commit": "3889d10e298fec57ce7b0a82a63bef331c431bb7",
+  "first_pass_verified_files": 2852,
+  "final_verify_includes_this_record": true,
+  "production_logic_changed_after_full_runs": false,
+  "java_and_fabric_changed": false
+}

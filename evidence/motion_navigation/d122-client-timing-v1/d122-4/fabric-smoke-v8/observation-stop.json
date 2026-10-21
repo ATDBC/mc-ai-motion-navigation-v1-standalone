@@ -1,0 +1,203 @@
+{
+  "air_query_results": [
+    {
+      "lower_region_visible": null,
+      "observer_distance_blocks": null,
+      "position": [
+        16,
+        -2,
+        27
+      ],
+      "status": "outside_view"
+    },
+    {
+      "lower_region_visible": null,
+      "observer_distance_blocks": null,
+      "position": [
+        16,
+        -2,
+        28
+      ],
+      "status": "outside_view"
+    },
+    {
+      "lower_region_visible": null,
+      "observer_distance_blocks": null,
+      "position": [
+        16,
+        -2,
+        29
+      ],
+      "status": "occluded"
+    },
+    {
+      "lower_region_visible": null,
+      "observer_distance_blocks": null,
+      "position": [
+        16,
+        -2,
+        30
+      ],
+      "status": "occluded"
+    },
+    {
+      "lower_region_visible": null,
+      "observer_distance_blocks": null,
+      "position": [
+        16,
+        -2,
+        31
+      ],
+      "status": "occluded"
+    },
+    {
+      "lower_region_visible": null,
+      "observer_distance_blocks": null,
+      "position": [
+        16,
+        -2,
+        32
+      ],
+      "status": "occluded"
+    },
+    {
+      "lower_region_visible": null,
+      "observer_distance_blocks": null,
+      "position": [
+        16,
+        -2,
+        33
+      ],
+      "status": "occluded"
+    },
+    {
+      "lower_region_visible": null,
+      "observer_distance_blocks": null,
+      "position": [
+        16,
+        -2,
+        34
+      ],
+      "status": "occluded"
+    },
+    {
+      "lower_region_visible": null,
+      "observer_distance_blocks": null,
+      "position": [
+        16,
+        -2,
+        35
+      ],
+      "status": "occluded"
+    },
+    {
+      "lower_region_visible": null,
+      "observer_distance_blocks": null,
+      "position": [
+        16,
+        -2,
+        38
+      ],
+      "status": "occluded"
+    },
+    {
+      "lower_region_visible": null,
+      "observer_distance_blocks": null,
+      "position": [
+        16,
+        -2,
+        39
+      ],
+      "status": "occluded"
+    },
+    {
+      "lower_region_visible": null,
+      "observer_distance_blocks": null,
+      "position": [
+        16,
+        -2,
+        40
+      ],
+      "status": "occluded"
+    }
+  ],
+  "air_query_status_counts": {
+    "occluded": 10,
+    "outside_view": 2
+  },
+  "conclusion": "fixture declared the cells AIR, but the actor received outside_view/occluded evidence; UNKNOWN remained UNKNOWN",
+  "fabric_protocol_trials_run": 0,
+  "full_matrix_started": false,
+  "known_count": 55,
+  "mismatch_count": 0,
+  "preflight_sha256": "2b1de4cd419822203b369f19c46b622700c6bedb9472fe55960a09011a65cb12",
+  "required_count": 67,
+  "schema": "d122-4-v8-observation-stop-v1",
+  "source_run": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\artifacts\\fabric-deployment\\20261020T115158638012Z-bc79106d",
+  "stage": "fabric_trial_dependency_precheck",
+  "status": "FAILED_STOPPED",
+  "trace_sha256": "a893782ad9121847e7fa6ff5cb489cd90f5fecf0dd78a9c30238c08d2cdb3bf4",
+  "unknown_count": 12,
+  "unknown_positions": [
+    [
+      16,
+      -2,
+      27
+    ],
+    [
+      16,
+      -2,
+      28
+    ],
+    [
+      16,
+      -2,
+      29
+    ],
+    [
+      16,
+      -2,
+      30
+    ],
+    [
+      16,
+      -2,
+      31
+    ],
+    [
+      16,
+      -2,
+      32
+    ],
+    [
+      16,
+      -2,
+      33
+    ],
+    [
+      16,
+      -2,
+      34
+    ],
+    [
+      16,
+      -2,
+      35
+    ],
+    [
+      16,
+      -2,
+      38
+    ],
+    [
+      16,
+      -2,
+      39
+    ],
+    [
+      16,
+      -2,
+      40
+    ]
+  ]
+}

@@ -1,0 +1,287 @@
+[
+  {
+    "module": "tests.motion_nav.test_action_continuity_solver_limits",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_action_continuity_solver_limits",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 1.6372077998239547,
+    "tests_run": 15,
+    "log": "test_action_continuity_solver_limits-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d058_runtime_validation",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d058_runtime_validation",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 5.627281200140715,
+    "tests_run": 105,
+    "log": "test_d058_runtime_validation-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_navigation_session",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_navigation_session",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 2.1573967998847365,
+    "tests_run": 63,
+    "log": "test_navigation_session-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d102_action_handoff",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d102_action_handoff",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 65.88230140018277,
+    "tests_run": 55,
+    "log": "test_d102_action_handoff-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d102_contract_red",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d102_contract_red",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 13.589577100006863,
+    "tests_run": 5,
+    "log": "test_d102_contract_red-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d102_contracts",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d102_contracts",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 0.7289621999952942,
+    "tests_run": 38,
+    "log": "test_d102_contracts-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d102_evidence_contract",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d102_evidence_contract",
+      "-v"
+    ],
+    "exit_code": 1,
+    "duration_seconds": 0.5527495997957885,
+    "tests_run": 24,
+    "log": "test_d102_evidence_contract-missing-fixture.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d102_prepared_proof",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d102_prepared_proof",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 28.306684999959543,
+    "tests_run": 12,
+    "log": "test_d102_prepared_proof-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d102_receiver",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d102_receiver",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 49.965984700014815,
+    "tests_run": 40,
+    "log": "test_d102_receiver-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d102_registry_lifecycle",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d102_registry_lifecycle",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 71.96907429979183,
+    "tests_run": 40,
+    "log": "test_d102_registry_lifecycle-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d102_runtime_activation",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d102_runtime_activation",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 112.95083910017274,
+    "tests_run": 37,
+    "log": "test_d102_runtime_activation-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d102_windows_matrix",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d102_windows_matrix",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 60.12241480010562,
+    "tests_run": 36,
+    "log": "test_d102_windows_matrix-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d102_world_snapshot",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d102_world_snapshot",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 0.546440500067547,
+    "tests_run": 34,
+    "log": "test_d102_world_snapshot-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d117_prepared_liveness_monitor",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d117_prepared_liveness_monitor",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 0.3000958999618888,
+    "tests_run": 4,
+    "log": "test_d117_prepared_liveness_monitor-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d121_handoff_execution",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d121_handoff_execution",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 66.23427430004813,
+    "tests_run": 24,
+    "log": "test_d121_handoff_execution-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d121_joint_worker_stop",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d121_joint_worker_stop",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 0.08977240021340549,
+    "tests_run": 3,
+    "log": "test_d121_joint_worker_stop-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d121_momentum_handoff",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d121_momentum_handoff",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 10.567080499837175,
+    "tests_run": 40,
+    "log": "test_d121_momentum_handoff-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d121_successor_binding",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d121_successor_binding",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 30.02590460004285,
+    "tests_run": 39,
+    "log": "test_d121_successor_binding-green.json",
+    "skipped": false
+  },
+  {
+    "module": "tests.motion_nav.test_d121_transport_late",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "unittest",
+      "tests.motion_nav.test_d121_transport_late",
+      "-v"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 10.354518099920824,
+    "tests_run": 11,
+    "log": "test_d121_transport_late-green.json",
+    "skipped": false
+  }
+]

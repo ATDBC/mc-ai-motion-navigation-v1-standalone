@@ -1,0 +1,32 @@
+{
+  "source": "D:\\My_project\\mc_ai\\.tmp\\d102-formal-v1\\red\\20261012T0209255251309Z-53798e265e2e4b96955aa672fef74d0c",
+  "target": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\d102-formal-v1\\red\\20261012T0209255251309Z-53798e265e2e4b96955aa672fef74d0c",
+  "source_unchanged": true,
+  "copy_identical": true,
+  "files": {
+    "index.json": "e643368dfaea5aa4f75e67d556feeabf20b22fe9cde0e4b9ec872ab295afa04c",
+    "raw/test_control_drain_is_not_receiver.json": "43cde11c00a3dd37336e9cf7c7852a72b34f318bfe796c2fc363c65df7695c6b",
+    "raw/test_job_retirement_preserves_execution_refs.json": "f170334403ce758a489c092f7d6602b9306ff683693a5568c845314c19da140a",
+    "raw/test_overdue_keeps_registered_tail.json": "e2dc895ca9a633d4f832f96a78c920f9e25ba6ceed302fe7cade41dd499a822f",
+    "raw/test_parent_inputs_are_independent.json": "8f852dc0b32c092bd4b7f0bee26a305481ae9c1c9f49f37d6cabb6fad299b990",
+    "raw/test_snapshot_graph_is_immutable.json": "5fa036ba4f68f8bb3471506cc51023427be92b382b7bf52e4a115f689d02e651",
+    "source/docs/motion_navigation/acceptance/prepared-motion-proof-pipeline-d102.md": "d959d1a192bc43fde8d7aaf49054c0387a0e1604ef336e650a87174d1f3fadfb",
+    "source/mc2p/contracts/action_v1.py": "587e0f2bd3afba606ca8971388ce541c7cc69ed27db95aeae4a404432f575725",
+    "source/mc2p/contracts/common.py": "7f0eda025e7f1307d160902ee4815bb81f87c89193261dcfee0bed07241a5096",
+    "source/mc2p/motion_nav/async_work.py": "80e417f90e013e72dcdab26f88374f5d6ec73a2f2617cd5297b450241b8ae0bb",
+    "source/mc2p/motion_nav/motion_risk.py": "2acaaf68cfd367275f89e516105aac73f2f6182a29d4d629e8a110f73bdce286",
+    "source/mc2p/motion_nav/motion_solver.py": "701e41c7538f98c85415cf36461af57468f079d0ce8b3c97c1a7fbf5f3f4b100",
+    "source/mc2p/motion_nav/motion_worker.py": "05567f729e6da2973bba815db553ba529c02abf81528a85f588843cb1e8697d1",
+    "source/mc2p/motion_nav/online_motion.py": "69130ac03f74ea5be07af4f71c1ee1a5cfe338fae1369f4cfd2ee38743b8a259",
+    "source/mc2p/motion_nav/physics_1_21.py": "2020dde8bf327e51156c9fae5c3dbb70d63759b88f2d39bb7f8b639a0de70fea",
+    "source/mc2p/motion_nav/physics_adapter.py": "f8e5cbc02824e567d70f24954a6bf34baa5748cfae7338d7b0ae0762763044b3",
+    "source/mc2p/motion_nav/physics_rollout.py": "a4792651c191b002443a9968b29f05d48fc5f77b033399ac97b0122bcd374eab",
+    "source/mc2p/motion_nav/physics_types.py": "65c3228ff591373669c382f094b3f28910be51058fe28f65b9a18427867c89a5",
+    "source/mc2p/motion_nav/world_model.py": "c4ba0168306791734e33f66d38f9c680c4c77d25fbb3dbdfd8fc1f63bd5ed6aa",
+    "source/scripts/verify_prepared_motion_d102.py": "44e59218ca559dabffa9a1824cd06cbd757526a66c94ecbc05837fd7cf230cc8",
+    "source/tests/motion_nav/d102_contract_cases.py": "935a6fed7ebe76ce3ac2ecd614d0536ea4c3b1cfa95f623396f10c42e645c9ee",
+    "source/tests/motion_nav/test_b10_gap_solver.py": "350d287f9288c1a877b51c1703021ea9faf3c6b9b42d7be94306ed9e19413366",
+    "source/tests/motion_nav/test_d102_contract_red.py": "1ef158ca809f9099ab78b19036f9053a8149143e32c6c9ac0befb97095ce3f7a",
+    "source/tests/motion_nav/test_d102_evidence_contract.py": "eb0fcb132d783eacc758d18d9bad585aedab0d3d9f58a5a4a0498498c89c4ef9"
+  }
+}

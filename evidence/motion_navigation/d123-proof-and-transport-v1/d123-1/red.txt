@@ -1,0 +1,19 @@
+test_d123_actor_calibration (unittest.loader._FailedTest.test_d123_actor_calibration) ... ERROR
+
+======================================================================
+ERROR: test_d123_actor_calibration (unittest.loader._FailedTest.test_d123_actor_calibration)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_d123_actor_calibration
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\.venv\Lib\unittest\loader.py", line 162, in loadTestsFromName
+    module = __import__(module_name)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d123_actor_calibration.py", line 7, in <module>
+    from scripts import d123_actor_calibration as probe
+ImportError: cannot import name 'd123_actor_calibration' from 'scripts' (unknown location)
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)

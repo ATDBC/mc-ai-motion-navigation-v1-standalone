@@ -1,0 +1,21 @@
+test_bounded_schedule_selects_pending_before_default_and_holds_response (tests.test_d122_java_timing.D122JavaTimingTests.test_bounded_schedule_selects_pending_before_default_and_holds_response) ... ok
+test_timing_semantic_rejection_consumes_identity_without_installing_lease (tests.test_d122_java_timing.D122JavaTimingTests.test_timing_semantic_rejection_consumes_identity_without_installing_lease) ... FAIL
+test_v2_decoder_is_strict_and_v1_remains_isolated (tests.test_d122_java_timing.D122JavaTimingTests.test_v2_decoder_is_strict_and_v1_remains_isolated) ... ok
+
+======================================================================
+FAIL: test_timing_semantic_rejection_consumes_identity_without_installing_lease (tests.test_d122_java_timing.D122JavaTimingTests.test_timing_semantic_rejection_consumes_identity_without_installing_lease)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_java_timing.py", line 36, in test_timing_semantic_rejection_consumes_identity_without_installing_lease
+    self.compile_run("CLIENT_TIMING_ADMISSION_OK",
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_java_timing.py", line 19, in compile_run
+    self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+AssertionError: 2 != 0 : ����: �Ҳ����ļ�: D:\My_project\mc_ai\.tmp\d121-revision-worktree\mc2p\backends\runtime_overlays\mc121_actions\ClientTimingAdmission.java
+�÷�: javac <ѡ��> <Դ�ļ�>
+ʹ�� --help ���г����ܵ�ѡ��
+
+
+----------------------------------------------------------------------
+Ran 3 tests in 1.166s
+
+FAILED (failures=1)

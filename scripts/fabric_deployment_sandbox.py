@@ -11,6 +11,9 @@ import re
 import shutil
 
 from scripts.fabric_deployment_launch import ROOT, _hash
+from scripts.build_fabric_deployment_probe import (
+    select_probe_gradle_home, validate_probe_gradle_home,
+)
 from scripts.visibility_fixture_world import _no_links
 
 JAVA = ROOT / ".venv/Library/lib/jvm/bin/java.exe"
@@ -20,13 +23,29 @@ SURFACE_NATIVE_LIBRARY = (
 SERVER_SHA1 = "450698d1863ab5180c25d7c804ef0fe6369dd1ba"
 
 
+def select_server_jar(*, repository_root: Path = ROOT,
+                      environment: dict[str, str] | os._Environ[str] | None = None,
+                      gradle_home: Path | None = None) -> Path:
+    gradle_home = (select_probe_gradle_home(
+        repository_root=repository_root, environment=environment)
+        if gradle_home is None else validate_probe_gradle_home(
+            gradle_home, repository_root=repository_root,
+        ))
+    source = (gradle_home / "caches/fabric-loom/1.21/minecraft-server.jar").absolute()
+    _no_links(source)
+    if not source.is_file():
+        raise ValueError("locked Minecraft server jar is missing")
+    return source
+
+
 def _port(value: int) -> None:
     if type(value) is not int or not 1 <= value <= 65535:
         raise ValueError("invalid local test port")
 
 
 def prepare_server(target: Path, *, seed: int, port: int, world_name: str = "world",
-                   fixture_animals: bool=False, c1_fixture=None) -> dict:
+                   fixture_animals: bool=False, c1_fixture=None,
+                   gradle_home: Path | None = None) -> dict:
     _port(port)
     if type(seed) is not int or not -(2 ** 63) <= seed < 2 ** 63:
         raise ValueError("invalid test world seed")
@@ -51,8 +70,7 @@ def prepare_server(target: Path, *, seed: int, port: int, world_name: str = "wor
     _no_links(target.parent)
     if target.exists():
         raise FileExistsError("server run directory must be new")
-    source = ROOT / ".gradle/caches/fabric-loom/1.21/minecraft-server.jar"
-    _no_links(source)
+    source = select_server_jar(gradle_home=gradle_home)
     if source.stat().st_size != 51623779 or _hash(source, "sha1") != SERVER_SHA1:
         raise ValueError("cached server jar does not match locked upstream release")
     properties = dict(**{"server-ip": "127.0.0.1", "server-port": str(port), "level-seed": str(seed),

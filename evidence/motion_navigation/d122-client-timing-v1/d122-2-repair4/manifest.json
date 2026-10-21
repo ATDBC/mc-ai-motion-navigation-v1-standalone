@@ -1,0 +1,41 @@
+{
+  "schema": "mc2p.d122-2-repair4-manifest.v1",
+  "source_base": "2db6e16b",
+  "implementation_head": "3eb13576",
+  "platform": "Windows",
+  "scope": "hold rejected successor response until incumbent fallback finishes",
+  "checks": {
+    "adjacent": 94,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "mutations_detected": 19,
+    "compile_java": "passed"
+  },
+  "not_run": [
+    "full Windows shards",
+    "standalone full checks",
+    "D122-3 formal component matrix",
+    "performance acceptance",
+    "Fabric"
+  ],
+  "code_sha256": {
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java": "6a8cd6b2caa08e5edcd64ab625fd27ec0d7d8ba97fa887441907eb34f86e8165",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java": "331444028dac5e2d2e6067d4696442611c8d382c011a620fd403d2ee11b6cca9",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingAdmission.java": "33c94e744d2c868ea5547ff5f20144463eed1d572cdfc25adad63bb9b9505b1e",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingSchedule.java": "99b3316e616784e512e9f54891f3aa7fefcefeef97f882cbb7881794ae0eb74c",
+    "scripts/d122_java_mutation_probe.py": "13f08d379a924512f2ba545a3636f8d31304780909c26dc91e5e3298f3c4a2e9",
+    "tests/java/ClientTimingAdmissionTest.java": "5489b46252334c50cdc821b5a27070105befad931aeca4d013b3678550b0f0a4",
+    "tests/java/ClientTimingRejectIsolationTest.java": "cd36a0af203d4eee664b334bcc901e5d136edf395e83b235e7b1c4e64d13b61e",
+    "tests/java/ClientTimingScheduleTest.java": "43ee264fb0e846d385705d06952a2516e85663379b2093a1d27f57e4dbf94f6d",
+    "tests/test_d122_java_permission_bridge.py": "029c1b617d26f34068ac5d5d38bd93b7a8b8ffb91e1b6a2527cebc17d8889c74"
+  },
+  "evidence_sha256": {
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair4/README.md": "d514b106bac59035623b0709b52c93e2928537bad2790e0339b17197df0f2977",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair4/red.txt": "f9cde743d06b54f58db080ad6c7acc54972fcc4c02994730ef99a4ae8f02c70b",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair4/adjacent.txt": "1e9e307f14eb67f3e11fd1a58cc113413ab563d6f12cd2d489a26a6185431f6f",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair4/compile-java.txt": "5777b837e36b77c2fc7ecc71552dfc994677d055236f1fa8e342d2e704b4c35b",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair4/mutation-run.txt": "6aade90b0be6357827cb79de7eb8f2bd6295f75e82d6d2759a0a02bd7891f446",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair4/mutations.json": "8bc82c0de21cc6520b93840a7e2028ca3f547e6c87cab84218513c7f067f69d8"
+  }
+}

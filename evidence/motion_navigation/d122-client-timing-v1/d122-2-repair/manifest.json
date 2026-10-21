@@ -1,0 +1,44 @@
+{
+  "schema": "mc2p.d122-2-repair-manifest.v1",
+  "source_base": "090c6eb9",
+  "implementation_head": "7ded5743",
+  "platform": "Windows",
+  "scope": "exact default relation, permission revocation facts, bounded budget arithmetic",
+  "checks": {
+    "adjacent": 91,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "mutations_detected": 15,
+    "compile_java": "passed"
+  },
+  "not_run": [
+    "full Windows shards",
+    "standalone full checks",
+    "D122-3 formal component matrix",
+    "performance acceptance",
+    "Fabric"
+  ],
+  "code_sha256": {
+    "mc2p/contracts/action_v1.py": "5fa7d80b6b8a221ec5147a9084a307b6169a42b55885df64736151d1bdc7a2a0",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientActionRequest.java": "d1493166b0e149fb198eb862906d34cfdf78b221deb3b632d7f7d028f5aaaaeb",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java": "3b309aacd7287d3162209d95e9d18fecae56c08037e578d3c532ce00a16d5cfc",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java": "f84b11ec591df006c0b76e771460531b3f6bf82b3ece579d5421af23f4ad4ea2",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingSchedule.java": "8524437ff5c78c76a63eb75c9c28348e6f93301e9ef49f8768e83108605507af",
+    "scripts/d122_java_mutation_probe.py": "04d1cd78c594afcd194fd326cd7e02418207e0628ef49de8362e4af43214557c",
+    "tests/fixtures/d122_default_relation_vectors.tsv": "5ce7140cd29222fbf6b057b902c8ee0355f952d6cb7f65a1a50d0cbe54f41a5b",
+    "tests/java/ClientActionTimingDecodeTest.java": "a391b5c7b9836ab49f0bc693cc3e2fb2a99b37313be6f79a4f0543368ccadd9e",
+    "tests/java/ClientTimingScheduleTest.java": "bb4b9385f0815ea86e32035a5a528b454e0ad5494340e551ea7079b57b55fc16",
+    "tests/java/ClientPermissionRevocationTest.java": "0fb3ac3c8f27191df1d3d0759b52a417919c6b71c85a6544d724f171ad7ff39d",
+    "tests/test_d122_java_permission_bridge.py": "a3bdd5dfcde58cbfd01cde85a8784c59f02d9e180c652c80117f69a98bff0a66",
+    "tests/test_d122_python_timing.py": "93843c1ef3893a27f84e01b822e7c12bca81c2a0ed386963ba7af9a4657f914f"
+  },
+  "evidence_sha256": {
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair/README.md": "fa8cecc49d789b5216d451b0256396203baaa9478d2214103355cae69e0c0642",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair/red.txt": "41f4432fc737f81711cfa39b6c4f27e6f3a0dae4006dd0c53c25f25f47c22674",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair/adjacent.txt": "afddff2667985a531f2732330d543d84e0829aef3e242374c5f4e0693bf463c8",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair/compile-java.txt": "2b00da53b7f7b75f862c2e00e0845f9e5b34de57e98e9dc22bf9924c912c04c1",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair/mutation-run.txt": "407f9117e3479d328b91b9a677521f812a87d4a4e29517061922f73027bad4a0",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair/mutations.json": "c3e7f6b6247cf1af71aba01d9e89668e5e07895d64511be63899ca50e3cdb074"
+  }
+}

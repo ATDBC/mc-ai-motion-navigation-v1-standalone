@@ -9,7 +9,9 @@ import time
 from typing import Callable
 import uuid
 
-from mc2p.backends.client_behavior_payload import encode_behavior_action
+from mc2p.backends.client_behavior_payload import (
+    encode_behavior_action, ActionCapabilityUnsupported, ACTION_SCHEMA_V1, ACTION_SCHEMA_V2,
+)
 from mc2p.backends.client_observation_payload import (
     ClientObservationPayloadError, decode_client_observation_payload, snapshot_v2_from_payload,
 )
@@ -71,8 +73,13 @@ class FabricBehaviorBackendV1:
 
     def __init__(self, *, transport: DeploymentTransport, client_identity: ClientProcessIdentity,
                  token: str, server_port: int, clock_ns: Callable[[], int] = time.perf_counter_ns,
-                 observation_schema_version: str = OBSERVATION_V3):
+                 observation_schema_version: str = OBSERVATION_V3,
+                 requested_action_schema: str = ACTION_SCHEMA_V1):
         self._observation_schema_version = validate_observation_schema(observation_schema_version)
+        if type(requested_action_schema) is not str or requested_action_schema not in {ACTION_SCHEMA_V1, ACTION_SCHEMA_V2}:
+            raise ContractViolation("unsupported requested action schema")
+        self._requested_action_schema = requested_action_schema
+        self._negotiated_action_schema = None
         if (type(transport) is not DeploymentTransport or type(client_identity) is not ClientProcessIdentity
                 or type(token) is not str or re.fullmatch("[0-9a-f]{64}", token) is None
                 or type(server_port) is not int or not 1 <= server_port <= 65535):
@@ -88,6 +95,10 @@ class FabricBehaviorBackendV1:
         self._diagnostics = self._receipt = self._peer_proof = None
         self._last_observation_timing = None
         self._block_decode_cache = {}
+
+    @property
+    def negotiated_action_schema(self) -> str | None:
+        return self._negotiated_action_schema
 
     @property
     def observation_schema_version(self) -> str:
@@ -156,11 +167,16 @@ class FabricBehaviorBackendV1:
             if self.observation_schema_version == OBSERVATION_V3:
                 session_value.update(schema_version="mc2p.deployment_session.v2",
                                      observation_schema_version=self.observation_schema_version)
+            if self._requested_action_schema == ACTION_SCHEMA_V2:
+                session_value.update(schema_version="mc2p.deployment_session.v3",
+                                     observation_schema_version=self.observation_schema_version,
+                                     action_schema_version=ACTION_SCHEMA_V2)
             session = _json_bytes(session_value)
             self._token = None
             self._transport.send(session, request.deadline_monotonic_ns)
             observation, _ = self._read_sample(request.episode_id, 0, None, started, request.deadline_monotonic_ns,
                 resolve_observation_request(self.observation_schema_version, None))
+            self._negotiated_action_schema = self._requested_action_schema
             self._episode, self._observation = request.episode_id, observation
             return ResetResultV0(request.request_id, request.episode_id, True, observation=observation)
         except TimeoutError:
@@ -214,6 +230,9 @@ class FabricBehaviorBackendV1:
                 raise ContractViolation("observation_entity_query_mismatch")
         receipt = envelope["receipt"]
         immutable_receipt = behavior_receipt_from_mapping(receipt)
+        if (self._requested_action_schema == ACTION_SCHEMA_V2
+                and receipt["schema_version"] != "mc2p.client_action_receipt.v4"):
+            raise ContractViolation("client action schema confirmation missing or downgraded")
         self._validate_diagnostics(envelope["diagnostics"])
         if (receipt["generation_id"] != sequence or receipt["world_tick"] != decoded.sample_world_tick
                 or receipt["request_sequence_id"] != request_sequence
@@ -287,6 +306,10 @@ class FabricBehaviorBackendV1:
              observation_request: ObservationRequestV3 | None = None) -> BackendStepResultV1:
         self._open()
         request = resolve_observation_request(self.observation_schema_version, observation_request)
+        if (type(action) is ActionSnapshotV1
+                and (action.first_effect_window is not None or action.safe_default is not None)
+                and self._negotiated_action_schema != ACTION_SCHEMA_V2):
+            raise ActionCapabilityUnsupported("client action timing v2 was not negotiated")
         if (type(action) is not ActionSnapshotV1 or self._observation is None
                 or action.episode_id != self._episode or action.observation_sequence_id != self._sequence
                 or action.request_sequence_id <= self._last_request):
@@ -297,7 +320,8 @@ class FabricBehaviorBackendV1:
         self._receipt = None
         try:
             payload = encode_behavior_action(replace(action, deadline_monotonic_ns=limit), now_ns=started,
-                observation_received_at_ns=self._observation.received_at_monotonic_ns)
+                observation_received_at_ns=self._observation.received_at_monotonic_ns,
+                negotiated_action_schema=self._negotiated_action_schema or ACTION_SCHEMA_V1)
             if request is not None:
                 payload = _json_bytes(dict(schema_version="mc2p.client_step.v3", action=json.loads(payload),
                                            observation_request=asdict(request)))
@@ -316,6 +340,7 @@ class FabricBehaviorBackendV1:
 
     def close(self) -> None:
         self._closed = True
+        self._negotiated_action_schema = None
         self._token = None
         self._receipt = self._diagnostics = None
         self._block_decode_cache.clear()

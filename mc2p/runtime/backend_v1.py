@@ -4,7 +4,7 @@ from typing import Protocol
 
 from mc2p.contracts.action_v1 import ActionSnapshotV1
 from mc2p.contracts.action_receipt import (
-    ClientBehaviorReceipt, ClientBehaviorReceiptV2, ClientBehaviorReceiptV3,
+    ClientBehaviorReceipt, ClientBehaviorReceiptV2, ClientBehaviorReceiptV3, ClientBehaviorReceiptV4,
 )
 from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
@@ -29,7 +29,7 @@ class BackendStepResultV1(BackendStepResultV0):
 
     def __post_init__(self) -> None:
         BackendStepResultV0.__post_init__(self)
-        if type(self.receipt) not in (ClientBehaviorReceiptV2, ClientBehaviorReceiptV3):
+        if type(self.receipt) not in (ClientBehaviorReceiptV2, ClientBehaviorReceiptV3, ClientBehaviorReceiptV4):
             raise ContractViolation("formal backend result requires immutable client receipt")
 
 

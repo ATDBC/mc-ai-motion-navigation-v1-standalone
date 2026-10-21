@@ -1,0 +1,38 @@
+{
+  "source_commit": "2dad8981b784ddf75d491b94b52706ee87e4fab6",
+  "public_byte_base": "3889d10e298fec57ce7b0a82a63bef331c431bb7",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "files": [
+    {
+      "path": "tests/sim/manifests/navigation-product-r28-v8.json",
+      "current_sha256": "418a330e892ce19663f3a4d560d8ade1fe4875ef3146883fd0b12e882545c526",
+      "expected_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+      "current_bytes": 10675,
+      "expected_bytes": 11142,
+      "current_crlf": 0,
+      "expected_crlf": 467,
+      "equal_after_crlf_normalization": true
+    },
+    {
+      "path": "evidence/motion_navigation/F2REC-recovery-v1/r0/tool-provenance.json",
+      "current_sha256": "cdccd4f3c4e55e48578bc913761d46a40743c41f4fdc231137020decfb13fe1b",
+      "expected_sha256": "57da769896dd269e0a862c12bed413b956a3570217d4ce2e10680834ec3f4644",
+      "current_bytes": 3570,
+      "expected_bytes": 3625,
+      "current_crlf": 0,
+      "expected_crlf": 55,
+      "equal_after_crlf_normalization": true
+    },
+    {
+      "path": "experiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json",
+      "current_sha256": "39145f39d191916d57c60b21efb832b0f0574e49c2aca71157b85d5c4d70190f",
+      "expected_sha256": "99c144d6806e16e5e217d33062f0cf6b6a94de11d39b831d91ac5b103747740d",
+      "current_bytes": 11676,
+      "expected_bytes": 12732,
+      "current_crlf": 0,
+      "expected_crlf": 1056,
+      "equal_after_crlf_normalization": true
+    }
+  ]
+}

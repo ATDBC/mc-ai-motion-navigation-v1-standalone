@@ -34,6 +34,10 @@ public record DeploymentStepV3(byte[] actionPayload, ClientActionRequest action,
     @Override public byte[] actionPayload() { return actionPayload.clone(); }
 
     public static DeploymentStepV3 decode(byte[] payload) {
+        return decode(payload, "mc2p.client_action.v1");
+    }
+
+    public static DeploymentStepV3 decode(byte[] payload, String actionSchemaVersion) {
         if (payload == null || payload.length == 0 || payload.length > MAX_BYTES)
             throw new IllegalArgumentException("invalid deployment step size");
         try {
@@ -58,7 +62,7 @@ public record DeploymentStepV3(byte[] actionPayload, ClientActionRequest action,
                 if (actionPayload.length == 0 || actionPayload.length > MAX_BYTES
                         || requestPayload.length == 0 || requestPayload.length > MAX_BYTES)
                     throw new IllegalArgumentException("invalid deployment step component size");
-                ClientActionRequest action = ClientActionRequest.decode(actionPayload);
+                ClientActionRequest action = ClientActionRequest.decode(actionPayload, actionSchemaVersion);
                 ClientObservationRequestV3 request = ClientObservationRequestV3.decode(requestPayload);
                 return new DeploymentStepV3(actionPayload, action, request);
             }

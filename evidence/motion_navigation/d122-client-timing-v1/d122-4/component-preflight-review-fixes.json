@@ -1,0 +1,914 @@
+{
+  "schema_version": "mc2p.d122-component-outer-preflight.v1",
+  "result": "PASS",
+  "trials": [
+    {
+      "schema_version": "mc2p.d122-shared-trial.v1",
+      "backend": "calculator",
+      "trial_id": "d122-south-0-timely_l1",
+      "direction_index": 0,
+      "repetition": 0,
+      "policy": "timely_l1",
+      "reset_succeeded": true,
+      "start_grounded_still": true,
+      "action_schema": "mc2p.client_action.v2",
+      "landing_tick": 26,
+      "parent_default_installed_before_l": true,
+      "parent_request_sequence_id": 25,
+      "successor_request_sequence_id": 26,
+      "fallback_armed_event": {
+        "status": "fallback_armed",
+        "movement_tick_id": 26,
+        "episode_id": "episode-sim",
+        "request_sequence_id": 25
+      },
+      "fallback_armed_tick": 26,
+      "default_duration_ticks": 9,
+      "successor_window": {
+        "earliest_tick": 27,
+        "latest_tick": 27
+      },
+      "successor_reached_client": true,
+      "successor_jump_sample_ticks": [
+        27
+      ],
+      "window_missed_event": null,
+      "window_missed_tick": null,
+      "default_sample_ticks": [],
+      "health_evidence": {
+        "source": "calculator_final_state",
+        "decreased": false
+      },
+      "final_body": {
+        "position": [
+          0.5,
+          64.0,
+          6.812656160928958
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "damage": 0.0
+      },
+      "source_released": true,
+      "prepared_frame_clear": true,
+      "driver_terminal": true,
+      "runtime_state": "ready",
+      "runtime_failure": null,
+      "driver_state": "success",
+      "goal_satisfied": true,
+      "error": null,
+      "attempted_successor": null,
+      "transport_outcome": "successor_applied",
+      "transport_events": [],
+      "raw_case_passed": true,
+      "synchronous_timings": [
+        {
+          "submit_compute_ns": 1067200,
+          "control_wall_ns": 1923800,
+          "backend_wait_ns": 1402200,
+          "control_compute_ns": 521600
+        },
+        {
+          "submit_compute_ns": 696800,
+          "control_wall_ns": 1407100,
+          "backend_wait_ns": 1008700,
+          "control_compute_ns": 398400
+        },
+        {
+          "submit_compute_ns": 790100,
+          "control_wall_ns": 2725100,
+          "backend_wait_ns": 2121400,
+          "control_compute_ns": 603700
+        },
+        {
+          "submit_compute_ns": 3779400,
+          "control_wall_ns": 1877400,
+          "backend_wait_ns": 1272900,
+          "control_compute_ns": 604500
+        },
+        {
+          "submit_compute_ns": 840200,
+          "control_wall_ns": 1861000,
+          "backend_wait_ns": 1328400,
+          "control_compute_ns": 532600
+        },
+        {
+          "submit_compute_ns": 843100,
+          "control_wall_ns": 1540300,
+          "backend_wait_ns": 1053200,
+          "control_compute_ns": 487100
+        },
+        {
+          "submit_compute_ns": 977900,
+          "control_wall_ns": 1550700,
+          "backend_wait_ns": 1120600,
+          "control_compute_ns": 430100
+        },
+        {
+          "submit_compute_ns": 709300,
+          "control_wall_ns": 1470700,
+          "backend_wait_ns": 1034500,
+          "control_compute_ns": 436200
+        },
+        {
+          "submit_compute_ns": 750800,
+          "control_wall_ns": 1403500,
+          "backend_wait_ns": 1040200,
+          "control_compute_ns": 363300
+        },
+        {
+          "submit_compute_ns": 743900,
+          "control_wall_ns": 1172700,
+          "backend_wait_ns": 868200,
+          "control_compute_ns": 304500
+        },
+        {
+          "submit_compute_ns": 532700,
+          "control_wall_ns": 1290700,
+          "backend_wait_ns": 965100,
+          "control_compute_ns": 325600
+        },
+        {
+          "submit_compute_ns": 486900,
+          "control_wall_ns": 1188000,
+          "backend_wait_ns": 881000,
+          "control_compute_ns": 307000
+        },
+        {
+          "submit_compute_ns": 494500,
+          "control_wall_ns": 1140500,
+          "backend_wait_ns": 844900,
+          "control_compute_ns": 295600
+        },
+        {
+          "submit_compute_ns": 732600,
+          "control_wall_ns": 1217300,
+          "backend_wait_ns": 914200,
+          "control_compute_ns": 303100
+        },
+        {
+          "submit_compute_ns": 489100,
+          "control_wall_ns": 1176100,
+          "backend_wait_ns": 844400,
+          "control_compute_ns": 331700
+        },
+        {
+          "submit_compute_ns": 476500,
+          "control_wall_ns": 1161200,
+          "backend_wait_ns": 872300,
+          "control_compute_ns": 288900
+        },
+        {
+          "submit_compute_ns": 502000,
+          "control_wall_ns": 1270000,
+          "backend_wait_ns": 945900,
+          "control_compute_ns": 324100
+        },
+        {
+          "submit_compute_ns": 533800,
+          "control_wall_ns": 1222200,
+          "backend_wait_ns": 900800,
+          "control_compute_ns": 321400
+        },
+        {
+          "submit_compute_ns": 490400,
+          "control_wall_ns": 1224300,
+          "backend_wait_ns": 915400,
+          "control_compute_ns": 308900
+        },
+        {
+          "submit_compute_ns": 470300,
+          "control_wall_ns": 1970100,
+          "backend_wait_ns": 1469200,
+          "control_compute_ns": 500900
+        },
+        {
+          "submit_compute_ns": 619400,
+          "control_wall_ns": 1259200,
+          "backend_wait_ns": 907400,
+          "control_compute_ns": 351800
+        },
+        {
+          "submit_compute_ns": 464900,
+          "control_wall_ns": 1438800,
+          "backend_wait_ns": 1140800,
+          "control_compute_ns": 298000
+        },
+        {
+          "submit_compute_ns": 485500,
+          "control_wall_ns": 1155900,
+          "backend_wait_ns": 843700,
+          "control_compute_ns": 312200
+        },
+        {
+          "submit_compute_ns": 544000,
+          "control_wall_ns": 1267400,
+          "backend_wait_ns": 930800,
+          "control_compute_ns": 336600
+        },
+        {
+          "submit_compute_ns": 556700,
+          "control_wall_ns": 1310800,
+          "backend_wait_ns": 950500,
+          "control_compute_ns": 360300
+        },
+        {
+          "submit_compute_ns": 579400,
+          "control_wall_ns": 1251600,
+          "backend_wait_ns": 886700,
+          "control_compute_ns": 364900
+        },
+        {
+          "submit_compute_ns": 1869400,
+          "control_wall_ns": 6162200,
+          "backend_wait_ns": 981000,
+          "control_compute_ns": 5181200
+        },
+        {
+          "submit_compute_ns": 652800,
+          "control_wall_ns": 1544700,
+          "backend_wait_ns": 906000,
+          "control_compute_ns": 638700
+        },
+        {
+          "submit_compute_ns": 547700,
+          "control_wall_ns": 1407100,
+          "backend_wait_ns": 886000,
+          "control_compute_ns": 521100
+        },
+        {
+          "submit_compute_ns": 513400,
+          "control_wall_ns": 1362600,
+          "backend_wait_ns": 798800,
+          "control_compute_ns": 563800
+        },
+        {
+          "submit_compute_ns": 541500,
+          "control_wall_ns": 1429200,
+          "backend_wait_ns": 904900,
+          "control_compute_ns": 524300
+        },
+        {
+          "submit_compute_ns": 509900,
+          "control_wall_ns": 1280900,
+          "backend_wait_ns": 793500,
+          "control_compute_ns": 487400
+        },
+        {
+          "submit_compute_ns": 487600,
+          "control_wall_ns": 1265100,
+          "backend_wait_ns": 786500,
+          "control_compute_ns": 478600
+        },
+        {
+          "submit_compute_ns": 460400,
+          "control_wall_ns": 1336900,
+          "backend_wait_ns": 851800,
+          "control_compute_ns": 485100
+        },
+        {
+          "submit_compute_ns": 494400,
+          "control_wall_ns": 1275300,
+          "backend_wait_ns": 799400,
+          "control_compute_ns": 475900
+        },
+        {
+          "submit_compute_ns": 479600,
+          "control_wall_ns": 1350000,
+          "backend_wait_ns": 850800,
+          "control_compute_ns": 499200
+        },
+        {
+          "submit_compute_ns": 480600,
+          "control_wall_ns": 1279000,
+          "backend_wait_ns": 807700,
+          "control_compute_ns": 471300
+        },
+        {
+          "submit_compute_ns": 506300,
+          "control_wall_ns": 1223500,
+          "backend_wait_ns": 768400,
+          "control_compute_ns": 455100
+        },
+        {
+          "submit_compute_ns": 662500,
+          "control_wall_ns": 1541100,
+          "backend_wait_ns": 1031200,
+          "control_compute_ns": 509900
+        },
+        {
+          "submit_compute_ns": 618200,
+          "control_wall_ns": 1373000,
+          "backend_wait_ns": 828900,
+          "control_compute_ns": 544100
+        },
+        {
+          "submit_compute_ns": 542500,
+          "control_wall_ns": 1410100,
+          "backend_wait_ns": 901000,
+          "control_compute_ns": 509100
+        },
+        {
+          "submit_compute_ns": 585800,
+          "control_wall_ns": 1338900,
+          "backend_wait_ns": 822800,
+          "control_compute_ns": 516100
+        },
+        {
+          "submit_compute_ns": 563800,
+          "control_wall_ns": 1295000,
+          "backend_wait_ns": 806200,
+          "control_compute_ns": 488800
+        },
+        {
+          "submit_compute_ns": 552900,
+          "control_wall_ns": 1368400,
+          "backend_wait_ns": 880100,
+          "control_compute_ns": 488300
+        },
+        {
+          "submit_compute_ns": 565000,
+          "control_wall_ns": 1294800,
+          "backend_wait_ns": 798400,
+          "control_compute_ns": 496400
+        },
+        {
+          "submit_compute_ns": 561700,
+          "control_wall_ns": 1340700,
+          "backend_wait_ns": 840700,
+          "control_compute_ns": 500000
+        },
+        {
+          "submit_compute_ns": 590700,
+          "control_wall_ns": 1425500,
+          "backend_wait_ns": 914400,
+          "control_compute_ns": 511100
+        },
+        {
+          "submit_compute_ns": 640300,
+          "control_wall_ns": 1067200,
+          "backend_wait_ns": 785400,
+          "control_compute_ns": 281800
+        }
+      ],
+      "frame_count": 48,
+      "passed": true,
+      "failures": []
+    },
+    {
+      "schema_version": "mc2p.d122-shared-trial.v1",
+      "backend": "calculator",
+      "trial_id": "d122-south-0-late_l2",
+      "direction_index": 0,
+      "repetition": 0,
+      "policy": "late_l2",
+      "reset_succeeded": true,
+      "start_grounded_still": true,
+      "action_schema": "mc2p.client_action.v2",
+      "landing_tick": 26,
+      "parent_default_installed_before_l": true,
+      "parent_request_sequence_id": 25,
+      "successor_request_sequence_id": 26,
+      "fallback_armed_event": {
+        "status": "fallback_armed",
+        "movement_tick_id": 26,
+        "episode_id": "episode-sim",
+        "request_sequence_id": 25
+      },
+      "fallback_armed_tick": 26,
+      "default_duration_ticks": 9,
+      "successor_window": {
+        "earliest_tick": 27,
+        "latest_tick": 27
+      },
+      "successor_reached_client": true,
+      "successor_jump_sample_ticks": [],
+      "window_missed_event": {
+        "status": "window_missed",
+        "movement_tick_id": 28,
+        "episode_id": "episode-sim",
+        "request_sequence_id": 26
+      },
+      "window_missed_tick": 28,
+      "default_sample_ticks": [
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ],
+      "health_evidence": {
+        "source": "calculator_final_state",
+        "decreased": false
+      },
+      "final_body": {
+        "position": [
+          0.5,
+          64.0,
+          2.24523051470443
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          -0.0047854777214997495
+        ],
+        "on_ground": true,
+        "damage": 0.0
+      },
+      "source_released": true,
+      "prepared_frame_clear": true,
+      "driver_terminal": true,
+      "runtime_state": "ready",
+      "runtime_failure": null,
+      "driver_state": "failed",
+      "goal_satisfied": false,
+      "error": null,
+      "attempted_successor": null,
+      "transport_outcome": "window_missed",
+      "transport_events": [],
+      "raw_case_passed": true,
+      "synchronous_timings": [
+        {
+          "submit_compute_ns": 994000,
+          "control_wall_ns": 1903000,
+          "backend_wait_ns": 1457800,
+          "control_compute_ns": 445200
+        },
+        {
+          "submit_compute_ns": 647000,
+          "control_wall_ns": 1687600,
+          "backend_wait_ns": 1129500,
+          "control_compute_ns": 558100
+        },
+        {
+          "submit_compute_ns": 914500,
+          "control_wall_ns": 1449000,
+          "backend_wait_ns": 1075400,
+          "control_compute_ns": 373600
+        },
+        {
+          "submit_compute_ns": 502900,
+          "control_wall_ns": 1263200,
+          "backend_wait_ns": 931800,
+          "control_compute_ns": 331400
+        },
+        {
+          "submit_compute_ns": 663800,
+          "control_wall_ns": 1584200,
+          "backend_wait_ns": 1184300,
+          "control_compute_ns": 399900
+        },
+        {
+          "submit_compute_ns": 591300,
+          "control_wall_ns": 1217700,
+          "backend_wait_ns": 897300,
+          "control_compute_ns": 320400
+        },
+        {
+          "submit_compute_ns": 706000,
+          "control_wall_ns": 1622900,
+          "backend_wait_ns": 1268600,
+          "control_compute_ns": 354300
+        },
+        {
+          "submit_compute_ns": 567100,
+          "control_wall_ns": 1278800,
+          "backend_wait_ns": 942800,
+          "control_compute_ns": 336000
+        },
+        {
+          "submit_compute_ns": 498800,
+          "control_wall_ns": 1242200,
+          "backend_wait_ns": 938300,
+          "control_compute_ns": 303900
+        },
+        {
+          "submit_compute_ns": 909300,
+          "control_wall_ns": 1474200,
+          "backend_wait_ns": 1084900,
+          "control_compute_ns": 389300
+        },
+        {
+          "submit_compute_ns": 639800,
+          "control_wall_ns": 1337100,
+          "backend_wait_ns": 997200,
+          "control_compute_ns": 339900
+        },
+        {
+          "submit_compute_ns": 498200,
+          "control_wall_ns": 1558100,
+          "backend_wait_ns": 1208100,
+          "control_compute_ns": 350000
+        },
+        {
+          "submit_compute_ns": 579000,
+          "control_wall_ns": 1178200,
+          "backend_wait_ns": 866500,
+          "control_compute_ns": 311700
+        },
+        {
+          "submit_compute_ns": 698800,
+          "control_wall_ns": 1221000,
+          "backend_wait_ns": 910500,
+          "control_compute_ns": 310500
+        },
+        {
+          "submit_compute_ns": 723400,
+          "control_wall_ns": 1371500,
+          "backend_wait_ns": 1008000,
+          "control_compute_ns": 363500
+        },
+        {
+          "submit_compute_ns": 556500,
+          "control_wall_ns": 1171500,
+          "backend_wait_ns": 880300,
+          "control_compute_ns": 291200
+        },
+        {
+          "submit_compute_ns": 497700,
+          "control_wall_ns": 1484200,
+          "backend_wait_ns": 1133200,
+          "control_compute_ns": 351000
+        },
+        {
+          "submit_compute_ns": 590300,
+          "control_wall_ns": 1289700,
+          "backend_wait_ns": 940000,
+          "control_compute_ns": 349700
+        },
+        {
+          "submit_compute_ns": 492700,
+          "control_wall_ns": 1200800,
+          "backend_wait_ns": 901800,
+          "control_compute_ns": 299000
+        },
+        {
+          "submit_compute_ns": 532200,
+          "control_wall_ns": 1409900,
+          "backend_wait_ns": 1040200,
+          "control_compute_ns": 369700
+        },
+        {
+          "submit_compute_ns": 532600,
+          "control_wall_ns": 1199200,
+          "backend_wait_ns": 874200,
+          "control_compute_ns": 325000
+        },
+        {
+          "submit_compute_ns": 457900,
+          "control_wall_ns": 1164100,
+          "backend_wait_ns": 873900,
+          "control_compute_ns": 290200
+        },
+        {
+          "submit_compute_ns": 625900,
+          "control_wall_ns": 1396900,
+          "backend_wait_ns": 1013300,
+          "control_compute_ns": 383600
+        },
+        {
+          "submit_compute_ns": 526800,
+          "control_wall_ns": 1487800,
+          "backend_wait_ns": 1179900,
+          "control_compute_ns": 307900
+        },
+        {
+          "submit_compute_ns": 485800,
+          "control_wall_ns": 1325600,
+          "backend_wait_ns": 978600,
+          "control_compute_ns": 347000
+        },
+        {
+          "submit_compute_ns": 717600,
+          "control_wall_ns": 1307800,
+          "backend_wait_ns": 940100,
+          "control_compute_ns": 367700
+        },
+        {
+          "submit_compute_ns": 1629700,
+          "control_wall_ns": 8257100,
+          "backend_wait_ns": 2785300,
+          "control_compute_ns": 5471800
+        },
+        {
+          "submit_compute_ns": 14453400,
+          "control_wall_ns": 1769800,
+          "backend_wait_ns": 981000,
+          "control_compute_ns": 788800
+        },
+        {
+          "submit_compute_ns": 154300,
+          "control_wall_ns": 1696200,
+          "backend_wait_ns": 948400,
+          "control_compute_ns": 747800
+        },
+        {
+          "submit_compute_ns": 161600,
+          "control_wall_ns": 5881100,
+          "backend_wait_ns": 909500,
+          "control_compute_ns": 4971600
+        }
+      ],
+      "frame_count": 30,
+      "passed": true,
+      "failures": []
+    },
+    {
+      "schema_version": "mc2p.d122-shared-trial.v1",
+      "backend": "calculator",
+      "trial_id": "d122-south-0-never_delivered",
+      "direction_index": 0,
+      "repetition": 0,
+      "policy": "never_delivered",
+      "reset_succeeded": true,
+      "start_grounded_still": true,
+      "action_schema": "mc2p.client_action.v2",
+      "landing_tick": 26,
+      "parent_default_installed_before_l": true,
+      "parent_request_sequence_id": 25,
+      "successor_request_sequence_id": 26,
+      "fallback_armed_event": {
+        "status": "fallback_armed",
+        "movement_tick_id": 26,
+        "episode_id": "episode-sim",
+        "request_sequence_id": 25
+      },
+      "fallback_armed_tick": 26,
+      "default_duration_ticks": 9,
+      "successor_window": {
+        "earliest_tick": 27,
+        "latest_tick": 27
+      },
+      "successor_reached_client": false,
+      "successor_jump_sample_ticks": [],
+      "window_missed_event": null,
+      "window_missed_tick": null,
+      "default_sample_ticks": [
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ],
+      "health_evidence": {
+        "source": "calculator_final_state",
+        "decreased": false
+      },
+      "final_body": {
+        "position": [
+          0.5,
+          64.0,
+          2.2404450369829303
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          -0.0026128708359388635
+        ],
+        "on_ground": true,
+        "damage": 0.0
+      },
+      "source_released": true,
+      "prepared_frame_clear": true,
+      "driver_terminal": true,
+      "runtime_state": "ready",
+      "runtime_failure": {
+        "code": "contract",
+        "message": "successor_transport_not_delivered",
+        "retryable": true,
+        "source": "client_behavior"
+      },
+      "driver_state": "failed",
+      "goal_satisfied": false,
+      "error": null,
+      "attempted_successor": {
+        "request_sequence_id": 26,
+        "first_effect_window": {
+          "earliest_tick": 27,
+          "latest_tick": 27
+        },
+        "injection_reason": "successor_transport_not_delivered"
+      },
+      "transport_outcome": "successor_transport_loss",
+      "transport_events": [
+        {
+          "kind": "successor_lost_before_client",
+          "sequence": 26,
+          "source_tick": 26,
+          "attempted_request": {
+            "request_sequence_id": 26,
+            "first_effect_window": {
+              "earliest_tick": 27,
+              "latest_tick": 27
+            },
+            "injection_reason": "successor_transport_not_delivered"
+          }
+        }
+      ],
+      "raw_case_passed": true,
+      "synchronous_timings": [
+        {
+          "submit_compute_ns": 887400,
+          "control_wall_ns": 2058500,
+          "backend_wait_ns": 1612100,
+          "control_compute_ns": 446400
+        },
+        {
+          "submit_compute_ns": 819300,
+          "control_wall_ns": 1492000,
+          "backend_wait_ns": 1079000,
+          "control_compute_ns": 413000
+        },
+        {
+          "submit_compute_ns": 777500,
+          "control_wall_ns": 1402900,
+          "backend_wait_ns": 1053300,
+          "control_compute_ns": 349600
+        },
+        {
+          "submit_compute_ns": 493600,
+          "control_wall_ns": 1601800,
+          "backend_wait_ns": 1207800,
+          "control_compute_ns": 394000
+        },
+        {
+          "submit_compute_ns": 548200,
+          "control_wall_ns": 1464900,
+          "backend_wait_ns": 1102700,
+          "control_compute_ns": 362200
+        },
+        {
+          "submit_compute_ns": 561000,
+          "control_wall_ns": 1246800,
+          "backend_wait_ns": 917500,
+          "control_compute_ns": 329300
+        },
+        {
+          "submit_compute_ns": 721900,
+          "control_wall_ns": 1656200,
+          "backend_wait_ns": 1252100,
+          "control_compute_ns": 404100
+        },
+        {
+          "submit_compute_ns": 704300,
+          "control_wall_ns": 1319500,
+          "backend_wait_ns": 971500,
+          "control_compute_ns": 348000
+        },
+        {
+          "submit_compute_ns": 699300,
+          "control_wall_ns": 1484700,
+          "backend_wait_ns": 1069800,
+          "control_compute_ns": 414900
+        },
+        {
+          "submit_compute_ns": 731400,
+          "control_wall_ns": 1193000,
+          "backend_wait_ns": 876900,
+          "control_compute_ns": 316100
+        },
+        {
+          "submit_compute_ns": 517700,
+          "control_wall_ns": 1490900,
+          "backend_wait_ns": 1094600,
+          "control_compute_ns": 396300
+        },
+        {
+          "submit_compute_ns": 584600,
+          "control_wall_ns": 1345500,
+          "backend_wait_ns": 985800,
+          "control_compute_ns": 359700
+        },
+        {
+          "submit_compute_ns": 540800,
+          "control_wall_ns": 1159800,
+          "backend_wait_ns": 856200,
+          "control_compute_ns": 303600
+        },
+        {
+          "submit_compute_ns": 766600,
+          "control_wall_ns": 1655100,
+          "backend_wait_ns": 1307600,
+          "control_compute_ns": 347500
+        },
+        {
+          "submit_compute_ns": 522100,
+          "control_wall_ns": 1330600,
+          "backend_wait_ns": 999600,
+          "control_compute_ns": 331000
+        },
+        {
+          "submit_compute_ns": 631300,
+          "control_wall_ns": 1420600,
+          "backend_wait_ns": 1035200,
+          "control_compute_ns": 385400
+        },
+        {
+          "submit_compute_ns": 574700,
+          "control_wall_ns": 1177400,
+          "backend_wait_ns": 864700,
+          "control_compute_ns": 312700
+        },
+        {
+          "submit_compute_ns": 462100,
+          "control_wall_ns": 1092600,
+          "backend_wait_ns": 807500,
+          "control_compute_ns": 285100
+        },
+        {
+          "submit_compute_ns": 443300,
+          "control_wall_ns": 1485200,
+          "backend_wait_ns": 1152000,
+          "control_compute_ns": 333200
+        },
+        {
+          "submit_compute_ns": 506900,
+          "control_wall_ns": 1131600,
+          "backend_wait_ns": 830300,
+          "control_compute_ns": 301300
+        },
+        {
+          "submit_compute_ns": 433000,
+          "control_wall_ns": 1113100,
+          "backend_wait_ns": 817700,
+          "control_compute_ns": 295400
+        },
+        {
+          "submit_compute_ns": 432400,
+          "control_wall_ns": 1414600,
+          "backend_wait_ns": 1063400,
+          "control_compute_ns": 351200
+        },
+        {
+          "submit_compute_ns": 624600,
+          "control_wall_ns": 1194800,
+          "backend_wait_ns": 871700,
+          "control_compute_ns": 323100
+        },
+        {
+          "submit_compute_ns": 457100,
+          "control_wall_ns": 1254900,
+          "backend_wait_ns": 962400,
+          "control_compute_ns": 292500
+        },
+        {
+          "submit_compute_ns": 495900,
+          "control_wall_ns": 1266600,
+          "backend_wait_ns": 855200,
+          "control_compute_ns": 411400
+        },
+        {
+          "submit_compute_ns": 689500,
+          "control_wall_ns": 1219100,
+          "backend_wait_ns": 892400,
+          "control_compute_ns": 326700
+        },
+        {
+          "submit_compute_ns": 1728900,
+          "control_wall_ns": 8297200,
+          "backend_wait_ns": 2516500,
+          "control_compute_ns": 5780700
+        },
+        {
+          "submit_compute_ns": 14721800,
+          "control_wall_ns": 1461200,
+          "backend_wait_ns": 1083100,
+          "control_compute_ns": 378100
+        },
+        {
+          "submit_compute_ns": 2152100,
+          "control_wall_ns": 1135700,
+          "backend_wait_ns": 829900,
+          "control_compute_ns": 305800
+        },
+        {
+          "submit_compute_ns": 1792700,
+          "control_wall_ns": 1113600,
+          "backend_wait_ns": 831000,
+          "control_compute_ns": 282600
+        },
+        {
+          "submit_compute_ns": 3466900,
+          "control_wall_ns": 5650700,
+          "backend_wait_ns": 1046900,
+          "control_compute_ns": 4603800
+        }
+      ],
+      "frame_count": 31,
+      "passed": true,
+      "failures": []
+    }
+  ]
+}

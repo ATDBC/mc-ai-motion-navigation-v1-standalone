@@ -1,0 +1,169 @@
+{
+  "schema": "d122.python-contract-probe.v1",
+  "mutations": [
+    {
+      "mutation": "drop_window_projection",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "early_replaces_current",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "miss_clears_default",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "ordinary_revives_old_default",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "default_budget_starts_at_parent",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "missed_response_released_early",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    }
+  ],
+  "repair_mutations": [
+    {
+      "mutation": "short_wall_allowed",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "wall_truncates_proved_samples",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "exhausted_without_sample_coverage",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "cancel_receipt_not_consumed",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "accepted_cancel_misclassified",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "cancel_leaves_pending",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "takeover_sample_not_consumed",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "inactive_sample_ends_default",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "deadline_releases_unfinished_default",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "cancel_erases_ambiguous_history",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "replaced_pending_stays_unresolved",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "exhausted_neutral_rearms_parent",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    },
+    {
+      "mutation": "exhausted_neutral_becomes_parent_command",
+      "checks": 1,
+      "failures": 1,
+      "errors": 0,
+      "detected": true
+    }
+  ],
+  "v1_comparison": {
+    "reference_sha256": "3a93a5dac30d8d4fb4e68b436297813593a82741dbb00444dc0fbfe805737733",
+    "scenarios": [
+      {
+        "scenario": 0,
+        "paired_requests": 30,
+        "identical": true,
+        "signature": "afc8269cf6d34c9e929eab93bc7ebadba5519bf0f3d52ffe7be4943cd4938b69"
+      },
+      {
+        "scenario": 1,
+        "paired_requests": 30,
+        "identical": true,
+        "signature": "0c241e74003c61e9f5a4aaf9462447dec4d76284cbf6e89ad67d1c2dd8e1d27b"
+      },
+      {
+        "scenario": 2,
+        "paired_requests": 30,
+        "identical": true,
+        "signature": "8b877362d42d7b8753764182f8aa36c7582fbef0c86454f4a7b7f7116d32800d"
+      },
+      {
+        "scenario": 3,
+        "paired_requests": 30,
+        "identical": true,
+        "signature": "ceb7ab7f0a13c67dd1af656aafc93c43403a805e86c77960b5b1a78ec6619552"
+      }
+    ]
+  }
+}

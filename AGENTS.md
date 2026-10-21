@@ -1,6 +1,18 @@
-# AGENTS.md
+2026-10-21，[D124](docs/motion_navigation/decisions/0124-separate-broad-physics-reads-from-proof-dependencies.md) 已完成并签署。四方向证明依赖均由 67 降为 58：每方向 9 个被已知完整方块屏蔽的下层宽候选不再进入证明，3 个真实必要格在未知时仍返回 `NEEDS_WORLD`。屏障事实继续绑定版本；半砖、楼梯、身体进入下层、特殊材料真实接触和缓存跨变化均有反例检查。D120 972 个入口／2916 个后缀逐项一致、旧成功退步 0；D122 20／20、v1 兼容 120／120；控制 P95／P99／最大 0.4712／4.4607／4.7067 ms，同步提交最大 14.4417 ms；最大正式消息 493,588 B。Windows 源码树正逆各 209 个模块／2748 项，独立快照正逆各 208 个模块／2724 项，失败、错误、超时、跳过和清理失败均为 0；Java 源码树与快照各 3／3，最终快照校验 3195 个文件。首次源码全量和首次 standalone 暴露的旧合同与导出缺口均保留，最终字节复跑全绿。没有修改 Session／transport／Java／观察，也没有运行 Minecraft／Fabric。见[架构](docs/motion_navigation/architecture/proof-dependency-projection-v1.md)、[计划](docs/motion_navigation/stages/d124-proof-dependency-projection-plan.md)、[验收](docs/motion_navigation/acceptance/d124-proof-dependency-projection.md)和 `evidence/motion_navigation/d124-proof-dependency-projection-v1/`。
 
-2026-10-19，[D121](docs/motion_navigation/decisions/0121-prove-fallback-backed-momentum-handoff.md) 在同一阶段获授权继续修订，状态为 **AUTHORIZED REVISION／IN PROGRESS**。S0、S1 保持完成；历史 S2 direct-copy 超过 2 MiB 的失败和 `s2/stop.json` 保留。修订方案不用联合证明消息：当前证明保留精确出口 fallback，只增加紧凑后继可行性绑定，完整后继证明继续走 D117 prepared 消息和生命周期。`L` 决定 `L+1`，默认 sneak fallback；后继只允许在 `L+1` 首次生效，错过后不得 `L+2` 补跳。2 MiB 上限不变，代表场景每条正式消息须不超过其 50%。修订 S2—S4 与当前完整发布矩阵尚未完成，下面 D120 的全绿结果仅属于历史基线。见[计划](docs/motion_navigation/stages/d121-fallback-backed-momentum-handoff-plan.md)和[验收](docs/motion_navigation/acceptance/d121-fallback-backed-momentum-handoff.md)。本轮不授权规划、生产四格 profile、Session 状态、Java、Fabric、新 owner／账本／worker 管线或放宽安全规则。
+# AGENTS.md
+2026-10-20，D123-1 已明确授权并执行到固定视点只读验证，现为 **PARTIAL／STOPPED，独立审查 PASS／已签署**。全部 67 个依赖（含 12 个下层格）保留。Windows 原生可见性核心完成四方向共 1248 个相机朝向样本，每方向 12 格均未出现可见空气；其中 9 格另有不依赖相机朝向的完整立方体遮挡论证。仅转头无法补齐所有依赖，继续需要改变观察位置或新增 sensing，触发预登记停止条件。未启动新的 Minecraft／Fabric，未提交 movement trial；actor-only 实机校准和两阶段启动命令未交付。D123-0 继续 PARTIAL／STOPPED，删除依赖未授权；本次签署仅批准 D123-1 PARTIAL／STOPPED 的停止收尾，不授权 D123-2；D123-2／D123-3 未开始。见 D123 验收第 10 节和 `evidence/motion_navigation/d123-proof-and-transport-v1/d123-1/fixed-eye-run-2/stop.json`。
+
+D123-1 最终停止证据和索引所需紧凑文件现已逐项纳入公开导出与必需文件检查。原始 actor trace 仅由主项目保管，公开停止证据以 SHA-256 绑定；公开快照不含该大 trace，完整只读重放仍需主项目原始文件。
+
+
+2026-10-20，[D123](docs/motion_navigation/decisions/0123-resolve-proof-dependencies-and-transport-loss.md) 的只读 D123-0 状态为 **PARTIAL／STOPPED；独立审查 PASS／已签署**。当前 `BlockGeometry` 正式契约下，尚不能证明删除 12 个下层依赖格安全，因此没有批准任何删除。正式 gate 重算 396 行：PASS 52、FACT_MISMATCH 160、NEEDS_WORLD 100、两者同时 84；D120 原始 972 个入口、2916 个后缀精确一致，旧成功退步 0；定向检查 40／40。D123-1 没有自动进入；证据支持后续保留全部 12 个依赖并验证 actor-only 观察／校准路线，该校准尚未运行。没有修改生产代码或运行 Fabric，历史失败不改写。见[计划](docs/motion_navigation/stages/d123-proof-dependency-and-transport-loss-plan.md)和[验收](docs/motion_navigation/acceptance/d123-proof-dependency-and-transport-loss.md)。
+
+2026-10-20，D122-0—D122-3 已完成；D122-4 为 **PARTIAL／STOPPED**。D122-3 正式组件矩阵 20／20 通过。D122-4 真实 Fabric v8 在第一场协议 trial 前发现 67 个 proof 依赖只有 55 个已知，真实协议样本为 0／3，36 场未运行。收尾复核另确认：backend transport `TimeoutError` 会让 Runtime failed，driver 停在 stopping、source 未释放，旧 observation 不能证明默认后的健康。后续必须另立决定，区分“单请求丢失但通道仍活”和“通道失联”；不能靠修改结果行、把 `UNKNOWN` 当 `AIR` 或复用旧 observation 通过。v1—v8 历史全部保留。见[决定](docs/motion_navigation/decisions/0122-enforce-first-effect-window-and-prearm-safe-default.md)、[计划](docs/motion_navigation/stages/d122-client-timing-and-safe-default-plan.md)、[验收](docs/motion_navigation/acceptance/d122-client-timing-and-safe-default.md)和 `evidence/motion_navigation/d122-client-timing-v1/d122-4/`。
+
+2026-10-20，D121 发布修复的 Windows 运行门禁已全绿：源码正逆各 202 模块／2662 项，独立公开快照正逆各 201 模块／2638 项；失败、错误、超时、跳过和清理失败均为 0。历史字节与原始失败记录保留，纯行尾噪声为 0。最终只读独立审查已 PASS，允许进入 D122；摘要见 `evidence/motion_navigation/d121-momentum-handoff-v1/release-repair/final/independent-review.json`。D121 继续 PARTIAL／STOPPED。D122 的[决定](docs/motion_navigation/decisions/0122-enforce-first-effect-window-and-prearm-safe-default.md)、[规格](docs/motion_navigation/architecture/client-first-effect-window-and-safe-default-v2.md)和[实施计划](docs/motion_navigation/stages/d122-client-timing-and-safe-default-plan.md)已写好，代码尚未开始。见[发布修复验收](docs/motion_navigation/acceptance/d121-fallback-backed-momentum-handoff.md)和 `evidence/motion_navigation/d121-momentum-handoff-v1/release-repair/final/`。
+
+2026-10-20，D121 状态为 **PARTIAL／STOPPED**。Task 4 的及时输入组件链通过；Task 5 证明过期后继仍会在 L+2 被客户端采样，未送达时也不能保证停在中间平台。历史 S2 direct-copy 失败、Task 5 原始证据和 D120 校准记录均保留。发布修复只处理历史字节、回归、诊断和入口文档，不改变动作或传输协议。上述 D121 停止结论保持；后续 D122 已另写决定，客户端首效窗口与预排安全默认输入尚未实现。见[计划](docs/motion_navigation/stages/d121-fallback-backed-momentum-handoff-plan.md)、[发布修复计划](docs/motion_navigation/stages/d121-release-repair-plan.md)和[验收](docs/motion_navigation/acceptance/d121-fallback-backed-momentum-handoff.md)。
 
 2026-10-19，[D120](docs/motion_navigation/decisions/0120-resume-momentum-entry-calibration.md) 已完成有限入口与实机校准：四方向 972 个联合入口、2916 个后缀通过，Windows Fabric south 3/3、full 36/36，1476 条 full 命令身份对应、离散物理差异 0、真实健康零下降、来源释放和关闭尾迹通过。JDK 预检、reset 健康观察误拒和北向 ±π 角差误拒的历史失败不回写。Windows 源码树正逆各 197 模块／2534 项，独立公开快照正逆各 196 模块／2510 项全绿，失败、错误、超时、跳过和清理失败均为 0；Java 各 3/3，矩阵快照 verify 2634 文件。连续 `sound_envelope` 仍 unverified，D118 历史 FAILED／STOPPED 不改，生产接入和 D118-1—D118-5 未授权。见[计划](docs/motion_navigation/stages/d120-momentum-entry-calibration-plan.md)、[验收](docs/motion_navigation/acceptance/d120-momentum-entry-calibration.md)和 `evidence/motion_navigation/d120-momentum-entry-v1/`。
 
@@ -97,6 +109,10 @@ Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于�
 - 出现未预期失败时，先停止扩大验收，保留失败证据，定位根因并检查共同规则；修复后先复跑直接相关场景，不带着已知问题继续批量运行。
 - 小范围接口或诊断修改按实际影响复查，并完成阶段要求的检查；没有新变化、失败或未决疑点时，复用仍有效的证据，不自动重跑全部。额外问题先登记并判断是否阻塞当前交付，避免无关扩展当前批次。
 - 快速发现失败不得降低验收门槛、删除失败样本或把有界失败计为成功；机器人已经承担的安全收尾责任必须继续履行。
+- 本项目大部分工作具有探索性：大胆假设，小心求证，争取收敛。明确区分假设、探针和正式交付；探针不能直接变成生产实现，证据支持后才做最小接入。
+- 每轮先写问题、竞争解释、要观察的事实、通过条件和停止条件，再做成本最低且区分度最高的实验。每轮必须减少候选解释或关闭一条路线，否则停止。
+- 同一问题连续两轮相邻修正仍未接近产品目标时，回查假设、量尺和夹具，禁止第三轮打地鼠式修补。
+- 探索不降低安全、权限、失败分类或验收门槛。Minecraft 优先利用确定物理、可读事件、离散 tick、稳定世界和可重放输入等捷径，不照搬现实机器人全部复杂度，也不让只针对假想风险的过度防御阻止正常能力收敛。
 
 ## 文档
 

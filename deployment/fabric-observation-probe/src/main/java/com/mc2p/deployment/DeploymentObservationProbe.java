@@ -17,7 +17,7 @@ import net.minecraft.client.MinecraftClient;
 public final class DeploymentObservationProbe implements ClientModInitializer {
     private static ClientBehaviorExecutor executor;
     private ProbeTransport transport;
-    private String token, episode, observationSchemaVersion, remoteAddress, bootstrapPhase;
+    private String token, episode, observationSchemaVersion, actionSchemaVersion, remoteAddress, bootstrapPhase;
     private int serverPort;
     private long generation, deadline;
     private Object world, player, connection;
@@ -89,6 +89,8 @@ public final class DeploymentObservationProbe implements ClientModInitializer {
                 DeploymentSession session = DeploymentSession.decode(frame, token);
                 episode = session.episode();
                 observationSchemaVersion = session.observationSchemaVersion();
+                actionSchemaVersion = session.actionSchemaVersion();
+                executor.configureActionSchema(client, actionSchemaVersion);
                 observationRequest = ClientObservationRequestV3.navigation();
                 token = null;
             }
@@ -124,7 +126,7 @@ public final class DeploymentObservationProbe implements ClientModInitializer {
                 byte[] actionPayload;
                 ClientActionRequest action;
                 ClientObservationRequestV3 nextRequest = ClientObservationRequestV3.navigation();
-                DeploymentStepV3 step = DeploymentStepV3.decode(frame);
+                DeploymentStepV3 step = DeploymentStepV3.decode(frame, actionSchemaVersion);
                 actionPayload = step.actionPayload();
                 action = step.action();
                 nextRequest = step.observationRequest();

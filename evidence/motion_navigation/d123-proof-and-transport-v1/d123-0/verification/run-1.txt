@@ -1,0 +1,5 @@
+direction 0: frozen 67/12, mutations recorded
+direction 1: frozen 67/12, mutations recorded
+direction 2: frozen 67/12, mutations recorded
+direction 3: frozen 67/12, mutations recorded
+{"status": "STOPPED_INSUFFICIENT_EVIDENCE", "d120": {"manifest_sha256": "89c5ee269da0b8ac969d69be781a589c8f28449faf0b153fe69a6b2c2a433dd6", "entrances": 972, "suffixes": 2916, "all_exactly_equal": true, "old_success_regressions": 0}, "four_directions": 4, "single_rows": 144, "all_mutation_rows": 392, "shape_sweep_mutations": 144, "read_reasons": 160, "per_direction_lower_cells": 12, "per_direction_dependencies": 67, "material_boundary_counterexamples": 28, "production_changes": false, "fabric_run": false, "recommendation": "Do not authorize D123-1 blanket pruning. Keep necessary gap reads; resolve maximum-extent material/contact assumptions before removing protected-cell material reads, or use existing actor observation for all retained dependencies."}

@@ -1,0 +1,4 @@
+usage: export_motion_navigation_standalone.py export [-h] --root ROOT
+                                                     [--clean]
+                                                     [--byte-base-root BYTE_BASE_ROOT]
+export_motion_navigation_standalone.py export: error: the following arguments are required: --root

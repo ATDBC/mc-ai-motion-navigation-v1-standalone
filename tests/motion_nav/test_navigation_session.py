@@ -2026,6 +2026,19 @@ class NavigationSessionTests(unittest.TestCase):
         )
         self.assertTrue(planner.closed)
 
+    def test_activation_registry_is_read_only_and_preserves_the_bound_service(self):
+        from mc2p.motion_nav.motion_worker import MotionResultInbox
+        executor = ActionRouteExecutor(
+            ordinary_profile(), jump_profile(), step_profile(),
+        )
+        self.assertIsNone(executor.activation_registry)
+        inbox = MotionResultInbox()
+        self.addCleanup(inbox.close)
+        executor.bind_prepared_result_inbox(inbox, owner_id="test-route-owner")
+        self.assertIs(executor.activation_registry, inbox)
+        with self.assertRaises(AttributeError):
+            executor.activation_registry = None
+
     def test_cancel_keeps_executor_until_its_landing_responsibility_finishes(self):
         world = _known_world({
             (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
@@ -2046,6 +2059,8 @@ class NavigationSessionTests(unittest.TestCase):
         session.propose(initial, None, 2_000_000_000)
         owner = _DelayedCancelExecutor()
         _replace_route_executor(session, owner)
+        self.assertIsNone(owner.activation_registry)
+        self.assertIsNone(session._supervisor.incumbent_route.activation_registry)
 
         session.cancel("task_cancelled")
         landing = session.propose(

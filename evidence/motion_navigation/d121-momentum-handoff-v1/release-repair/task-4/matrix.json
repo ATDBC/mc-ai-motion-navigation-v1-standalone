@@ -1,0 +1,12 @@
+{
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "scripts/d121_transport_late_probe.py",
+    "--output",
+    "evidence/motion_navigation/d121-momentum-handoff-v1/release-repair/task-4/matrix-v2.json"
+  ],
+  "platform": "win32",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "exit_code": 0,
+  "elapsed_seconds": 10.189548254013062
+}

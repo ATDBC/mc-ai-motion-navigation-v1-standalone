@@ -1,0 +1,73 @@
+{
+  "status": "WINDOWS_GATES_PASS_PENDING_INDEPENDENT_REVIEW",
+  "d121_status": "PARTIAL_STOPPED",
+  "d122": "NOT_STARTED",
+  "platform": "Windows",
+  "source_base_commit": "0e3b37d07575d04ab0f51a4b0d7e6d5749b14dbe",
+  "validation_source_commit": "577cb070",
+  "production_logic_changes_after_base": [],
+  "full_runs": {
+    "source-forward-valid": {
+      "modules": 202,
+      "tests": 2662,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0,
+      "cleanup_failures": 0,
+      "module_limit_seconds": 300.0,
+      "started_at": "2026-10-20T02:26:26.830307+00:00",
+      "finished_at": "2026-10-20T02:56:03.230045+00:00",
+      "report_sha256": "a4dd95bc27e0dad72e2f506694668e2ad36f685541c6172819172ef450a53f92"
+    },
+    "source-reverse": {
+      "modules": 202,
+      "tests": 2662,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0,
+      "cleanup_failures": 0,
+      "module_limit_seconds": 300.0,
+      "started_at": "2026-10-20T02:56:33.020942+00:00",
+      "finished_at": "2026-10-20T03:20:56.224630+00:00",
+      "report_sha256": "2a3d1ba0f40bd54bfb0422d22a613315075e0f4888df6032cf352c1633cc1769"
+    },
+    "snapshot-forward": {
+      "modules": 201,
+      "tests": 2638,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0,
+      "cleanup_failures": 0,
+      "module_limit_seconds": 300.0,
+      "started_at": "2026-10-20T03:23:04.055277+00:00",
+      "finished_at": "2026-10-20T03:46:24.444238+00:00",
+      "report_sha256": "134e0863fff90083aea967b9234bc57af2cfe2451e5e0e1a4a8ae51024b33474"
+    },
+    "snapshot-reverse": {
+      "modules": 201,
+      "tests": 2638,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0,
+      "cleanup_failures": 0,
+      "module_limit_seconds": 300.0,
+      "started_at": "2026-10-20T03:46:32.121762+00:00",
+      "finished_at": "2026-10-20T04:15:04.614095+00:00",
+      "report_sha256": "a6d5a3368570a406f9663befc16fc72b48a55d8265d6774a089ff4c2ca9e16ea"
+    }
+  },
+  "excluded_public_module": {
+    "module": "tests.motion_nav.test_d102_evidence_contract",
+    "tests": 24,
+    "reason": "Existing standalone exclusion: requires non-public G0/G1 raw evidence. Source forward and reverse ran it."
+  },
+  "byte_integrity_report": "export-integrity.json",
+  "final_publication_verify_report": "final-verify.json",
+  "tested_code_files": 574,
+  "historical_invalid_run": "source-forward.json and stop.json retained; environment junction repair is recorded separately.",
+  "new_fabric_or_java_runs": false
+}

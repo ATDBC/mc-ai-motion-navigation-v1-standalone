@@ -1,0 +1,37 @@
+{
+  "schema": "d122-cache-index-copy-v1",
+  "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\metadata-2.106",
+  "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\metadata-2.106",
+  "backup": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\d122-gradle-metadata-backup",
+  "source_modified": false,
+  "files": [
+    {
+      "name": "module-artifact.bin",
+      "before_sha256": "c598668034dbb5b0eab7f1f4fd408c2dc020eb24359d366e0423506205b692e0",
+      "source_sha256": "92dc48cbdde835874d763e3fe65c2915121486eefdb256a3cba08507cb3e5403",
+      "after_sha256": "92dc48cbdde835874d763e3fe65c2915121486eefdb256a3cba08507cb3e5403",
+      "matched": true
+    },
+    {
+      "name": "module-artifacts.bin",
+      "before_sha256": "29a918b02310ecfb35c36f237e2461e885ac27f929b88295e0d5f7950a420ea8",
+      "source_sha256": "29a918b02310ecfb35c36f237e2461e885ac27f929b88295e0d5f7950a420ea8",
+      "after_sha256": "29a918b02310ecfb35c36f237e2461e885ac27f929b88295e0d5f7950a420ea8",
+      "matched": true
+    },
+    {
+      "name": "module-metadata.bin",
+      "before_sha256": "aa2197010dd39624246a29985ad336c4e9ca0a702581ad6bee267ea92130eee0",
+      "source_sha256": "e9730109174cdbacf8cf17c86b9e322c76c7c98b5fd841c45da905f2aa63aaeb",
+      "after_sha256": "e9730109174cdbacf8cf17c86b9e322c76c7c98b5fd841c45da905f2aa63aaeb",
+      "matched": true
+    },
+    {
+      "name": "resource-at-url.bin",
+      "before_sha256": "d7a428d9b0d9809a32c3210902bcb92399620b29a7fb83d4b32b53925da46849",
+      "source_sha256": "e5735688708a5cb9637a59622eed54a9d2cf02f8910837387565c259fc367d88",
+      "after_sha256": "e5735688708a5cb9637a59622eed54a9d2cf02f8910837387565c259fc367d88",
+      "matched": true
+    }
+  ]
+}

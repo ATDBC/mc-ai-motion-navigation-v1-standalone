@@ -1,0 +1,13 @@
+{
+  "module": "tests.motion_nav.test_d102_prepared_proof",
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d102_prepared_proof",
+    "-v"
+  ],
+  "exit_code": 0,
+  "duration_seconds": 28.306684999959543,
+  "output": "test_each_boundary_has_valid_tail_and_dependencies (tests.motion_nav.test_d102_prepared_proof.ProofTests.test_each_boundary_has_valid_tail_and_dependencies) ... ok\ntest_future_inputs_do_not_invent_sequences (tests.motion_nav.test_d102_prepared_proof.ProofTests.test_future_inputs_do_not_invent_sequences) ... ok\ntest_inherited_dependency_versions_are_preserved_or_typed_rejected (tests.motion_nav.test_d102_prepared_proof.ProofTests.test_inherited_dependency_versions_are_preserved_or_typed_rejected) ... ok\ntest_inline_worker_records_prepared_job_formal_identity (tests.motion_nav.test_d102_prepared_proof.ProofTests.test_inline_worker_records_prepared_job_formal_identity) ... ok\ntest_late_start_replays_explicit_non_neutral_hold (tests.motion_nav.test_d102_prepared_proof.ProofTests.test_late_start_replays_explicit_non_neutral_hold) ... ok\ntest_one_budget_covers_branches_and_tails (tests.motion_nav.test_d102_prepared_proof.ProofTests.test_one_budget_covers_branches_and_tails) ... ok\ntest_oversized_bundle_returns_bounded_budget_failure_with_actual_work (tests.motion_nav.test_d102_prepared_proof.ProofTests.test_oversized_bundle_returns_bounded_budget_failure_with_actual_work) ... ok\ntest_same_fixed_inputs_match_frozen_scanner (tests.motion_nav.test_d102_prepared_proof.ProofTests.test_same_fixed_inputs_match_frozen_scanner) ... ok\ntest_spawn_returns_missing_information_at_128_byte_job_token_and_stays_alive (tests.motion_nav.test_d102_prepared_proof.ProofTests.test_spawn_returns_missing_information_at_128_byte_job_token_and_stays_alive) ... ok\ntest_spawn_uses_transmitted_snapshot (tests.motion_nav.test_d102_prepared_proof.ProofTests.test_spawn_uses_transmitted_snapshot) ... ok\ntest_unknown_or_unsupported_is_typed (tests.motion_nav.test_d102_prepared_proof.ProofTests.test_unknown_or_unsupported_is_typed) ... ok\ntest_wrong_or_other_legal_inputs_are_not_substituted (tests.motion_nav.test_d102_prepared_proof.ProofTests.test_wrong_or_other_legal_inputs_are_not_substituted) ... ok\n\n----------------------------------------------------------------------\nRan 12 tests in 27.924s\n\nOK\n"
+}

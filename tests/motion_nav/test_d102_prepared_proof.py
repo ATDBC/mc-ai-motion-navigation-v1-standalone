@@ -151,7 +151,21 @@ class ProofTests(unittest.TestCase):
         self.assertEqual(result.bundle.proof.stopping_tail_steps, self.reference.counts.tail_ticks)
         self.assertEqual(result.counts.completed_candidates, 1)
         self.assertLessEqual(result.counts.physics_steps, 65_536)
-        self.assertEqual(result.bundle.proof.dependency_facts, self.reference.proof.dependency_facts)
+        actual_facts = dict(result.bundle.proof.dependency_facts)
+        frozen_facts = dict(self.reference.proof.dependency_facts)
+        self.assertLessEqual(set(actual_facts), set(frozen_facts))
+        self.assertEqual(
+            {position: frozen_facts[position] for position in actual_facts},
+            actual_facts,
+        )
+        removed = set(frozen_facts) - set(actual_facts)
+        self.assertTrue(removed)
+        snapshot_facts = dict(self.snapshot.facts)
+        for x, y, z in removed:
+            cover = snapshot_facts[(x, y + 1, z)]
+            self.assertIsNotNone(cover.block)
+            self.assertEqual(cover.block.collision_kind, "full_cube")
+            self.assertIn((x, y + 1, z), actual_facts)
         for actual, frozen in zip(result.bundle.proof.branches, self.reference.proof.branches):
             self.assertEqual(actual.trajectory, frozen.states)
             interval, = frozen.risk_intervals

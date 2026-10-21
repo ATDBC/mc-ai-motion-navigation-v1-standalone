@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\probe_fabric_deployment_observation.py", line 2729, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\probe_fabric_deployment_observation.py", line 2640, in main
+    launch_path = args.launch_json or export_launch()
+                                      ^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\fabric_deployment_launch.py", line 130, in export_launch
+    build_probe(timeout_seconds=timeout_seconds)
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py", line 147, in build_probe
+    build_native()
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\surface_depth_probe\build.py", line 35, in build_native
+    java_tools = discover_java_tools()
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\export_motion_navigation_standalone.py", line 466, in discover_java_tools
+    raise ExportViolation(
+scripts.export_motion_navigation_standalone.ExportViolation: OpenJDK 21 was not found through JAVA_HOME or PATH

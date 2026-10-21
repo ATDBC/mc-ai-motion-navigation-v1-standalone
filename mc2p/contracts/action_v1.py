@@ -43,8 +43,33 @@ class MovementTickWindowV1:
     def __post_init__(self) -> None:
         require_nonnegative_int(self.earliest_tick, "earliest movement tick")
         require_nonnegative_int(self.latest_tick, "latest movement tick")
+        if self.latest_tick > 2**63 - 1:
+            raise ContractViolation("movement tick window exceeds signed 64-bit range")
         if self.latest_tick < self.earliest_tick:
             raise ContractViolation("movement tick window is reversed")
+
+
+@dataclass(frozen=True, slots=True)
+class SafeDefaultV1:
+    """One movement-only suffix, installed with its parent before activation."""
+
+    activation_tick: int
+    movement: MovementV1
+    valid_for_ticks: int
+    wall_budget_ns: int
+
+    def __post_init__(self) -> None:
+        require_nonnegative_int(self.activation_tick, "default activation tick")
+        if self.activation_tick > 2**63 - 1:
+            raise ContractViolation("default activation tick exceeds signed 64-bit range")
+        if type(self.movement) is not MovementV1:
+            raise ContractViolation("safe default requires movement-only controls")
+        if type(self.valid_for_ticks) is not int or not 1 <= self.valid_for_ticks <= 20:
+            raise ContractViolation("default valid_for_ticks must be 1 through 20")
+        if type(self.wall_budget_ns) is not int or not 0 < self.wall_budget_ns <= 30_000_000_000:
+            raise ContractViolation("default wall budget must be within 1..30000000000 ns")
+        if self.wall_budget_ns < self.valid_for_ticks * 50_000_000:
+            raise ContractViolation("default wall budget must cover its nominal proof duration")
 
 
 @dataclass(frozen=True, slots=True)
@@ -180,6 +205,7 @@ class ActionIntentV1:
     movement_observed_yaw_limit_degrees: float | None = None
     movement_conditioned_look_intent_id: str | None = None
     movement_tick_window: MovementTickWindowV1 | None = None
+    safe_default: SafeDefaultV1 | None = None
     schema_version: str = field(default="mc2p.action-intent.v1", init=False)
 
     def __post_init__(self) -> None:
@@ -254,6 +280,9 @@ class ActionIntentV1:
             raise ContractViolation("movement tick window must be typed")
         if self.movement_tick_window is not None and self.movement is None:
             raise ContractViolation("movement tick window requires movement ownership")
+        if self.safe_default is not None:
+            if type(self.safe_default) is not SafeDefaultV1 or self.movement is None:
+                raise ContractViolation("safe default requires typed movement ownership")
 
 
 @dataclass(frozen=True, slots=True)
@@ -267,6 +296,8 @@ class ActionSnapshotV1:
     operation: BehaviorOperationV1 | None = None
     valid_for_ticks: int = 1
     cancel_request_sequence_id: int | None = None
+    first_effect_window: MovementTickWindowV1 | None = None
+    safe_default: SafeDefaultV1 | None = None
     schema_version: str = field(default="mc2p.action-snapshot.v1", init=False)
 
     def __post_init__(self) -> None:
@@ -284,10 +315,21 @@ class ActionSnapshotV1:
             raise ContractViolation("formal controls require V1 types")
         if self.operation is not None and type(self.operation) not in _OPERATION_TYPES:
             raise ContractViolation("unsupported formal operation type")
+        if self.first_effect_window is not None and type(self.first_effect_window) is not MovementTickWindowV1:
+            raise ContractViolation("first effect window must be typed")
+        if self.safe_default is not None and type(self.safe_default) is not SafeDefaultV1:
+            raise ContractViolation("safe default must be typed")
+        if self.safe_default is not None and self.first_effect_window is not None:
+            window = self.first_effect_window
+            if window.earliest_tick != window.latest_tick:
+                raise ContractViolation("safe default requires an exact first effect tick")
+            if self.safe_default.activation_tick != window.earliest_tick + self.valid_for_ticks:
+                raise ContractViolation("safe default activation must follow the admitted input lease")
         cancel = self.cancel_request_sequence_id
         if cancel is not None:
             require_nonnegative_int(cancel, "cancel_request_sequence_id")
             if cancel >= self.request_sequence_id:
                 raise ContractViolation("cancel must reference an earlier request")
-            if self.operation is not None or self.movement != MovementV1() or self.look != LookV1():
+            if (self.operation is not None or self.movement != MovementV1() or self.look != LookV1()
+                    or self.first_effect_window is not None or self.safe_default is not None):
                 raise ContractViolation("cancel cannot introduce new controls or operations")

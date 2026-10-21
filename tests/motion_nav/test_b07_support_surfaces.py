@@ -37,7 +37,9 @@ class B07SupportSurfaceTests(unittest.TestCase):
 
         self.assertIs(result.status, QueryStatus.FEASIBLE)
         self.assertEqual(result.surfaces[0].position, (.5, 0.0, .5))
-        self.assertIn((0, -2, 0), result.dependencies)
+        # D124 proved that a full-cube support owns this boundary.  The broad
+        # collision candidate below it is deliberately absent from the proof.
+        self.assertNotIn((0, -2, 0), result.dependencies)
         self.assertIn((0, -1, 0), result.dependencies)
 
     def test_top_slab_shields_bounded_unknown_collision_owner_below_it(self):
@@ -54,9 +56,10 @@ class B07SupportSurfaceTests(unittest.TestCase):
 
         result = query_support_surfaces(world.view(), 0, 0, 0.0, 0.0)
 
-        self.assertIs(result.status, QueryStatus.FEASIBLE)
-        self.assertEqual(result.surfaces[0].position, (.5, 0.0, .5))
-        self.assertIn((0, -2, 0), result.dependencies)
+        # A top slab is not a full-cube barrier.  Its unknown lower owner may
+        # still contribute collision and therefore remains required.
+        self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+        self.assertIn((0, -2, 0), result.missing_cells)
 
     def test_bottom_slab_does_not_hide_unknown_collision_owner_below_it(self):
         session = WorldSessionId("b07-bottom-slab-open-unknown")

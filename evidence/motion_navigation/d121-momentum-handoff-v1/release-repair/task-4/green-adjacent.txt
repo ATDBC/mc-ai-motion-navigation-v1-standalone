@@ -1,0 +1,26 @@
+======================================================================
+FAIL: test_d121_historical_s1_and_current_preparation_semantics_are_separate (tests.motion_nav.test_standalone_export.StandaloneExportTests.test_d121_historical_s1_and_current_preparation_semantics_are_separate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_standalone_export.py", line 471, in test_d121_historical_s1_and_current_preparation_semantics_are_separate
+    self.assertEqual(hashlib.sha256(raw).hexdigest(), expected, name)
+AssertionError: '70ad5b2fda4f13771315ea55cf3762a03467fc77117a979d9166b0262ff52fdc' != '8cb0fc6ae6d0b2c270c131c28f019d046e473737b40300888c9e0026e72dda85'
+- 70ad5b2fda4f13771315ea55cf3762a03467fc77117a979d9166b0262ff52fdc
++ 8cb0fc6ae6d0b2c270c131c28f019d046e473737b40300888c9e0026e72dda85
+ : mc2p/motion_nav/action_route_executor.py
+
+======================================================================
+FAIL: test_f2_export_matches_frozen_production_fingerprints (tests.motion_nav.test_standalone_export.StandaloneExportTests.test_f2_export_matches_frozen_production_fingerprints)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_standalone_export.py", line 727, in test_f2_export_matches_frozen_production_fingerprints
+    self.assertEqual(
+AssertionError: '70ad5b2fda4f13771315ea55cf3762a03467fc77117a979d9166b0262ff52fdc' != '8cb0fc6ae6d0b2c270c131c28f019d046e473737b40300888c9e0026e72dda85'
+- 70ad5b2fda4f13771315ea55cf3762a03467fc77117a979d9166b0262ff52fdc
++ 8cb0fc6ae6d0b2c270c131c28f019d046e473737b40300888c9e0026e72dda85
+ : mc2p/motion_nav/action_route_executor.py
+
+----------------------------------------------------------------------
+Ran 87 tests in 133.517s
+
+FAILED (failures=2)

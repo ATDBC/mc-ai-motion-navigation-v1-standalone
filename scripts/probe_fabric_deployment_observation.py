@@ -38,6 +38,9 @@ from mc2p.skills.perception_needs import PerceptionConfig
 from scripts.control_probe_core import append_jsonl, write_json_atomic
 from scripts.client_time_evidence import export_runtime_time_evidence
 from scripts.fabric_deployment_launch import export_launch, inspect_launch, verify_assets, _hash
+from scripts.build_fabric_deployment_probe import (
+    select_probe_gradle_home, validate_probe_gradle_home,
+)
 from scripts.fabric_deployment_sandbox import JAVA, SERVER_SHA1, prepare_server, write_argument_file, client_environment
 from scripts.fabric_container_scenario import run_container_scenario, evaluate_container, evaluate_container_reconnect
 from scripts.bounded_process import run_bounded_process, make_run_id
@@ -160,6 +163,23 @@ D118_MOMENTUM_CALIBRATION_SOURCES = (
     "mc2p/backends/runtime_overlays/mc121_structured/BehaviorPlayerMixin.java",
     "mc2p/backends/runtime_overlays/mc121_diagnostics/ClientPhysicsTickDiagnostics.java",
     "mc2p/backends/runtime_overlays/mc121_diagnostics/ClientFtickDiagnostics.java",
+)
+D122_CLIENT_TIMING_SOURCES = (
+    *D118_MOMENTUM_CALIBRATION_SOURCES,
+    "scripts/d122_fabric_timing.py",
+    "scripts/d122_formal_timing_probe.py",
+    "scripts/d121_handoff_execution_probe.py",
+    "mc2p/motion_nav/action_route_executor.py",
+    "mc2p/motion_nav/execution_supervisor.py",
+    "mc2p/motion_nav/motion_candidate.py",
+    "mc2p/motion_nav/navigation_session.py",
+    "mc2p/motion_nav/online_motion.py",
+    "mc2p/skills/navigation_session_driver.py",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientActionRequest.java",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingAdmission.java",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingSchedule.java",
 )
 NAVIGATION_SESSION_SOURCES = (
     "mc2p/motion_nav/navigation_session.py",
@@ -330,6 +350,7 @@ def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
                               b09_air_motion_probe: bool = False,
                               d118_motion_calibration_probe: bool = False,
                               d120_motion_calibration_probe: bool = False,
+                              d122_client_timing_probe: bool = False,
                               b10_gap_solver_probe: bool = False,
                               continuous_height_probe: bool = False,
                               b11_world_change_probe: bool = False,
@@ -385,6 +406,9 @@ def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
             "scripts/d120_momentum_calibration.py",
             "scripts/d120_momentum_entry_calibration.py",
         )})
+    if d122_client_timing_probe:
+        sources.update({name: _hash(ROOT / name)
+                        for name in D122_CLIENT_TIMING_SOURCES})
     if b10_gap_solver_probe:
         sources.update({name: _hash(ROOT / name) for name in (
             *B03_SOURCES, *B09_AIR_MOTION_SOURCES, *B10_GAP_SOLVER_SOURCES,
@@ -954,13 +978,15 @@ def _scenario(runtime, backend, episode, directory, deadline, previous_gui=None)
 
 
 def prepare_scenario(run_dir: Path, *, seed: int, port: int, container_probe: bool,
-                     visibility_probe: bool = False, c1_fixture=None) -> dict:
+                     visibility_probe: bool = False, c1_fixture=None,
+                     gradle_home: Path | None = None) -> dict:
     if type(container_probe) is not bool or type(visibility_probe) is not bool or (container_probe and visibility_probe):
         raise ValueError('probe scene selection must be exclusive booleans')
     world_name = f"mc2p-visibility-deployment-{seed}" if container_probe or visibility_probe else "world"
     result = {"server": prepare_server(run_dir / "server", seed=seed, port=port,
                                        world_name=world_name, fixture_animals=visibility_probe,
-                                       c1_fixture=c1_fixture)}
+                                        c1_fixture=c1_fixture,
+                                        gradle_home=gradle_home)}
     if container_probe or visibility_probe:
         result["fixture"] = build_visibility_fixture(run_dir / "fixture", seed=seed, level_name=world_name)
         installed = install_visibility_fixture(run_dir / "fixture", run_dir / "server")
@@ -992,7 +1018,7 @@ _SINGLE_CLIENT_SESSION_PROBES = frozenset({
     "b06_ordinary_material", "b07_step", "b08_ground_modes",
     "b09_air_motion", "d118_motion_calibration", "b10_gap_solver",
     "continuous_height", "b11_world_change", "input_buffer_idle",
-    "c1", "surface_cost",
+    "c1", "surface_cost", "d122_client_timing",
 })
 
 
@@ -1012,7 +1038,7 @@ def _captures_close_diagnostics(
         return True
     return time_diagnostics and bool(active_probes & {
         "b11_world_change", "b10_gap_solver", "continuous_height",
-        "d118_motion_calibration",
+        "d118_motion_calibration", "d122_client_timing",
     })
 
 
@@ -1050,7 +1076,13 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                ftick_diagnostics: bool = False,
                b10_targeted_probe: str | None = None,
                d120_motion_calibration_probe: bool = False,
-               d120_full_matrix: bool = False) -> int:
+               d120_full_matrix: bool = False,
+               d122_client_timing_probe: bool = False,
+               d122_full_matrix: bool = False,
+               gradle_home: Path | None = None) -> int:
+    if gradle_home is None:
+        raise ValueError("worker requires an explicitly selected Gradle home")
+    gradle_home = validate_probe_gradle_home(gradle_home)
     if d120_motion_calibration_probe:
         if d118_motion_calibration_probe:
             raise ValueError("D118 and D120 calibration modes are mutually exclusive")
@@ -1075,7 +1107,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             input_buffer_idle_probe,c1_fixed_melee_probe,
             c1_moving_melee_probe,c1_external_motion_probe,
             c1r_control_frame_probe,b12a_attack_evidence_probe,
-            b12b_partial_combat_probe,surface_cost_probe))>1:
+            b12b_partial_combat_probe,surface_cost_probe,
+            d122_client_timing_probe))>1:
         raise ValueError('probe scenarios are mutually exclusive')
     if block_parity:
         raise ValueError('first-hit block parity was retired with sensor profile 3')
@@ -1103,6 +1136,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             ("b08_ground_modes", b08_ground_modes_probe),
             ("b09_air_motion", b09_air_motion_probe),
             ("d118_motion_calibration", d118_motion_calibration_probe),
+            ("d122_client_timing", d122_client_timing_probe),
             ("b10_gap_solver", b10_gap_solver_probe),
             ("continuous_height", continuous_height_probe),
             ("b11_world_change", b11_world_change_probe),
@@ -1126,6 +1160,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         b09_air_motion_probe=b09_air_motion_probe,
         d118_motion_calibration_probe=d118_motion_calibration_probe,
         d120_motion_calibration_probe=d120_motion_calibration_probe,
+        d122_client_timing_probe=d122_client_timing_probe,
         b10_gap_solver_probe=b10_gap_solver_probe,
         continuous_height_probe=continuous_height_probe,
         b11_world_change_probe=b11_world_change_probe,
@@ -1146,8 +1181,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
     server_log = None
     provenance = {}
     try:
-        provenance["launch"] = inspect_launch(launch)
-        provenance["assets"] = verify_assets()
+        provenance["launch"] = inspect_launch(launch, gradle_home=gradle_home)
+        provenance["assets"] = verify_assets(gradle_home=gradle_home)
         c1_artifact = None
         if (c1_moving_melee_probe or c1_external_motion_probe
                 or b12b_partial_combat_probe):
@@ -1156,6 +1191,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         provenance.update(prepare_scenario(
             run_dir, seed=seed, port=server_port, container_probe=container_probe,
             visibility_probe=visibility_probe, c1_fixture=c1_artifact,
+            gradle_home=gradle_home,
         ))
         server_log = (run_dir / "server-console.log").open("xb")
         server_env = client_environment(dict(os.environ), token="0" * 64, server_port=server_port, ipc_port=ipc_port)
@@ -1184,7 +1220,10 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                 raise TimeoutError("independent server startup deadline exceeded")
             time.sleep(.05)
         previous_gui = None
-        for number in range(1 if single_client_session else 2):
+        client_count = (12 if d122_full_matrix else 1) if d122_client_timing_probe else (
+            1 if single_client_session else 2
+        )
+        for number in range(client_count):
             directory = run_dir / f"client-{number}"
             directory.mkdir(exist_ok=False)
             options = "pauseOnLostFocus:false\nrenderDistance:2\nsimulationDistance:5\nmaxFps:60\nenableVsync:false\ntutorialStep:none\njoinedFirstServer:true\nskipMultiplayerWarning:true\nsoundCategory_master:0.0\n"
@@ -1193,6 +1232,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     or b05_jump_acceptance_probe or b06_ordinary_material_probe
                     or b07_step_probe or b08_ground_modes_probe
                     or b09_air_motion_probe or d118_motion_calibration_probe
+                    or d122_client_timing_probe
                     or b10_gap_solver_probe
                     or continuous_height_probe
                     or b11_world_change_probe
@@ -1224,7 +1264,16 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.STDOUT, creationflags=subprocess.CREATE_NO_WINDOW)
                     identity = ClientProcessIdentity(process.pid, psutil.Process(process.pid).create_time())
                     write_json_atomic(directory / "identity.json", asdict(identity))
-                    backend = create_deployment_backend(transport, identity, token, server_port)
+                    if d122_client_timing_probe:
+                        from scripts.d122_fabric_timing import D122FabricBehaviorBackend
+                        backend = D122FabricBehaviorBackend(
+                            transport=transport, client_identity=identity,
+                            token=token, server_port=server_port,
+                            observation_schema_version=OBSERVATION_V3,
+                            physics_directory=directory / "physics-tick-events",
+                        )
+                    else:
+                        backend = create_deployment_backend(transport, identity, token, server_port)
                     if b11_world_change_probe:
                         from scripts.r27_placement_runtime import InventoryDelayTestBackend
                         backend = InventoryDelayTestBackend(backend)
@@ -1610,6 +1659,43 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             fixture_writer=write_b08_fixture,
                             player_teleporter=teleport_b08_player,
                         )
+                    elif d122_client_timing_probe:
+                        from scripts.d122_fabric_timing import run_fabric_runtime
+                        from scripts.d118_momentum_calibration_runtime import fixture_command_row
+                        d122_directory = directory / "d122-client-timing"
+                        d122_directory.mkdir(exist_ok=True)
+                        allowed_materials = {"minecraft:air", "minecraft:grass_block"}
+                        def write_d122_fixture(positions, material, *, trial_id, phase,
+                                               origin, feet_y):
+                            if material not in allowed_materials:
+                                raise ValueError("undeclared D122 fixture material")
+                            if server is None or server.stdin is None:
+                                raise RuntimeError("D122 fixture server command channel is unavailable")
+                            commands = [f"setblock {x} {y} {z} {material} replace"
+                                        for x, y, z in positions]
+                            server.stdin.write(("\n".join(commands) + "\n").encode("utf-8"))
+                            server.stdin.flush()
+                            append_jsonl(d122_directory / "fixture-commands.jsonl",
+                                fixture_command_row(trial_id=trial_id, phase=phase,
+                                    origin=origin, feet_y=feet_y, material=material,
+                                    positions=positions))
+                        def teleport_d122_player(x, y, z, yaw, pitch):
+                            if server is None or server.stdin is None:
+                                raise RuntimeError("D122 fixture server command channel is unavailable")
+                            command = f"tp MC2PProbe {x:.6f} {y:.6f} {z:.6f} {yaw:.6f} {pitch:.6f}"
+                            server.stdin.write((command + "\n").encode("utf-8"))
+                            server.stdin.flush()
+                            append_jsonl(d122_directory / "teleports.jsonl", dict(
+                                x=x, y=y, z=z, yaw=yaw, pitch=pitch,
+                            ))
+                        direction = number // 3 if d122_full_matrix else 0
+                        repetition = number % 3 if d122_full_matrix else 0
+                        stages, rows, episode_checks = run_fabric_runtime(
+                            runtime, backend, episode, d122_directory, deadline,
+                            fixture_writer=write_d122_fixture,
+                            player_teleporter=teleport_d122_player,
+                            direction_index=direction, repetition=repetition,
+                        )
                     elif d118_motion_calibration_probe:
                         from scripts.d118_momentum_calibration_runtime import (
                             fixture_command_row,
@@ -1911,6 +1997,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             or b05_jump_route_probe or b05_jump_acceptance_probe
                             or b06_ordinary_material_probe or b07_step_probe
                             or b08_ground_modes_probe or b09_air_motion_probe
+                            or d122_client_timing_probe
                             or b10_gap_solver_probe or continuous_height_probe
                             or b11_world_change_probe
                             or input_buffer_idle_probe
@@ -2075,6 +2162,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                           or b05_jump_acceptance_probe or b06_ordinary_material_probe
                           or b07_step_probe or b08_ground_modes_probe
                           or b09_air_motion_probe or d118_motion_calibration_probe
+                          or d122_client_timing_probe
                           or b10_gap_solver_probe or continuous_height_probe
                           or b11_world_change_probe or input_buffer_idle_probe
                           or c1_probe or surface_cost_probe):
@@ -2097,6 +2185,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                                              or b08_ground_modes_probe
                                                              or b09_air_motion_probe
                                                              or d118_motion_calibration_probe
+                                                             or d122_client_timing_probe
                                                              or b10_gap_solver_probe
                                                              or continuous_height_probe
                                                              or b11_world_change_probe
@@ -2109,6 +2198,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             or b05_jump_acceptance_probe or b06_ordinary_material_probe
                             or b07_step_probe or b08_ground_modes_probe
                             or b09_air_motion_probe or d118_motion_calibration_probe
+                            or d122_client_timing_probe
                             or b10_gap_solver_probe or continuous_height_probe
                             or b11_world_change_probe or input_buffer_idle_probe
                             or surface_cost_probe))
@@ -2134,6 +2224,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     if d118_motion_calibration_probe:
                         sessions[-1]["d120_momentum_calibration" if d120_motion_calibration_probe
                                      else "d118_momentum_calibration"] = stages
+                    if d122_client_timing_probe:
+                        sessions[-1]["d122_client_timing"] = stages
                     if b10_gap_solver_probe:
                         sessions[-1]["b10_gap_solver"] = stages
                     if continuous_height_probe:
@@ -2248,7 +2340,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     and math.dist([start["position"]["value"][key] for key in ("x", "y", "z")],
                                   [end["position"]["value"][key] for key in ("x", "y", "z")]) < .1)]
         checks.append(dict(name="source_cache_and_launch_unchanged", passed=
-            inspect_launch(launch) == provenance["launch"]
+            inspect_launch(launch, gradle_home=gradle_home) == provenance["launch"]
             and _hash(run_dir / "server/server.jar", "sha1") == SERVER_SHA1))
     except BaseException as error:
         failure = dict(type=type(error).__name__, message=str(error))
@@ -2278,6 +2370,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         b09_air_motion_probe=b09_air_motion_probe,
         d118_motion_calibration_probe=d118_motion_calibration_probe,
         d120_motion_calibration_probe=d120_motion_calibration_probe,
+        d122_client_timing_probe=d122_client_timing_probe,
         b10_gap_solver_probe=b10_gap_solver_probe,
         continuous_height_probe=continuous_height_probe,
         b11_world_change_probe=b11_world_change_probe,
@@ -2298,6 +2391,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         field_profiles=["navigation_v1", "interaction_v1"] if (
             mining_probe or container_probe or visibility_probe
             or b11_world_change_probe or c1_probe or surface_cost_probe
+            or d122_client_timing_probe
         ) else ["navigation_v1"],
         seed=seed, provenance=provenance,
         scenario="visibility" if visibility_probe else "mining" if mining_probe else "container" if container_probe
@@ -2312,6 +2406,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             else "b07-step" if b07_step_probe
             else "b08-ground-modes" if b08_ground_modes_probe
             else "b09-air-motion" if b09_air_motion_probe
+            else "d122-client-timing" if d122_client_timing_probe
             else "d118-momentum-calibration" if d118_motion_calibration_probe
             else "b10-gap-solver" if b10_gap_solver_probe
             else "continuous-height" if continuous_height_probe
@@ -2346,6 +2441,7 @@ def main(argv=None) -> int:
     parser.add_argument("--ipc-port", type=int, default=8140)
     parser.add_argument("--timeout-seconds", type=float)
     parser.add_argument("--launch-json", type=Path)
+    parser.add_argument("--gradle-home", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--container-probe", action="store_true", help="verify nonempty normal chest transfer and reconnect")
     parser.add_argument("--mining-probe", action="store_true", help="verify shared Runtime mining, pickup, placement and persisted server state")
     parser.add_argument("--time-diagnostics", action="store_true", help="record read-only tick/time-packet attribution outside actor payloads")
@@ -2385,6 +2481,10 @@ def main(argv=None) -> int:
                         help='run the D120 sealed momentum entry calibration')
     parser.add_argument('--d120-full-matrix', action='store_true',
                         help='run D120 three families in four directions three times')
+    parser.add_argument('--d122-client-timing-probe', action='store_true',
+                        help='run D122 exact first-effect and prearmed-default trials')
+    parser.add_argument('--d122-full-matrix', action='store_true',
+                        help='run D122 three timing states in four directions three times')
     parser.add_argument('--b10-gap-solver-probe', action='store_true',
                         help='solve and validate one-cell gaps in a controlled session')
     parser.add_argument('--b10-targeted-probe', choices=['coordinator-worker-delay-5-0-0'],
@@ -2428,6 +2528,7 @@ def main(argv=None) -> int:
             args.b07_step_probe,args.b08_ground_modes_probe,
             args.b09_air_motion_probe,args.d118_motion_calibration_probe,
             args.d120_motion_calibration_probe,
+            args.d122_client_timing_probe,
             args.b10_gap_solver_probe,
             args.continuous_height_probe,args.navigation_review20_probe,
             args.b11_world_change_probe,
@@ -2453,12 +2554,13 @@ def main(argv=None) -> int:
         parser.error('F-TICK diagnostics requires --time-diagnostics')
     if args.ftick_diagnostics and not (
             args.b10_gap_solver_probe or args.d118_motion_calibration_probe
-            or args.d120_motion_calibration_probe):
+            or args.d120_motion_calibration_probe or args.d122_client_timing_probe):
         parser.error(
             'F-TICK diagnostics requires --b10-gap-solver-probe or '
             '--d118-motion-calibration-probe'
         )
-    if ((args.d118_motion_calibration_probe or args.d120_motion_calibration_probe)
+    if ((args.d118_motion_calibration_probe or args.d120_motion_calibration_probe
+            or args.d122_client_timing_probe)
             and not (args.time_diagnostics and args.physics_tick_diagnostics
                      and args.ftick_diagnostics)):
         parser.error(
@@ -2468,6 +2570,8 @@ def main(argv=None) -> int:
         parser.error('D118 full matrix requires --d118-motion-calibration-probe')
     if args.d120_full_matrix and not args.d120_motion_calibration_probe:
         parser.error('D120 full matrix requires --d120-motion-calibration-probe')
+    if args.d122_full_matrix and not args.d122_client_timing_probe:
+        parser.error('D122 full matrix requires --d122-client-timing-probe')
     if args.b10_targeted_probe is not None and not args.b10_gap_solver_probe:
         parser.error('targeted B10 probe requires --b10-gap-solver-probe')
     if (args.c1r_control_frame_probe or args.b12b_partial_combat_probe
@@ -2495,12 +2599,13 @@ def main(argv=None) -> int:
                                or args.surface_cost_probe
                                or args.b11_world_change_probe
                                or args.continuous_height_probe
-                               or args.navigation_review20_probe) else 600
+                               or args.navigation_review20_probe
+                               or args.d122_client_timing_probe) else 600
     if (not math.isfinite(args.timeout_seconds) or not 120 <= args.timeout_seconds <= maximum_timeout
             or not 1 <= args.server_port <= 65535 or not 1 <= args.ipc_port <= 65535 or args.server_port == args.ipc_port):
         parser.error("invalid bounded probe configuration")
     if args.worker:
-        if args.launch_json is None or args.run_dir is None:
+        if args.launch_json is None or args.run_dir is None or args.gradle_home is None:
             parser.error("worker requires prepared inputs")
         _no_links(args.run_dir.absolute())
         return run_worker(args.run_dir.absolute(), json.loads(args.launch_json.read_text("utf-8")), args.seed,
@@ -2533,7 +2638,10 @@ def main(argv=None) -> int:
                           args.ftick_diagnostics,
                           b10_targeted_probe=args.b10_targeted_probe,
                           d120_motion_calibration_probe=args.d120_motion_calibration_probe,
-                          d120_full_matrix=args.d120_full_matrix)
+                          d120_full_matrix=args.d120_full_matrix,
+                          d122_client_timing_probe=args.d122_client_timing_probe,
+                           d122_full_matrix=args.d122_full_matrix,
+                           gradle_home=args.gradle_home)
 
     if not port_free(args.server_port) or not port_free(args.ipc_port):
         parser.error("a local test port is occupied")
@@ -2541,10 +2649,12 @@ def main(argv=None) -> int:
         parser.error("insufficient local memory or disk headroom")
     with socket.create_connection(("127.0.0.1", 7897), timeout=2):
         pass
-    launch_path = args.launch_json or export_launch()
+    gradle_home = (select_probe_gradle_home() if args.gradle_home is None
+                   else validate_probe_gradle_home(args.gradle_home))
+    launch_path = args.launch_json or export_launch(gradle_home=gradle_home)
     _no_links(launch_path.absolute())
     launch = json.loads(launch_path.read_text("utf-8"))
-    inspect_launch(launch)
+    inspect_launch(launch, gradle_home=gradle_home)
     root = ROOT / "artifacts/fabric-deployment"
     _no_links(root.parent)
     root.mkdir(exist_ok=True)
@@ -2555,7 +2665,8 @@ def main(argv=None) -> int:
     print(f"FABRIC_DEPLOYMENT_RUN_DIR={run_dir}", flush=True)
     command = [sys.executable, str(Path(__file__).absolute()), "--worker", "--run-dir", str(run_dir),
         "--launch-json", str(run_dir / "launch.json"), "--seed", str(args.seed), "--server-port", str(args.server_port),
-        "--ipc-port", str(args.ipc_port), "--timeout-seconds", str(args.timeout_seconds)]
+        "--ipc-port", str(args.ipc_port), "--timeout-seconds", str(args.timeout_seconds),
+        "--gradle-home", str(gradle_home)]
     if args.container_probe:
         command.append("--container-probe")
     if args.mining_probe:
@@ -2589,6 +2700,10 @@ def main(argv=None) -> int:
         command.append('--d120-motion-calibration-probe')
     if args.d120_full_matrix:
         command.append('--d120-full-matrix')
+    if args.d122_client_timing_probe:
+        command.append('--d122-client-timing-probe')
+    if args.d122_full_matrix:
+        command.append('--d122-full-matrix')
     if args.b10_gap_solver_probe: command.append('--b10-gap-solver-probe')
     if args.b10_targeted_probe is not None:
         command.extend(['--b10-targeted-probe', args.b10_targeted_probe])

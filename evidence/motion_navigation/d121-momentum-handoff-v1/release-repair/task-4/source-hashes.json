@@ -1,0 +1,22 @@
+{
+  "sha256": {
+    "docs/motion_navigation/acceptance/d121-fallback-backed-momentum-handoff.md": "0db683ba36777bdb26c5e9491ceeedd4efeacf7e34b6ad9c9ed2ce41de03df84",
+    "docs/motion_navigation/decisions/0121-prove-fallback-backed-momentum-handoff.md": "3c78f110426cb84cfb97f4d0aa611d8452fc21b61f2eeadf2b95041ef96689f7",
+    "docs/motion_navigation/stages/d121-fallback-backed-momentum-handoff-plan.md": "65278497caf8f97b53295aacb43f8f8c5c15cdbec33f6d0e5b8c7d4a32cf3d62",
+    "docs/motion_navigation/stages/d121-release-repair-plan.md": "a789ba224263ddef3693e3924a37134f86b95791847d72bb08692dc11a746339",
+    "packaging/motion-navigation-standalone/AGENTS.md": "e6c35b21375c42625a0c8d6bce1f770f09a3d079f3e83313c44cab3c71f2e676",
+    "packaging/motion-navigation-standalone/README.md": "bf495e9a63af36af68af60484c33df47201ff4f76b060c1d31c8e18f10f36df8",
+    "scripts/d121_transport_late_probe.py": "f5980be0477c88b6ebb6f21fc3720682d89d1eb380ecaa5261d50c27249633f4",
+    "tests/motion_nav/test_d121_transport_late.py": "2d6cf78c43a8ef729e990002ba5206068fae2681ce29d6569588f377039a5f9f"
+  },
+  "line_endings": {
+    "docs/motion_navigation/acceptance/d121-fallback-backed-momentum-handoff.md": "LF",
+    "docs/motion_navigation/decisions/0121-prove-fallback-backed-momentum-handoff.md": "LF",
+    "docs/motion_navigation/stages/d121-fallback-backed-momentum-handoff-plan.md": "LF",
+    "docs/motion_navigation/stages/d121-release-repair-plan.md": "LF",
+    "packaging/motion-navigation-standalone/AGENTS.md": "LF",
+    "packaging/motion-navigation-standalone/README.md": "LF",
+    "scripts/d121_transport_late_probe.py": "LF",
+    "tests/motion_nav/test_d121_transport_late.py": "LF"
+  }
+}

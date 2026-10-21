@@ -15,7 +15,7 @@ D120 已证明冻结的 972 个落地入口和三种后缀与实机校准结果�
 
 D121 开始时，安全证明把“松开全部输入”写死为唯一收尾。S1 已完成声明式 fallback，prepared proof 和在线求解器都能证明潜行尾段。本次继续解决消息表达和落地交接，不重做 S0／S1。
 
-历史 S2 的测试侧 direct-copy 联合包重复序列化当前与后继完整证明，超过 2 MiB，保留为失败的替代方案。临时生产实现已撤回，生产联合消息没有运行。原 `s2/stop.json` 不改写；本次授权修订继续使用 D121，不新开 D122，也不把历史替代方案的失败当作当前阶段必须终止的依据。
+历史 S2 的测试侧 direct-copy 联合包重复序列化当前与后继完整证明，超过 2 MiB，保留为失败的替代方案。临时生产实现已撤回，生产联合消息没有运行。原 `s2/stop.json` 不改写；当时授权的组件修订继续使用 D121，也不把历史替代方案的失败当作当前阶段必须终止的依据。
 
 ## 2. 本轮决定
 
@@ -102,4 +102,10 @@ D121 不授权：
 
 组件证据显示，过期 jump 在 L+2 真实生效，Python 输入账本随后才把它分类为 `APPLIED_OUTSIDE_WINDOW`。现有 `ActionSnapshotV1` 和客户端 wire 不携带 exact movement tick window 或 prepared generation，所以客户端在物理前没有这项判断依据。
 
-这属于原决定已经登记的停止条件。修复需要扩展 action contract／wire／Java，超出当前“无 Java、无协议变化”的授权。D121 因此保持已经通过的 Task 2—4 切片，整体改为 `PARTIAL／STOPPED`；不运行 S4、Fabric 或规划接入。后续若继续，必须另写决定定义客户端应用前的 tick window／generation／撤销语义和兼容边界，不能把 receipt 的事后检测写成通过。
+这属于原决定已经登记的停止条件。修复需要扩展 action contract／wire／Java，超出当前“无 Java、无协议变化”的授权。D121 因此保持已经通过的 Task 2—4 切片，整体改为 `PARTIAL／STOPPED`；不运行 S4、Fabric 或规划接入。后续 D122 尚未开始，须在发布修复全部通过后另写决定。客户端首效窗口、安全默认输入和握手兼容边界需要一起定义，不能把 receipt 的事后检测写成通过。
+
+## 发布修复 Task 4：诊断与入口更正（2026-10-20）
+
+新的 Task 5 诊断使用 v2 schema，分别记录 `applied_in_window`、`applied_outside_window` 和 `not_delivered`。及时和未送达都没有执行“协议在物理前拒绝过期输入”的检查，因此 `expired_application_prevention=not_applicable`，兼容字段 `protocol_prevented_expired_application=null`。null 不表示成功；晚到后仍应用则明确为 `not_prevented` 和 false。
+
+原 Task 5 证据不回写。新结果追加到 `evidence/motion_navigation/d121-momentum-handoff-v1/release-repair/task-4/`；三场的物理、输入和停止结论保持不变，聚合仍为 `FAILED_STOPPED`。公开入口统一为 `PARTIAL／STOPPED`；D122 尚未开始，必须先完成发布修复的全量 Windows 与独立快照门禁。

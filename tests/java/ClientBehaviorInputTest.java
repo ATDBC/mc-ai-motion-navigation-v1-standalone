@@ -61,7 +61,89 @@ public final class ClientBehaviorInputTest {
         deferredRejectionClearsPreviouslyBoundDiagnosticIdentity();
         operationRejectionPreservesAdmittedMovementAndIdentity();
         boundedLedgerDropsOldestSamplesWithoutCrashing();
+        exactWindowOverridesDefaultBeforeVanillaAndNeverRepeatsConsumption();
+        missedWindowRunsFullDefaultDespiteWallClockAndClearsOldSneak();
+        rejectedActivationKeepsParentDefaultAndBoundsResponse();
         System.out.println("CLIENT_BEHAVIOR_INPUT_OK");
+    }
+
+    private static void rejectedActivationKeepsParentDefaultAndBoundsResponse() {
+        ClientRequestGate gate = new ClientRequestGate();
+        long[] now = {3_000_000_000L};
+        int[] attempts = {0};
+        ClientBehaviorInput input = new ClientBehaviorInput(gate, () -> now[0], () -> true,
+                () -> now[0], () -> {}, payload -> { attempts[0]++; return false; }, sample -> {});
+        yes(gate.admit("reject", 40, 0, 0, 2_000_000_000L, 1, now[0]) == null);
+        input.bindAcceptedRequest("reject", 40);
+        input.set(1, 0, false, false, true);
+        input.armDefault("reject", 40, 2, 0, 0, false, true, false, 8, 400_000_000L);
+        input.prepareForPlayerTick(); input.tick(false, 1);
+        yes(gate.admitPending("reject", 41, 1, 1, 2_000_000_000L, 1) == null);
+        input.stageWindowed("reject", 41, 1, 2, 2, now[0] + 2_000_000_000L,
+                1, 1, 0, true, false, true, "operation-rejected", null);
+        input.prepareForPlayerTick();
+        yes(attempts[0] == 1 && input.sneaking);
+        input.tick(input.sneaking, .3f);
+        yes(input.lastSample().requestSequenceId() == 40 && input.lastSample().sneak());
+        yes(!input.lastSample().jump() && !input.timingResponseReady());
+    }
+
+    private static void exactWindowOverridesDefaultBeforeVanillaAndNeverRepeatsConsumption() {
+        ClientRequestGate gate = new ClientRequestGate();
+        long[] now = {1_000_000_000L};
+        int[] activations = {0};
+        ClientBehaviorInput input = new ClientBehaviorInput(gate, () -> now[0], () -> true,
+                () -> now[0], () -> {}, payload -> { activations[0]++; return true; }, sample -> {});
+        yes(gate.admit("timed", 25, 0, 0, 2_000_000_000L, 1, now[0]) == null);
+        input.bindAcceptedRequest("timed", 25);
+        input.set(1, 0, false, false, true);
+        input.armDefault("timed", 25, 2, 0, 0, false, true, false, 8, 400_000_000L);
+        input.prepareForPlayerTick();
+        input.tick(false, 1);
+        yes(input.drainTimingEvents().stream().anyMatch(e -> e.status().equals("fallback_armed")));
+
+        yes(gate.admitPending("timed", 26, 1, 1, 2_000_000_000L, 1) == null);
+        input.stageWindowed("timed", 26, 1, 2, 2, now[0] + 2_000_000_000L,
+                1, 1, 0, true, false, true, "payload", null);
+        input.prepareForPlayerTick();
+        yes(!input.sneaking); // Previous/default sneak must not leak into the jump frame.
+        input.prepareForPlayerTick(); // Repeated HEAD hook cannot consume or re-apply.
+        yes(activations[0] == 1);
+        input.tick(false, 1);
+        yes(input.lastSample().requestSequenceId() == 26 && input.lastSample().jump());
+        yes(input.drainTimingEvents().stream().filter(e -> e.status().equals("window_applied")).count() == 1);
+        yes(input.timingResponseReady());
+        input.tick(false, 1); // A second Input.tick without a new HEAD preparation cannot replay the jump.
+        yes(!input.lastSample().jump());
+    }
+
+    private static void missedWindowRunsFullDefaultDespiteWallClockAndClearsOldSneak() {
+        ClientRequestGate gate = new ClientRequestGate();
+        long[] now = {2_000_000_000L};
+        ClientBehaviorInput input = new ClientBehaviorInput(gate, () -> now[0], () -> true);
+        yes(gate.admit("late", 30, 0, 0, 100_000_000L, 1, now[0]) == null);
+        input.bindAcceptedRequest("late", 30);
+        input.set(1, 0, false, false, true);
+        input.armDefault("late", 30, 2, 0, 0, false, true, false, 8, 400_000_000L);
+        input.prepareForPlayerTick(); input.tick(false, 1);
+        yes(gate.admitPending("late", 31, 1, 1, 1_000_000_000L, 1) == null);
+        input.stageWindowed("late", 31, 1, 1, 1, now[0] + 1_000_000_000L,
+                1, 1, 0, true, false, true, "payload", null);
+        // The only legal first-effect tick is already past. Jump must never enter physics.
+        for (int index = 0; index < 8; index++) {
+            input.expireOnClientTick();
+            input.prepareForPlayerTick();
+            yes(input.sneaking);
+            input.tick(input.sneaking, .3f);
+            yes(input.lastSample().sneak() && !input.lastSample().jump());
+            now[0] += 100_000_000L;
+        }
+        yes(!input.timingResponseReady());
+        input.prepareForPlayerTick();
+        yes(input.timingResponseReady());
+        yes(!input.sneaking); // Exhaustion clears the pre-Input.tick projection in the same boundary.
+        input.tick(false, 1);
+        yes(!input.lastSample().sneak() && !input.lastSample().jump());
     }
 
     private static void beforeSampleCallbackRunsBeforeActualInputConsumption() {
@@ -131,7 +213,7 @@ public final class ClientBehaviorInputTest {
             yes(input.jumping && !gate.leaseActive(now[0]));
             now[0]++;
             input.prepareForPlayerTick();
-            yes(input.jumping && input.sneaking); // Logical exhaustion preserves vanilla's last edges.
+            yes(input.jumping && !input.sneaking); // D122 overwrites stale pre-sample sneak every tick.
             input.tick(input.sneaking, factor); // The intervening unleased sample remains neutral.
             yes(input.movementForward == 0 && !input.jumping && !input.sneaking);
             yes(input.sampleCount() == (sequence + 1) * 2 && input.leasedSampleCount() == sequence + 1);

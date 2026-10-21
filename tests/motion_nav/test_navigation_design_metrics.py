@@ -50,6 +50,7 @@ def validate(mode):
     def test_prepared_pipeline_types_have_reviewed_non_dispatch_roles(self):
         expected = {
             'ActivationStatus',
+            'ClientTimingStatusV1',
             'CommittedExecutionPhase',
             'DependencyStatus',
             'PreparedAdmissionStatus',

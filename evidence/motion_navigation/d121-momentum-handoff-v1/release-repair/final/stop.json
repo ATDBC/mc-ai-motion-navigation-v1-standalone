@@ -1,0 +1,37 @@
+{
+  "status": "ENVIRONMENT_INVALID",
+  "task": "D121 release repair Task 5 B",
+  "tested_commit": "bf71b742",
+  "platform": "Windows",
+  "reason": "First full source forward run found two historical evidence interpreter availability assertions; no direct fix or retry authorized within this task.",
+  "completed_modules": 84,
+  "summary": {
+    "passed": 83,
+    "failed": 1,
+    "error": 0,
+    "timeout": 0,
+    "launch_error": 0
+  },
+  "failed_modules": [
+    {
+      "module": "tests.motion_nav.test_d105_t2_evidence",
+      "failures": 2,
+      "errors": 0,
+      "diagnostic": "test_actual_generation_commands_resolve_repository_python (tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_actual_generation_commands_resolve_repository_python) ... FAIL\ntest_actual_receiver_timing_recomputes_without_new_measurement (tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_actual_receiver_timing_recomputes_without_new_measurement) ... ok\ntest_historical_index_recomputes_evidence_without_rebinding_sources (tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_historical_index_recomputes_evidence_without_rebinding_sources) ... FAIL\ntest_lf_hash_is_independent_of_worktree_newlines (tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_lf_hash_is_independent_of_worktree_newlines) ... ok\ntest_standalone_export_uses_current_interpreter_for_recorded_repository_python (tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_standalone_export_uses_current_interpreter_for_recorded_repository_python) ... ok\ntest_timeline_is_segmented_without_using_clock_as_a_gate (tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_timeline_is_segmented_without_using_clock_as_a_gate) ... ok\ntest_timeline_rejects_duplicate_or_out_of_order_events (tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_timeline_rejects_duplicate_or_out_of_order_events) ... ok\n\n======================================================================\nFAIL: test_actual_generation_commands_resolve_repository_python (tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_actual_generation_commands_resolve_repository_python)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\tests\\motion_nav\\test_d105_t2_evidence.py\", line 59, in test_actual_generation_commands_resolve_repository_python\n    self.assertTrue(result[\"passed\"], result[\"errors\"])\nAssertionError: False is not true : ['generation command interpreter does not exist: receiver_timing', 'generation command interpreter does not exist: receiver_recompute', 'generation command interpreter does not exist: evidence_verify', 'receiver timing argv interpreter does not exist']\n\n======================================================================\nFAIL: test_historical_index_recomputes_evidence_without_rebinding_sources (tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_historical_index_recomputes_evidence_without_rebinding_sources)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\tests\\motion_nav\\test_d105_t2_evidence.py\", line 32, in test_historical_index_recomputes_evidence_without_rebinding_sources\n    self.assertTrue(result[\"passed\"], result[\"errors\"])\nAssertionError: False is not true : ['generation command interpreter does not exist: receiver_timing', 'generation command interpreter does not exist: receiver_recompute', 'generation command interpreter does not exist: evidence_verify', 'receiver timing argv interpreter does not exist']\n\n----------------------------------------------------------------------\nRan 7 tests in 0.086s\n\nFAILED (failures=2)\n"
+    }
+  ],
+  "runner_stopped": true,
+  "source_reverse": "NOT_RUN",
+  "snapshot_export": "NOT_RUN",
+  "snapshot_forward": "NOT_RUN",
+  "snapshot_reverse": "NOT_RUN",
+  "d122": "NOT_STARTED",
+  "report_sha256": "7c9942083bcc348866d7d8b9b4270f10c97211c1d7839a7d02440ed79bf9b31a",
+  "environment_facts": {
+    "test_requires_repository_relative_interpreter": ".venv/python.exe",
+    "isolated_worktree_interpreter_exists": false,
+    "actual_runner_interpreter": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "actual_runner_interpreter_exists": true
+  },
+  "resolution": "Parent authorized ignored .venv junction to formal existing environment. No code, tests or historical evidence changed."
+}

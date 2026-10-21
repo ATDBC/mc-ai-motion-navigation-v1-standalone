@@ -1,0 +1,49 @@
+{
+  "schema": "mc2p.d122-2-java-manifest.v1",
+  "source_base": "9cda6c03",
+  "implementation_head": "775cafd2",
+  "platform": "Windows",
+  "scope": "D122-2 Java first-effect window and one safe default",
+  "checks": {
+    "adjacent": 89,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "mutations_detected": 11,
+    "compile_java": "passed"
+  },
+  "limits": {
+    "action_payload_bytes": 16384,
+    "timing_event_count": 64
+  },
+  "not_run": [
+    "full Windows shards",
+    "standalone full checks",
+    "D122-3 formal component matrix",
+    "performance acceptance",
+    "Fabric"
+  ],
+  "code_sha256": {
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientActionRequest.java": "977c5a00b1b4bae9a219189b258e130a4acfd505896eddba73c240969de7f753",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientRequestGate.java": "8bbf93ba6cc4f37b304d4aec35a0e776b9714d9f709966a4cc6a99460cfb2ad9",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingSchedule.java": "6f4163bf04bd2273a9546121ec81c0e8b4d1303e1d41cd42f3954eccd72ae4a4",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java": "eb0dc02325bcccd52033f8b23f7403c78a43d68f1132eae6bf93172ae23d7516",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java": "412d56d143ca25eced5377556a561959996a575ab44a8019c0dd4cd15f64c051",
+    "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/DeploymentSession.java": "24078c9fc7d019464bc50541bd9e637bab7e5db96749686eee714f78b753e568",
+    "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/DeploymentStepV3.java": "c18b13e20ba353ff8a364051d5ffaf37c17f203a2e6c2893a6d73d714752bc64",
+    "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/DeploymentObservationProbe.java": "e96794a9e79e7c7776cc19db13f43ffd33367d35ddcdd2814af1d6544f7540a1",
+    "tests/java/ClientActionTimingDecodeTest.java": "d708130dd5b38f2bf1fed9376100c12481625fa497fe3e3bae293bdd37be1ada",
+    "tests/java/ClientTimingScheduleTest.java": "6797d508d9ac1ae685316f2ed21b34ad327d3bfb8e4d00c8ed915a387e057467",
+    "tests/java/ClientBehaviorInputTest.java": "b32b2d1f058cb267d1d1d1fd3f770a6122bc6ac18b7defbba1dbeb4e53955087",
+    "tests/test_d122_java_timing.py": "ab75136ebe07158af95151bf8c6f4baf64766f7d436e1c856fad3880d0739f42",
+    "scripts/d122_java_mutation_probe.py": "3cd2ee478d6e4f2ed35121c2f55337eaf5f3de02a30772c66a8fd4e5ed906973"
+  },
+  "evidence_sha256": {
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2/README.md": "8f772a134a9c23f1a9d67c61ea5a5e92cb11c53085b74b7fd0f76c3cf65e6d8a",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2/red-before-java.txt": "bad1700133efd68d36c17d08198868e78086bc959d47a532efc799e4b9012029",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2/java-adjacent.txt": "684f5e323580a2a4f695a71e905d80b9774d0e751bb7a0a88ef9e420f91ee38a",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2/compile-java.txt": "5777b837e36b77c2fc7ecc71552dfc994677d055236f1fa8e342d2e704b4c35b",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2/mutation-run.txt": "bb69d255587675f8f8df40cda2bacfe50c6ab354e732d64ce68a0f381feefe8e",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2/mutations.json": "03cc8c07c0e4fb2412ed8e0222227c651d85acd7ee302c39b3c227e888cbc5e2"
+  }
+}

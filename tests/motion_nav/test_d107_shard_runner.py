@@ -1019,7 +1019,7 @@ time.sleep(30)
                 process.kill()
                 process.wait(timeout=3)
 
-    def test_conflicting_create_time_never_replaces_registered_pid(self):
+    def test_unconfirmed_conflicting_create_time_never_replaces_registered_pid(self):
         original = ProcessIdentityV0(pid=123, create_time=456.0)
         reused = ProcessIdentityV0(pid=123, create_time=789.0)
         registered = {123: original}
@@ -1029,6 +1029,68 @@ time.sleep(30)
 
         self.assertEqual(registered, {123: original})
         self.assertIn("pid 123 identity changed", diagnostics[0])
+
+    def test_windows_job_confirmation_retires_exited_reused_pid_identity(self):
+        original = ProcessIdentityV0(pid=123, create_time=456.0)
+        reused = ProcessIdentityV0(pid=123, create_time=789.0)
+        registered = {123: original}
+        diagnostics = []
+
+        shard_runner._register_scanned_identity(reused, registered, diagnostics)
+        with patch.object(shard_runner, "_identity_is_alive", return_value=False):
+            shard_runner._merge_child_registration(
+                {"registered_tree": []},
+                registered,
+                diagnostics,
+                authorized_identities={123: reused},
+            )
+
+        self.assertEqual(registered, {123: reused})
+        self.assertEqual(diagnostics, [])
+
+    def test_live_windows_job_confirmation_resolves_pid_reuse_during_scan(self):
+        root = ProcessIdentityV0(pid=100, create_time=400.0)
+        original = ProcessIdentityV0(pid=123, create_time=456.0)
+        reused = ProcessIdentityV0(pid=123, create_time=789.0)
+        registered = {100: root, 123: original}
+        diagnostics = []
+        snapshot = type("Snapshot", (), {"identities": (root, reused)})()
+        job = object()
+
+        with patch.object(
+            shard_runner, "capture_registered_tree", return_value=snapshot,
+        ), patch.object(
+            shard_runner,
+            "_container_authorized_identities",
+            return_value={100: root, 123: reused},
+        ), patch.object(shard_runner, "_identity_is_alive", return_value=False):
+            shard_runner._capture_into(
+                root,
+                registered,
+                diagnostics,
+                job=job,
+            )
+
+        self.assertEqual(registered, {100: root, 123: reused})
+        self.assertEqual(diagnostics, [])
+
+    def test_windows_job_confirmation_does_not_replace_live_registered_identity(self):
+        original = ProcessIdentityV0(pid=123, create_time=456.0)
+        reused = ProcessIdentityV0(pid=123, create_time=789.0)
+        registered = {123: original}
+        diagnostics = []
+
+        shard_runner._register_scanned_identity(reused, registered, diagnostics)
+        with patch.object(shard_runner, "_identity_is_alive", return_value=True):
+            shard_runner._merge_child_registration(
+                {"registered_tree": []},
+                registered,
+                diagnostics,
+                authorized_identities={123: reused},
+            )
+
+        self.assertEqual(registered, {123: original})
+        self.assertTrue(any("identity changed" in item for item in diagnostics))
 
     def test_child_registration_diagnostic_is_not_dropped(self):
         identity = ProcessIdentityV0(pid=123, create_time=456.0)

@@ -1,0 +1,10 @@
+{
+  "verified_file_count": 2829,
+  "reconciled_paths": 2387,
+  "all_task4_evidence_exported": true,
+  "method": "export_tree plus verify_tree",
+  "root": ".tmp/d121-task4-final-export",
+  "byte_base_root": ".tmp/d121-task2-integration/base",
+  "byte_base_commit": "3889d10e298fec57ce7b0a82a63bef331c431bb7",
+  "clean": false
+}

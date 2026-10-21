@@ -1,0 +1,9 @@
+kind	next_tick	valid_for_ticks	earliest	latest	activation_tick	accepted
+ordinary	26	1	-	-	27	true
+ordinary	26	3	-	-	29	true
+ordinary	26	3	-	-	30	false
+windowed	26	1	27	27	28	true
+windowed	26	1	27	28	28	false
+windowed	106	3	107	107	110	true
+windowed	106	3	107	107	111	false
+ordinary	0	1	-	-	9223372036854775807	false

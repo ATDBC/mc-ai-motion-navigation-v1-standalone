@@ -1,0 +1,45 @@
+test_body_inside_lower_space_restores_unknown_requirement (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_body_inside_lower_space_restores_unknown_requirement) ... ok
+test_exact_d120_data_absent_never_becomes_small_success (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_exact_d120_data_absent_never_becomes_small_success) ... ok
+test_maximum_extent_material_read_is_independent_of_collision (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_maximum_extent_material_read_is_independent_of_collision) ... ok
+test_overlays_leave_frozen_source_unchanged (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_overlays_leave_frozen_source_unchanged) ... ERROR
+test_physics_equivalence_does_not_remove_dependency_gate (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_physics_equivalence_does_not_remove_dependency_gate) ... ok
+test_unknown_under_air_rejects_parent_and_successor (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_unknown_under_air_rejects_parent_and_successor) ... FAIL
+
+======================================================================
+ERROR: test_overlays_leave_frozen_source_unchanged (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_overlays_leave_frozen_source_unchanged)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d123_dependency_probe.py", line 67, in test_overlays_leave_frozen_source_unchanged
+    before = probe.digest(self.case[4])
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\d123_dependency_probe.py", line 57, in digest
+    return hashlib.sha256(json.dumps(plain(value), sort_keys=True, separators=(",", ":"),
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.venv\Lib\json\__init__.py", line 238, in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.venv\Lib\json\encoder.py", line 200, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.venv\Lib\json\encoder.py", line 258, in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.venv\Lib\json\encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type bytes is not JSON serializable
+
+======================================================================
+FAIL: test_unknown_under_air_rejects_parent_and_successor (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_unknown_under_air_rejects_parent_and_successor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d123_dependency_probe.py", line 25, in test_unknown_under_air_rejects_parent_and_successor
+    self.assertEqual(row["successor_binding_status"], "needs_world", row)
+AssertionError: 'solved' != 'needs_world'
+- solved
++ needs_world
+ : {'parent_status': 'needs_world', 'parent_failure': {'status': 'needs_world', 'proof': None, 'candidates_evaluated': 0, 'missing_cells': [[0, 62, 0]], 'reasons': ['release_recovery_world_incomplete']}, 'successor_binding_status': 'solved', 'successor_failure_reasons': (), 'offline_dependency_gate': 'NEEDS_WORLD', 'gate_unknown': [(0, 62, 0)], 'dependency_signature': '43548d603b1a62eece8b61021494f1e87fd361f44f15c81376d0ac529571b8b0', 'dependencies': [(0, 62, -6), (0, 62, -5), (0, 62, -4), (0, 62, -3), (0, 62, -2), (0, 62, -1), (0, 62, 0), (0, 62, 1), (0, 62, 2), (0, 62, 5), (0, 62, 6), (0, 62, 7), (0, 63, -6), (0, 63, -5), (0, 63, -4), (0, 63, -3), (0, 63, -2), (0, 63, -1), (0, 63, 0), (0, 63, 1), (0, 63, 2), (0, 63, 3), (0, 63, 4), (0, 63, 5), (0, 63, 6), (0, 63, 7), (0, 64, -6), (0, 64, -5), (0, 64, -4), (0, 64, -3), (0, 64, -2), (0, 64, -1), (0, 64, 0), (0, 64, 1), (0, 64, 2), (0, 64, 3), (0, 64, 4), (0, 64, 5), (0, 64, 6), (0, 64, 7), (0, 65, -6), (0, 65, -5), (0, 65, -4), (0, 65, -3), (0, 65, -2), (0, 65, -1), (0, 65, 0), (0, 65, 1), (0, 65, 2), (0, 65, 3), (0, 65, 4), (0, 65, 5), (0, 65, 6), (0, 65, 7), (0, 66, -2), (0, 66, -1), (0, 66, 0), (0, 66, 1), (0, 66, 2), (0, 66, 3), (0, 66, 4), (0, 66, 5), (0, 66, 6), (0, 67, -1), (0, 67, 0), (0, 67, 3), (0, 67, 4)]}
+
+----------------------------------------------------------------------
+Ran 6 tests in 2.227s
+
+FAILED (failures=1, errors=1)

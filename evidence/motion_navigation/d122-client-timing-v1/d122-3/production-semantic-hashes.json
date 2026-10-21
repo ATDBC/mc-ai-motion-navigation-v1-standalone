@@ -1,0 +1,42 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D122-3 current production semantics for negotiated v2 timing projection and proof-selected safe default",
+  "normalization": "CRLF_TO_LF",
+  "status": "current",
+  "source_base_commit": "0d433800",
+  "previous_d121_release_repair_record_sha256": "f9d07a697d527389ca54dd6d05bccd2407e4173cbfe5b3a2d501bf17826ead9d",
+  "excluded_component_support": [
+    "scripts/d122_formal_timing_probe.py",
+    "tests/sim/backend.py",
+    "tests/sim/client_timing.py"
+  ],
+  "files": {
+    "mc2p/backends/client_behavior_payload.py": "188607ea647f0c5686b203e516146b6e37dc5ceea06d73ee7ed4a7fbd5953acf",
+    "mc2p/backends/fabric_behavior.py": "07a50812745a7afa36e5ad9b465f7c824fcb116479ad1791d5a71296d6393be5",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientActionRequest.java": "d1493166b0e149fb198eb862906d34cfdf78b221deb3b632d7f7d028f5aaaaeb",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java": "e555465a2256661cfe1c8ebd4552179fea9cacb4d5ff9ad10aee144b256804b6",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java": "a2f809abed99acab54687cf2e1fa4614fc8cc451cf1ae4bcc91b1669196b8726",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientRequestGate.java": "8bbf93ba6cc4f37b304d4aec35a0e776b9714d9f709966a4cc6a99460cfb2ad9",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingAdmission.java": "33c94e744d2c868ea5547ff5f20144463eed1d572cdfc25adad63bb9b9505b1e",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingSchedule.java": "99b3316e616784e512e9f54891f3aa7fefcefeef97f882cbb7881794ae0eb74c",
+    "mc2p/contracts/action_receipt.py": "a63ae3e0043813aeb6acf1867f0792e647af99141737921b48c47cdf58aa45a8",
+    "mc2p/contracts/action_v1.py": "5fa7d80b6b8a221ec5147a9084a307b6169a42b55885df64736151d1bdc7a2a0",
+    "mc2p/contracts/motion_activation.py": "1528e0bf595325473b1e8cc8efea0df4b95ddafa98dc229834e2be41096e18a2",
+    "mc2p/motion_nav/action_route_executor.py": "c8ae0122e9914d8ef3b80d11bd8d504c99d9f19c501f15f0d72a6c04e619ae84",
+    "mc2p/motion_nav/execution_supervisor.py": "1c3a15b90f7007f5f6bc77dcd316d45eee69f3d5c24c86d8cca5654223e3f127",
+    "mc2p/motion_nav/motion_candidate.py": "4a53e440faecc8ca8d5177bac538ae808a560527df710c985365c7ba56235064",
+    "mc2p/motion_nav/motion_chain.py": "af3f111d6560d4e1cf1861f42e92ec220fc36b4eead0bd374f82890b2c16e822",
+    "mc2p/motion_nav/motion_coordination.py": "fcd760c2a1a9815a292135b8ee59732cd340c88a1448db7ac6e12359e40fdf72",
+    "mc2p/motion_nav/motion_solver.py": "615d5455f0fdc540548c4f31ea988aca77b7ff69f57d8e15dd8a879cf3ecc998",
+    "mc2p/motion_nav/motion_worker.py": "f0532679e97351722e158d9098dc202b01cca6231761914c568f0454590eb5c2",
+    "mc2p/motion_nav/navigation_session.py": "bee15531311b200c3c0b272840bed808f2ac1983b3fb6961cc5ae1060476a800",
+    "mc2p/motion_nav/online_motion.py": "b5b0a69c7deaa0b0978931857418ab6f136dfea30b8549ccfc3693a999643648",
+    "mc2p/motion_nav/prepared_motion.py": "bf1c233e7ad0aa58b140b34dbc3a146dfd7ea25cd3e22c208d14c76b7ac492e2",
+    "mc2p/motion_nav/prepared_motion_proof.py": "fd1fb0929f5de35c1e5d587aea1bcb16160b1544a54a8e2c4be2c227905908ab",
+    "mc2p/motion_nav/route_body_controller.py": "48131c6af49607e1158ad775c7f771d4bbbae5c71934fe310f3df01a3bc05252",
+    "mc2p/runtime/arbiter_v1.py": "86bec50410ea7b361260634c4e560399de340dd3ebd66a645b0c4bc1bbaf1834",
+    "mc2p/runtime/backend_v1.py": "ad112bc7dfc677ae3292cbb856a58f47a31aa9ec1e16a778575e9e32348ccfe6",
+    "mc2p/runtime/player_runtime_v1.py": "0ac0c38288b57f5a9ddfbb9dcc1be2c5b3d28283bd39c116255bc0befa92b480",
+    "mc2p/skills/navigation_session_driver.py": "a8486589d1feb0def78173f106f8f46e22289ed5ab0dec2cb1b68812523ab17e"
+  }
+}

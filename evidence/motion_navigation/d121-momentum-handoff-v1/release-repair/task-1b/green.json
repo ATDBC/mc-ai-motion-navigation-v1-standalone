@@ -1,0 +1,16 @@
+{
+  "command_argv": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d102_evidence_contract",
+    "-v"
+  ],
+  "exit_code": 0,
+  "duration_seconds": 68.43699999991804,
+  "log": "green.txt",
+  "total": 24,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+}

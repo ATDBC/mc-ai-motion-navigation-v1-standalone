@@ -1,0 +1,44 @@
+test_accepted_cancel_retires_target_default_and_cancel_record (tests.test_d122_python_timing_repair.TimingRepairTests.test_accepted_cancel_retires_target_default_and_cancel_record) ... ok
+test_armed_default_finishes_real_ticks_despite_wall_expiry (tests.test_d122_python_timing_repair.TimingRepairTests.test_armed_default_finishes_real_ticks_despite_wall_expiry) ... ok
+test_cancel_clears_the_whole_default_and_pending_arrangement (tests.test_d122_python_timing_repair.TimingRepairTests.test_cancel_clears_the_whole_default_and_pending_arrangement) ... ok
+test_cancel_keeps_unrelated_ambiguous_history (tests.test_d122_python_timing_repair.TimingRepairTests.test_cancel_keeps_unrelated_ambiguous_history) ... FAIL
+test_complete_default_samples_and_exhaustion_retire_parent (tests.test_d122_python_timing_repair.TimingRepairTests.test_complete_default_samples_and_exhaustion_retire_parent) ... ok
+test_default_budget_must_cover_nominal_proof_duration (tests.test_d122_python_timing_repair.TimingRepairTests.test_default_budget_must_cover_nominal_proof_duration) ... ok
+test_exhausted_before_activation_cannot_retire_parent (tests.test_d122_python_timing_repair.TimingRepairTests.test_exhausted_before_activation_cannot_retire_parent) ... ok
+test_exhausted_without_complete_real_samples_cannot_retire_parent (tests.test_d122_python_timing_repair.TimingRepairTests.test_exhausted_without_complete_real_samples_cannot_retire_parent) ... ok
+test_exhaustion_cannot_claim_a_future_unobserved_tick (tests.test_d122_python_timing_repair.TimingRepairTests.test_exhaustion_cannot_claim_a_future_unobserved_tick) ... ok
+test_inactive_sample_alone_cannot_end_a_proved_default (tests.test_d122_python_timing_repair.TimingRepairTests.test_inactive_sample_alone_cannot_end_a_proved_default) ... ok
+test_replacement_must_have_a_real_sample_and_retires_old_default (tests.test_d122_python_timing_repair.TimingRepairTests.test_replacement_must_have_a_real_sample_and_retires_old_default) ... ok
+test_response_deadline_cannot_release_an_unfinished_default (tests.test_d122_python_timing_repair.TimingRepairTests.test_response_deadline_cannot_release_an_unfinished_default) ... FAIL
+test_unaccepted_cancel_does_not_retire_default (tests.test_d122_python_timing_repair.TimingRepairTests.test_unaccepted_cancel_does_not_retire_default) ... ok
+
+======================================================================
+FAIL: test_cancel_keeps_unrelated_ambiguous_history (tests.test_d122_python_timing_repair.TimingRepairTests.test_cancel_keeps_unrelated_ambiguous_history)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_python_timing_repair.py", line 182, in test_cancel_keeps_unrelated_ambiguous_history
+    self.assertEqual(ledger.record(24), old_record)
+AssertionError: Input[604 chars]atus.CANCELLED: 'cancelled'>, applied_ticks=()[101 chars]None) != Input[604 chars]atus.AMBIGUOUS: 'ambiguous'>, applied_ticks=()[101 chars]None)
+
+======================================================================
+FAIL: test_response_deadline_cannot_release_an_unfinished_default (tests.test_d122_python_timing_repair.TimingRepairTests.test_response_deadline_cannot_release_an_unfinished_default)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_python_timing_repair.py", line 151, in test_response_deadline_cannot_release_an_unfinished_default
+    result = backend.step(request, request.deadline_monotonic_ns)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\sim\backend.py", line 471, in step
+    raise TimeoutError("calculator client response hold exceeded deadline")
+TimeoutError: calculator client response hold exceeded deadline
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_python_timing_repair.py", line 153, in test_response_deadline_cannot_release_an_unfinished_default
+    self.fail("response deadline interrupted the required real default samples")
+AssertionError: response deadline interrupted the required real default samples
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.037s
+
+FAILED (failures=2)

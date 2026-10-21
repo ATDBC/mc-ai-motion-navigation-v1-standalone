@@ -1,0 +1,72 @@
+test_bounded_schedule_selects_pending_before_default_and_holds_response (tests.test_d122_java_timing.D122JavaTimingTests.test_bounded_schedule_selects_pending_before_default_and_holds_response) ... FAIL
+test_v2_decoder_is_strict_and_v1_remains_isolated (tests.test_d122_java_timing.D122JavaTimingTests.test_v2_decoder_is_strict_and_v1_remains_isolated) ... FAIL
+test_permission_revocation_closes_parent_and_pending_in_python_ledger (tests.test_d122_java_permission_bridge.D122JavaPermissionBridgeTests.test_permission_revocation_closes_parent_and_pending_in_python_ledger) ... FAIL
+test_python_and_java_share_default_relation_vectors (tests.test_d122_java_permission_bridge.D122JavaPermissionBridgeTests.test_python_and_java_share_default_relation_vectors) ... 
+  test_python_and_java_share_default_relation_vectors (tests.test_d122_java_permission_bridge.D122JavaPermissionBridgeTests.test_python_and_java_share_default_relation_vectors) (row='windowed\t26\t1\t27\t28\t28\tfalse') ... FAIL
+
+======================================================================
+FAIL: test_bounded_schedule_selects_pending_before_default_and_holds_response (tests.test_d122_java_timing.D122JavaTimingTests.test_bounded_schedule_selects_pending_before_default_and_holds_response)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_java_timing.py", line 31, in test_bounded_schedule_selects_pending_before_default_and_holds_response
+    self.compile_run("CLIENT_TIMING_SCHEDULE_OK",
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_java_timing.py", line 19, in compile_run
+    self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+AssertionError: 1 != 0 : D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientTimingScheduleTest.java:99: ����: �Ҳ�������
+        yes("safe_default_activation_mismatch".equals(schedule.preparedPendingDenial(710)));
+                                                              ^
+  ����:   ���� preparedPendingDenial(int)
+  λ��: ����ΪClientTimingSchedule�ı��� schedule
+1 ������
+
+
+======================================================================
+FAIL: test_v2_decoder_is_strict_and_v1_remains_isolated (tests.test_d122_java_timing.D122JavaTimingTests.test_v2_decoder_is_strict_and_v1_remains_isolated)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_java_timing.py", line 26, in test_v2_decoder_is_strict_and_v1_remains_isolated
+    self.compile_run("CLIENT_ACTION_TIMING_DECODE_OK",
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_java_timing.py", line 19, in compile_run
+    self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+AssertionError: 1 != 0 : D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientActionTimingDecodeTest.java:31: ����: �Ҳ�������
+        yes(parent.timingAdmissionDenial(26) == null);
+                  ^
+  ����:   ���� timingAdmissionDenial(int)
+  λ��: ����ΪClientActionRequest�ı��� parent
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientActionTimingDecodeTest.java:57: ����: �Ҳ�������
+                String denial = vector.timingAdmissionDenial(Long.parseLong(value[1]));
+                                      ^
+  ����:   ���� timingAdmissionDenial(long)
+  λ��: ����ΪClientActionRequest�ı��� vector
+2 ������
+
+
+======================================================================
+FAIL: test_permission_revocation_closes_parent_and_pending_in_python_ledger (tests.test_d122_java_permission_bridge.D122JavaPermissionBridgeTests.test_permission_revocation_closes_parent_and_pending_in_python_ledger)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_java_permission_bridge.py", line 52, in test_permission_revocation_closes_parent_and_pending_in_python_ledger
+    self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+AssertionError: 1 != 0 : ����: δ֪��ö�ٳ��� EnvType.CLIENT
+  ԭ��: �Ҳ���net.fabricmc.api.EnvType�����ļ�
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientPermissionRevocationTest.java:16: ����: �Ҳ�������
+        input.setTimingRejectionObserver(reasons::add);
+             ^
+  ����:   ���� setTimingRejectionObserver(reasons::add)
+  λ��: ����ΪClientBehaviorInput�ı��� input
+1 ������
+1 ������
+
+
+======================================================================
+FAIL: test_python_and_java_share_default_relation_vectors (tests.test_d122_java_permission_bridge.D122JavaPermissionBridgeTests.test_python_and_java_share_default_relation_vectors) (row='windowed\t26\t1\t27\t28\t28\tfalse')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_java_permission_bridge.py", line 42, in test_python_and_java_share_default_relation_vectors
+    self.assertEqual(actual, accepted == "true")
+AssertionError: True != False
+
+----------------------------------------------------------------------
+Ran 4 tests in 1.394s
+
+FAILED (failures=4)

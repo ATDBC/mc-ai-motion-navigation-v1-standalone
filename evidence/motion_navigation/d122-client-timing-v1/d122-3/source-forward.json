@@ -1,0 +1,986 @@
+{
+  "schema_version": "mc2p.motion-nav-shards.v1",
+  "state": "running",
+  "started_at": "2026-10-20T07:39:49.169251+00:00",
+  "finished_at": null,
+  "root": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree",
+  "tests_directory": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\tests\\motion_nav",
+  "python": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.venv\\python.exe",
+  "python_version": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "order": "forward",
+  "timeout_seconds": 600.0,
+  "includes": [],
+  "filters": [],
+  "selected_modules": 204,
+  "completed_modules": 21,
+  "current_module": "tests.motion_nav.test_b07_shape_matrix",
+  "summary": {
+    "passed": 20,
+    "failed": 1,
+    "error": 0,
+    "timeout": 0,
+    "launch_error": 0
+  },
+  "modules": [
+    {
+      "module": "tests.motion_nav.test_action_continuity_admission",
+      "file": "tests/motion_nav/test_action_continuity_admission.py",
+      "status": "passed",
+      "duration_seconds": 0.7164103998802602,
+      "return_code": 0,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_changed_physics_is_never_a_proved_start (tests.motion_nav.test_action_continuity_admission.ActionContinuityAdmissionTests.test_changed_physics_is_never_a_proved_start) ... ok\ntest_delayed_proved_variant_needs_exact_observed_prelude (tests.motion_nav.test_action_continuity_admission.ActionContinuityAdmissionTests.test_delayed_proved_variant_needs_exact_observed_prelude) ... ok\ntest_new_observation_same_proved_state_does_not_expire_start (tests.motion_nav.test_action_continuity_admission.ActionContinuityAdmissionTests.test_new_observation_same_proved_state_does_not_expire_start) ... ok\ntest_worker_revalidates_old_commands_without_searching_a_new_solution (tests.motion_nav.test_action_continuity_admission.ActionContinuityAdmissionTests.test_worker_revalidates_old_commands_without_searching_a_new_solution) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.294s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 51248,
+            "create_time": 1792481989.1984196
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 51248,
+            "create_time": 1792481989.1984196
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_fabric_options",
+      "file": "tests/motion_nav/test_action_continuity_fabric_options.py",
+      "status": "passed",
+      "duration_seconds": 0.5021565998904407,
+      "return_code": 0,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_default_drop_view_is_45_degrees_and_bad_environment_fails_before_game_work (tests.motion_nav.test_action_continuity_fabric_options.FabricStartupOptionsTests.test_default_drop_view_is_45_degrees_and_bad_environment_fails_before_game_work) ... ok\ntest_flat_drop_option_reaches_runtime_and_preserves_launcher_options (tests.motion_nav.test_action_continuity_fabric_options.FabricStartupOptionsTests.test_flat_drop_option_reaches_runtime_and_preserves_launcher_options) ... ok\ntest_flat_view_requires_explicit_start_delivery_drop (tests.motion_nav.test_action_continuity_fabric_options.FabricStartupOptionsTests.test_flat_view_requires_explicit_start_delivery_drop) ... ok\ntest_recording_planner_satisfies_formal_protocol_and_preserves_two_receipts (tests.motion_nav.test_action_continuity_fabric_options.FabricStartupOptionsTests.test_recording_planner_satisfies_formal_protocol_and_preserves_two_receipts) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.029s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 56372,
+            "create_time": 1792481989.918498
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 56372,
+            "create_time": 1792481989.918498
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_formal",
+      "file": "tests/motion_nav/test_action_continuity_formal.py",
+      "status": "passed",
+      "duration_seconds": 3.7637716000899673,
+      "return_code": 0,
+      "tests_run": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_airborne_cancel_keeps_owner_until_observed_safe_landing (tests.motion_nav.test_action_continuity_formal.ActionContinuityFormalTests.test_airborne_cancel_keeps_owner_until_observed_safe_landing) ... ok\ntest_cold_first_result_then_hot_revalidation_completes (tests.motion_nav.test_action_continuity_formal.ActionContinuityFormalTests.test_cold_first_result_then_hot_revalidation_completes) ... ok\ntest_first_jump_cannot_use_a_losing_required_look (tests.motion_nav.test_action_continuity_formal.ActionContinuityFormalTests.test_first_jump_cannot_use_a_losing_required_look) ... ok\ntest_first_jump_loses_arbitration_without_false_application (tests.motion_nav.test_action_continuity_formal.ActionContinuityFormalTests.test_first_jump_loses_arbitration_without_false_application) ... ok\ntest_known_landing_change_rejects_prepared_jump_and_releases_safely (tests.motion_nav.test_action_continuity_formal.ActionContinuityFormalTests.test_known_landing_change_rejects_prepared_jump_and_releases_safely) ... ok\ntest_non_centred_approach_gap_and_following_walk_complete (tests.motion_nav.test_action_continuity_formal.ActionContinuityFormalTests.test_non_centred_approach_gap_and_following_walk_complete) ... ok\ntest_non_centred_continuity_is_cardinally_symmetric (tests.motion_nav.test_action_continuity_formal.ActionContinuityFormalTests.test_non_centred_continuity_is_cardinally_symmetric) ... ok\ntest_three_observation_delivery_keeps_continuity (tests.motion_nav.test_action_continuity_formal.ActionContinuityFormalTests.test_three_observation_delivery_keeps_continuity) ... ok\ntest_two_observation_delivery_keeps_continuity (tests.motion_nav.test_action_continuity_formal.ActionContinuityFormalTests.test_two_observation_delivery_keeps_continuity) ... ok\n\n----------------------------------------------------------------------\nRan 9 tests in 3.367s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 59084,
+            "create_time": 1792481990.4246757
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 59084,
+            "create_time": 1792481990.4246757
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_solver_limits",
+      "file": "tests/motion_nav/test_action_continuity_solver_limits.py",
+      "status": "passed",
+      "duration_seconds": 1.6364746999461204,
+      "return_code": 0,
+      "tests_run": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_coordinator_checks_proof_fact_changed_before_the_delivery_frame (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_coordinator_checks_proof_fact_changed_before_the_delivery_frame)\nThe latest frame's empty change set cannot revive an old landing. ... ok\ntest_each_request_keeps_its_original_recovery_limit_when_omitted (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_each_request_keeps_its_original_recovery_limit_when_omitted) ... ok\ntest_four_tick_prefix_still_uses_one_bounded_air_search (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_four_tick_prefix_still_uses_one_bounded_air_search) ... ok\ntest_insufficient_recovery_time_is_rejected_in_solve_and_revalidation (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_insufficient_recovery_time_is_rejected_in_solve_and_revalidation) ... ok\ntest_invalid_limits_and_missing_proof_limit_are_not_guessed (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_invalid_limits_and_missing_proof_limit_are_not_guessed) ... ok\ntest_one_tick_later_entry_retains_the_published_recovery_horizon (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_one_tick_later_entry_retains_the_published_recovery_horizon) ... ok\ntest_preparation_advances_from_real_noncentral_source_without_new_observation (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_preparation_advances_from_real_noncentral_source_without_new_observation) ... ok\ntest_preparation_cannot_be_rebound_to_a_different_source_or_entry (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_preparation_cannot_be_rebound_to_a_different_source_or_entry) ... ok\ntest_preparation_must_not_jump_change_look_or_leave_support (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_preparation_must_not_jump_change_look_or_leave_support) ... ok\ntest_preparation_prefix_and_window_are_bounded (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_preparation_prefix_and_window_are_bounded) ... ok\ntest_preparation_unknown_space_is_reported_before_air_search (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_preparation_unknown_space_is_reported_before_air_search) ... ok\ntest_preparation_wall_contact_and_unsupported_state_do_not_create_proof (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_preparation_wall_contact_and_unsupported_state_do_not_create_proof) ... ok\ntest_proof_serialization_retains_the_recovery_limit (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_proof_serialization_retains_the_recovery_limit) ... ok\ntest_rollout_and_recovery_limits_are_independent (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_rollout_and_recovery_limits_are_independent) ... ok\ntest_short_gap_followed_by_walk_revalidates_without_changing_trajectory (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_short_gap_followed_by_walk_revalidates_without_changing_trajectory) ... ok\n\n----------------------------------------------------------------------\nRan 15 tests in 1.210s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 27344,
+            "create_time": 1792481994.1917148
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 27344,
+            "create_time": 1792481994.1917148
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_action_controller_adapter",
+      "file": "tests/motion_nav/test_action_controller_adapter.py",
+      "status": "passed",
+      "duration_seconds": 0.5037579999770969,
+      "return_code": 0,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_all_three_adapter_functions_are_required (tests.motion_nav.test_action_controller_adapter.ControllerAdapterTests.test_all_three_adapter_functions_are_required) ... ok\ntest_executor_does_not_inspect_air_controller_type (tests.motion_nav.test_action_controller_adapter.ControllerAdapterTests.test_executor_does_not_inspect_air_controller_type) ... ok\ntest_invalid_adapter_object_reports_a_contract_violation (tests.motion_nav.test_action_controller_adapter.ControllerAdapterTests.test_invalid_adapter_object_reports_a_contract_violation) ... ok\ntest_same_frame_protection_requires_an_adapter_operation (tests.motion_nav.test_action_controller_adapter.ControllerAdapterTests.test_same_frame_protection_requires_an_adapter_operation) ... ok\ntest_unrelated_controller_executes_cancels_and_reports_input_loss (tests.motion_nav.test_action_controller_adapter.ControllerAdapterTests.test_unrelated_controller_executes_cancels_and_reports_input_loss) ... ok\n\n----------------------------------------------------------------------\nRan 5 tests in 0.059s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 55644,
+            "create_time": 1792481995.8321636
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 55644,
+            "create_time": 1792481995.8321636
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_action_entry_handoff_repair",
+      "file": "tests/motion_nav/test_action_entry_handoff_repair.py",
+      "status": "passed",
+      "duration_seconds": 7.995217900024727,
+      "return_code": 0,
+      "tests_run": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_column_top_uses_formal_chain_to_turn_before_jump (tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_column_top_uses_formal_chain_to_turn_before_jump) ... ok\ntest_external_look_keeps_final_yaw_authority_and_bounds_entry_wait (tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_external_look_keeps_final_yaw_authority_and_bounds_entry_wait) ... ok\ntest_fabric_plan_freezes_four_directions_and_two_input_conditions (tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_fabric_plan_freezes_four_directions_and_two_input_conditions) ... ok\ntest_formal_matrix_freezes_all_declared_positive_families (tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_formal_matrix_freezes_all_declared_positive_families) ... ok\ntest_goal_revision_and_cancel_during_entry_turn_retire_old_look (tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_goal_revision_and_cancel_during_entry_turn_retire_old_look) ... ok\ntest_published_regression_uses_frozen_v7_product_signatures (tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_published_regression_uses_frozen_v7_product_signatures) ... ok\ntest_repeated_stale_anticipated_results_keep_one_job_and_end_bounded (tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_repeated_stale_anticipated_results_keep_one_job_and_end_bounded) ... ok\ntest_stale_anticipated_negative_retires_without_buying_real_failure (tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_stale_anticipated_negative_retires_without_buying_real_failure) ... ok\ntest_walk_owns_required_yaw_while_still_moving_before_jump (tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_walk_owns_required_yaw_while_still_moving_before_jump) ... ok\n\n----------------------------------------------------------------------\nRan 9 tests in 7.517s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 2,
+        "attempted": [
+          {
+            "pid": 45624,
+            "create_time": 1792482001.257017
+          },
+          {
+            "pid": 47312,
+            "create_time": 1792481996.3395047
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 45624,
+            "create_time": 1792482001.257017
+          },
+          {
+            "pid": 47312,
+            "create_time": 1792481996.3395047
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_action_entry_late_hardening",
+      "file": "tests/motion_nav/test_action_entry_late_hardening.py",
+      "status": "failed",
+      "duration_seconds": 7.113738000160083,
+      "return_code": 1,
+      "tests_run": 11,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_entry_permission_does_not_replace_walk_completion (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_entry_permission_does_not_replace_walk_completion) ... ok\ntest_fabric_entry_late_gate_reaches_typed_walk_braking_and_rejects_air (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_fabric_entry_late_gate_reaches_typed_walk_braking_and_rejects_air) ... ok\ntest_fabric_entry_late_matrix_is_four_directions_and_changes_only_condition (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_fabric_entry_late_matrix_is_four_directions_and_changes_only_condition) ... ok\ntest_final_jump_safe_landing_short_of_goal_reports_input_loss (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_final_jump_safe_landing_short_of_goal_reports_input_loss) ... ok\ntest_input_loss_recovery_preserves_the_original_safe_landing_prefix (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_input_loss_recovery_preserves_the_original_safe_landing_prefix) ... FAIL\ntest_normal_final_jump_can_still_succeed (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_normal_final_jump_can_still_succeed) ... ok\ntest_normal_goal_mismatch_does_not_become_input_loss (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_normal_goal_mismatch_does_not_become_input_loss) ... ok\ntest_random_late_outer_corner_finishes (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_random_late_outer_corner_finishes) ... ok\ntest_red_collector_accepts_legacy_terminal_report_without_failure_cause (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_red_collector_accepts_legacy_terminal_report_without_failure_cause) ... ok\ntest_stopping_into_entry_brakes_instead_of_tracking_endpoint (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_stopping_into_entry_brakes_instead_of_tracking_endpoint) ... ok\ntest_wrong_yaw_or_minimum_entry_speed_does_not_acquire_stopping_permission (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_wrong_yaw_or_minimum_entry_speed_does_not_acquire_stopping_permission) ... ok\n\n======================================================================\nFAIL: test_input_loss_recovery_preserves_the_original_safe_landing_prefix (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_input_loss_recovery_preserves_the_original_safe_landing_prefix)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\tests\\motion_nav\\test_action_entry_late_hardening.py\", line 121, in test_input_loss_recovery_preserves_the_original_safe_landing_prefix\n    self.assertEqual(motion(result.trace)[:before],old[:before])\nAssertionError: Lists differ: [[2, [98 chars] 1, 'strafe': 0, 'jump': False, 'sneak': False[22194 chars]80}]] != [[2, [98 chars] 1, 'jump': False, 'sneak': False, 'sprint': F[22194 chars]80}]]\n\nFirst differing element 69:\n[71, [117 chars] 1, 'strafe': 0, 'jump': True, 'sneak': False,[119 chars] 71}]\n[71, [117 chars] 1, 'jump': True, 'sneak': False, 'sprint': Tr[119 chars] 71}]\n\nDiff is 25385 characters long. Set self.maxDiff to None to see it.\n\n----------------------------------------------------------------------\nRan 11 tests in 6.619s\n\nFAILED (failures=1)\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 39248,
+            "create_time": 1792482004.3387048
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 39248,
+            "create_time": 1792482004.3387048
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_action_preconditions",
+      "file": "tests/motion_nav/test_action_preconditions.py",
+      "status": "passed",
+      "duration_seconds": 6.63505779998377,
+      "return_code": 0,
+      "tests_run": 30,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_acquisition_grant_survives_later_air_view_without_lower_region (tests.motion_nav.test_action_preconditions.ActionPreconditionTests.test_acquisition_grant_survives_later_air_view_without_lower_region) ... ok\ntest_far_drop_requests_bound_acquisition_at_action_boundary (tests.motion_nav.test_action_preconditions.ActionPreconditionTests.test_far_drop_requests_bound_acquisition_at_action_boundary) ... ok\ntest_fresh_air_where_landing_support_was_rejects_drop (tests.motion_nav.test_action_preconditions.ActionPreconditionTests.test_fresh_air_where_landing_support_was_rejects_drop) ... ok\ntest_fresh_nearby_lower_evidence_makes_drop_ready (tests.motion_nav.test_action_preconditions.ActionPreconditionTests.test_fresh_nearby_lower_evidence_makes_drop_ready) ... ok\ntest_old_or_wrong_acquisition_grant_cannot_make_drop_ready (tests.motion_nav.test_action_preconditions.ActionPreconditionTests.test_old_or_wrong_acquisition_grant_cannot_make_drop_ready) ... ok\ntest_stale_landing_support_requires_refresh_before_drop (tests.motion_nav.test_action_preconditions.ActionPreconditionTests.test_stale_landing_support_requires_refresh_before_drop) ... ok\ntest_action_index_advancement_starts_a_new_local_attempt_chain (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_action_index_advancement_starts_a_new_local_attempt_chain) ... ok\ntest_action_route_rejects_raw_or_wrong_route_proofs (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_action_route_rejects_raw_or_wrong_route_proofs) ... ok\ntest_action_route_uses_admitted_proof_and_hands_off_without_extra_frame (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_action_route_uses_admitted_proof_and_hands_off_without_extra_frame) ... ok\ntest_anticipated_entry_failures_share_one_chain_across_candidate_revisions (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_anticipated_entry_failures_share_one_chain_across_candidate_revisions) ... ok\ntest_coordinator_aligns_a_safe_gap_entry_before_background_solving (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_coordinator_aligns_a_safe_gap_entry_before_background_solving) ... ok\ntest_coordinator_bounds_identical_revalidation_retries (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_coordinator_bounds_identical_revalidation_retries) ... ok\ntest_coordinator_prepares_next_gap_from_the_next_applied_walk_state (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_coordinator_prepares_next_gap_from_the_next_applied_walk_state) ... ok\ntest_delivered_expired_results_share_one_local_chain (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_delivered_expired_results_share_one_local_chain) ... ok\ntest_entry_change_before_submission_shares_one_local_chain (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_entry_change_before_submission_shares_one_local_chain) ... ok\ntest_following_cardinal_walk_is_part_of_the_gap_exit_proof (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_following_cardinal_walk_is_part_of_the_gap_exit_proof) ... ok\ntest_gap_route_requires_verified_motion_by_default_then_accepts_it (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_gap_route_requires_verified_motion_by_default_then_accepts_it) ... ok\ntest_motion_backpressure_uses_fixed_deadline_and_shared_retry_limit (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_motion_backpressure_uses_fixed_deadline_and_shared_retry_limit) ... ok\ntest_motion_coordinator_requires_explicit_task_ledger (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_motion_coordinator_requires_explicit_task_ledger) ... ok\ntest_old_motion_revision_cannot_terminate_new_revision (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_old_motion_revision_cannot_terminate_new_revision) ... ok\ntest_online_coordinator_delivers_background_motion_to_waiting_route (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_online_coordinator_delivers_background_motion_to_waiting_route) ... ok\ntest_online_coordinator_retries_expired_solver_request_with_shared_budget (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_online_coordinator_retries_expired_solver_request_with_shared_budget) ... ok\ntest_online_coordinator_stops_waiting_when_solver_worker_dies (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_online_coordinator_stops_waiting_when_solver_worker_dies) ... ok\ntest_planned_gap_is_locally_solved_bound_admitted_then_executable (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_planned_gap_is_locally_solved_bound_admitted_then_executable) ... ok\ntest_planned_gap_rejects_landing_region_narrower_than_the_body (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_planned_gap_rejects_landing_region_narrower_than_the_body) ... ok\ntest_route_admitter_requests_background_revalidation_of_delayed_result (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_route_admitter_requests_background_revalidation_of_delayed_result) ... ok\ntest_stop_request_does_not_reset_attempts_while_route_owner_remains (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_stop_request_does_not_reset_attempts_while_route_owner_remains) ... ok\ntest_supported_gap_requires_precomputed_result_without_inline_solving (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_supported_gap_requires_precomputed_result_without_inline_solving) ... ok\ntest_two_motion_routes_can_only_use_the_same_explicit_task_ledger (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_two_motion_routes_can_only_use_the_same_explicit_task_ledger) ... ok\ntest_walk_hands_moving_body_to_verified_gap_without_braking_to_rest (tests.motion_nav.test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests.test_walk_hands_moving_body_to_verified_gap_without_braking_to_rest) ... ok\n\n----------------------------------------------------------------------\nRan 30 tests in 6.204s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 15,
+        "attempted": [
+          {
+            "pid": 8840,
+            "create_time": 1792482016.1973393
+          },
+          {
+            "pid": 12508,
+            "create_time": 1792482013.4352918
+          },
+          {
+            "pid": 14308,
+            "create_time": 1792482014.5676773
+          },
+          {
+            "pid": 14992,
+            "create_time": 1792482017.6269844
+          },
+          {
+            "pid": 22060,
+            "create_time": 1792482015.4407496
+          },
+          {
+            "pid": 22740,
+            "create_time": 1792482013.8126645
+          },
+          {
+            "pid": 27540,
+            "create_time": 1792482012.9959083
+          },
+          {
+            "pid": 35424,
+            "create_time": 1792482016.6232042
+          },
+          {
+            "pid": 43612,
+            "create_time": 1792482012.61977
+          },
+          {
+            "pid": 48428,
+            "create_time": 1792482011.457068
+          },
+          {
+            "pid": 53844,
+            "create_time": 1792482017.2133996
+          },
+          {
+            "pid": 57432,
+            "create_time": 1792482014.1908576
+          },
+          {
+            "pid": 60816,
+            "create_time": 1792482015.820712
+          },
+          {
+            "pid": 66000,
+            "create_time": 1792482012.0967982
+          },
+          {
+            "pid": 66236,
+            "create_time": 1792482015.0651822
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 8840,
+            "create_time": 1792482016.1973393
+          },
+          {
+            "pid": 12508,
+            "create_time": 1792482013.4352918
+          },
+          {
+            "pid": 14308,
+            "create_time": 1792482014.5676773
+          },
+          {
+            "pid": 14992,
+            "create_time": 1792482017.6269844
+          },
+          {
+            "pid": 22060,
+            "create_time": 1792482015.4407496
+          },
+          {
+            "pid": 22740,
+            "create_time": 1792482013.8126645
+          },
+          {
+            "pid": 27540,
+            "create_time": 1792482012.9959083
+          },
+          {
+            "pid": 35424,
+            "create_time": 1792482016.6232042
+          },
+          {
+            "pid": 43612,
+            "create_time": 1792482012.61977
+          },
+          {
+            "pid": 48428,
+            "create_time": 1792482011.457068
+          },
+          {
+            "pid": 53844,
+            "create_time": 1792482017.2133996
+          },
+          {
+            "pid": 57432,
+            "create_time": 1792482014.1908576
+          },
+          {
+            "pid": 60816,
+            "create_time": 1792482015.820712
+          },
+          {
+            "pid": 66000,
+            "create_time": 1792482012.0967982
+          },
+          {
+            "pid": 66236,
+            "create_time": 1792482015.0651822
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_action_spec_boundaries",
+      "file": "tests/motion_nav/test_action_spec_boundaries.py",
+      "status": "passed",
+      "duration_seconds": 0.3778834999538958,
+      "return_code": 0,
+      "tests_run": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_controlled_drop_has_no_upper_or_private_imports (tests.motion_nav.test_action_spec_boundaries.ActionSpecBoundaryTests.test_controlled_drop_has_no_upper_or_private_imports) ... ok\ntest_landing_evidence_is_owned_by_low_level_module (tests.motion_nav.test_action_spec_boundaries.ActionSpecBoundaryTests.test_landing_evidence_is_owned_by_low_level_module) ... ok\ntest_low_level_contracts_keep_public_facade_identity_and_id (tests.motion_nav.test_action_spec_boundaries.ActionSpecBoundaryTests.test_low_level_contracts_keep_public_facade_identity_and_id) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.216s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 50716,
+            "create_time": 1792482018.096249
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 50716,
+            "create_time": 1792482018.096249
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_action_spec_integration",
+      "file": "tests/motion_nav/test_action_spec_integration.py",
+      "status": "passed",
+      "duration_seconds": 0.6265266998670995,
+      "return_code": 0,
+      "tests_run": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_body_handoff_reads_the_explicit_commitment (tests.motion_nav.test_action_spec_integration.ActionSpecOwnerBoundaryTests.test_body_handoff_reads_the_explicit_commitment) ... ok\ntest_boundary_selection_keeps_started_and_upcoming_checks_separate (tests.motion_nav.test_action_spec_integration.ActionSpecOwnerBoundaryTests.test_boundary_selection_keeps_started_and_upcoming_checks_separate) ... ok\ntest_destination_recovery_uses_the_registered_completion_query (tests.motion_nav.test_action_spec_integration.ActionSpecOwnerBoundaryTests.test_destination_recovery_uses_the_registered_completion_query) ... ok\ntest_executor_books_registered_damage_once_at_commitment (tests.motion_nav.test_action_spec_integration.ActionSpecOwnerBoundaryTests.test_executor_books_registered_damage_once_at_commitment) ... ok\ntest_new_identity_enters_route_solver_and_executor_via_only_registration (tests.motion_nav.test_action_spec_integration.ActionSpecOwnerBoundaryTests.test_new_identity_enters_route_solver_and_executor_via_only_registration) ... ok\ntest_precondition_facade_uses_the_registered_declaration (tests.motion_nav.test_action_spec_integration.ActionSpecOwnerBoundaryTests.test_precondition_facade_uses_the_registered_declaration) ... ok\ntest_route_risk_uses_the_registered_declaration (tests.motion_nav.test_action_spec_integration.ActionSpecOwnerBoundaryTests.test_route_risk_uses_the_registered_declaration) ... ok\ntest_same_frame_protection_uses_the_registered_stop_declaration (tests.motion_nav.test_action_spec_integration.ActionSpecOwnerBoundaryTests.test_same_frame_protection_uses_the_registered_stop_declaration) ... ok\ntest_solving_reads_kind_and_geometry_from_the_registered_spec (tests.motion_nav.test_action_spec_integration.ActionSpecOwnerBoundaryTests.test_solving_reads_kind_and_geometry_from_the_registered_spec) ... ok\n\n----------------------------------------------------------------------\nRan 9 tests in 0.194s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 45344,
+            "create_time": 1792482018.4787543
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 45344,
+            "create_time": 1792482018.4787543
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_action_specs",
+      "file": "tests/motion_nav/test_action_specs.py",
+      "status": "passed",
+      "duration_seconds": 0.3766497999895364,
+      "return_code": 0,
+      "tests_run": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_air_controller_creation_cannot_be_left_undeclared (tests.motion_nav.test_action_specs.ActionSpecContractTests.test_air_controller_creation_cannot_be_left_undeclared) ... ok\ntest_all_five_existing_actions_are_registered_with_explicit_safety (tests.motion_nav.test_action_specs.ActionSpecContractTests.test_all_five_existing_actions_are_registered_with_explicit_safety) ... ok\ntest_background_solving_must_have_a_kind_and_geometry (tests.motion_nav.test_action_specs.ActionSpecContractTests.test_background_solving_must_have_a_kind_and_geometry) ... ok\ntest_collected_geometry_and_safety_facts_match_the_frozen_corpus (tests.motion_nav.test_action_specs.ActionSpecContractTests.test_collected_geometry_and_safety_facts_match_the_frozen_corpus) ... ok\ntest_duplicate_or_unknown_action_is_rejected (tests.motion_nav.test_action_specs.ActionSpecContractTests.test_duplicate_or_unknown_action_is_rejected) ... ok\ntest_missing_safety_declarations_are_rejected_at_registration (tests.motion_nav.test_action_specs.ActionSpecContractTests.test_missing_safety_declarations_are_rejected_at_registration) ... ok\ntest_spec_and_stop_declarations_cannot_store_execution_state (tests.motion_nav.test_action_specs.ActionSpecContractTests.test_spec_and_stop_declarations_cannot_store_execution_state) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 0.002s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 70916,
+            "create_time": 1792482019.1093385
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 70916,
+            "create_time": 1792482019.1093385
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_air_transition_solver",
+      "file": "tests/motion_nav/test_air_transition_solver.py",
+      "status": "passed",
+      "duration_seconds": 2.5900981000158936,
+      "return_code": 0,
+      "tests_run": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_damage_budget_is_part_of_the_request_even_for_zero_damage_actions (tests.motion_nav.test_air_transition_solver.AirTransitionSolverTests.test_damage_budget_is_part_of_the_request_even_for_zero_damage_actions) ... ok\ntest_delayed_start_is_proved_for_each_new_kind (tests.motion_nav.test_air_transition_solver.AirTransitionSolverTests.test_delayed_start_is_proved_for_each_new_kind) ... ok\ntest_jump_up_and_controlled_drop_share_the_verified_solver (tests.motion_nav.test_air_transition_solver.AirTransitionSolverTests.test_jump_up_and_controlled_drop_share_the_verified_solver) ... ok\ntest_new_kinds_use_the_existing_worker_and_candidate_admission_chain (tests.motion_nav.test_air_transition_solver.AirTransitionSolverTests.test_new_kinds_use_the_existing_worker_and_candidate_admission_chain) ... ok\ntest_policy_document_declares_all_three_solve_kinds (tests.motion_nav.test_air_transition_solver.AirTransitionSolverTests.test_policy_document_declares_all_three_solve_kinds) ... ok\ntest_supported_air_transition_requires_precomputed_result_without_inline_solving (tests.motion_nav.test_air_transition_solver.AirTransitionSolverTests.test_supported_air_transition_requires_precomputed_result_without_inline_solving) ... ok\ntest_wrong_entry_direction_and_unknown_clearance_are_rejected (tests.motion_nav.test_air_transition_solver.AirTransitionSolverTests.test_wrong_entry_direction_and_unknown_clearance_are_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 2.183s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 49700,
+            "create_time": 1792482019.4903688
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 49700,
+            "create_time": 1792482019.4903688
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_async_gap_revalidation_delivery",
+      "file": "tests/motion_nav/test_async_gap_revalidation_delivery.py",
+      "status": "passed",
+      "duration_seconds": 1.8286091000773013,
+      "return_code": 0,
+      "tests_run": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_delayed_interleaved_result_gets_real_background_revalidation (tests.motion_nav.test_async_gap_revalidation_delivery.AsyncGapRevalidationDeliveryTests.test_delayed_interleaved_result_gets_real_background_revalidation) ... ok\ntest_unserviced_followup_cannot_be_mislabeled_as_success (tests.motion_nav.test_async_gap_revalidation_delivery.AsyncGapRevalidationDeliveryTests.test_unserviced_followup_cannot_be_mislabeled_as_success) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 1.403s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 53816,
+            "create_time": 1792482022.0850375
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 53816,
+            "create_time": 1792482022.0850375
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_async_work_verification",
+      "file": "tests/motion_nav/test_async_work_verification.py",
+      "status": "passed",
+      "duration_seconds": 5.505351400002837,
+      "return_code": 0,
+      "tests_run": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_all_four_top_level_commands_reject_missing_evidence (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_all_four_top_level_commands_reject_missing_evidence) ... ok\ntest_calculator_body_stop_matrix_and_normal_placement (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_calculator_body_stop_matrix_and_normal_placement) ... ok\ntest_duplicate_receivers_are_detected_before_event_deduplication (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_duplicate_receivers_are_detected_before_event_deduplication) ... ok\ntest_fixed_fabric_helper_drains_body_after_business_completion (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_fixed_fabric_helper_drains_body_after_business_completion) ... ok\ntest_foreign_receiver_is_rejected (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_foreign_receiver_is_rejected) ... ok\ntest_foreign_world_frame_cannot_acquire_current_information (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_foreign_world_frame_cannot_acquire_current_information) ... ok\ntest_missing_each_required_event_cannot_pass_normal_task (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_missing_each_required_event_cannot_pass_normal_task) ... ok\ntest_missing_formal_async_records_cannot_pass (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_missing_formal_async_records_cannot_pass) ... ok\ntest_no_work_requires_declaration_and_independent_zero_activity (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_no_work_requires_declaration_and_independent_zero_activity) ... ok\ntest_normal_notification_acquires_current_fact_and_rejects_foreign_owner (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_normal_notification_acquires_current_fact_and_rejects_foreign_owner) ... ok\ntest_old_information_deliveries_after_each_retirement_and_receiver (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_old_information_deliveries_after_each_retirement_and_receiver) ... ok\ntest_old_information_notification_after_cancel_is_discarded (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_old_information_notification_after_cancel_is_discarded) ... ok\ntest_old_notification_does_not_mutate_a_new_attempt (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_old_notification_does_not_mutate_a_new_attempt) ... ok\ntest_repeated_cancel_preserves_terminal_placement_and_body_owner (tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_repeated_cancel_preserves_terminal_placement_and_body_owner) ... ok\n\n----------------------------------------------------------------------\nRan 14 tests in 5.027s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 11,
+        "attempted": [
+          {
+            "pid": 8836,
+            "create_time": 1792482024.9444487
+          },
+          {
+            "pid": 13196,
+            "create_time": 1792482024.577947
+          },
+          {
+            "pid": 13868,
+            "create_time": 1792482024.7141576
+          },
+          {
+            "pid": 14916,
+            "create_time": 1792482024.9371564
+          },
+          {
+            "pid": 15628,
+            "create_time": 1792482024.5688412
+          },
+          {
+            "pid": 32604,
+            "create_time": 1792482024.9789977
+          },
+          {
+            "pid": 42060,
+            "create_time": 1792482024.6026833
+          },
+          {
+            "pid": 61764,
+            "create_time": 1792482024.7204337
+          },
+          {
+            "pid": 64888,
+            "create_time": 1792482023.9240756
+          },
+          {
+            "pid": 71740,
+            "create_time": 1792482024.972442
+          },
+          {
+            "pid": 72604,
+            "create_time": 1792482024.6100514
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 8836,
+            "create_time": 1792482024.9444487
+          },
+          {
+            "pid": 13196,
+            "create_time": 1792482024.577947
+          },
+          {
+            "pid": 13868,
+            "create_time": 1792482024.7141576
+          },
+          {
+            "pid": 14916,
+            "create_time": 1792482024.9371564
+          },
+          {
+            "pid": 15628,
+            "create_time": 1792482024.5688412
+          },
+          {
+            "pid": 32604,
+            "create_time": 1792482024.9789977
+          },
+          {
+            "pid": 42060,
+            "create_time": 1792482024.6026833
+          },
+          {
+            "pid": 61764,
+            "create_time": 1792482024.7204337
+          },
+          {
+            "pid": 64888,
+            "create_time": 1792482023.9240756
+          },
+          {
+            "pid": 71740,
+            "create_time": 1792482024.972442
+          },
+          {
+            "pid": 72604,
+            "create_time": 1792482024.6100514
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_b02_geometry_acceptance",
+      "file": "tests/motion_nav/test_b02_geometry_acceptance.py",
+      "status": "passed",
+      "duration_seconds": 14.26068690000102,
+      "return_code": 0,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_s00_open_ground_has_clear_body_volume_and_support (tests.motion_nav.test_b02_geometry_acceptance.B02GeometryAcceptanceTests.test_s00_open_ground_has_clear_body_volume_and_support) ... ok\ntest_s02_corner_wall_blocks_the_continuous_sweep (tests.motion_nav.test_b02_geometry_acceptance.B02GeometryAcceptanceTests.test_s02_corner_wall_blocks_the_continuous_sweep) ... ok\ntest_s04_floating_wall_blocks_headroom_even_with_visible_floor (tests.motion_nav.test_b02_geometry_acceptance.B02GeometryAcceptanceTests.test_s04_floating_wall_blocks_headroom_even_with_visible_floor) ... ok\ntest_s05_pit_is_known_loss_of_support_not_unknown (tests.motion_nav.test_b02_geometry_acceptance.B02GeometryAcceptanceTests.test_s05_pit_is_known_loss_of_support_not_unknown) ... ok\ntest_ten_thousand_random_full_cube_sweeps_match_brute_reference (tests.motion_nav.test_b02_geometry_acceptance.B02GeometryAcceptanceTests.test_ten_thousand_random_full_cube_sweeps_match_brute_reference) ... ok\n\n----------------------------------------------------------------------\nRan 5 tests in 13.886s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 73420,
+            "create_time": 1792482029.4346569
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 73420,
+            "create_time": 1792482029.4346569
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_b06_block_motion_traits",
+      "file": "tests/motion_nav/test_b06_block_motion_traits.py",
+      "status": "passed",
+      "duration_seconds": 0.37818540004082024,
+      "return_code": 0,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_b07_whitelisted_partial_shapes_reuse_ordinary_ground_dynamics (tests.motion_nav.test_b06_block_motion_traits.B06BlockMotionTraitsTests.test_b07_whitelisted_partial_shapes_reuse_ordinary_ground_dynamics) ... ok\ntest_confirmed_ordinary_full_cubes_share_one_motion_model (tests.motion_nav.test_b06_block_motion_traits.B06BlockMotionTraitsTests.test_confirmed_ordinary_full_cubes_share_one_motion_model) ... ok\ntest_geometry_and_special_effects_prevent_unsafe_ordinary_fallback (tests.motion_nav.test_b06_block_motion_traits.B06BlockMotionTraitsTests.test_geometry_and_special_effects_prevent_unsafe_ordinary_fallback) ... ok\ntest_registry_snapshot_covers_the_frozen_vanilla_blockstate_set (tests.motion_nav.test_b06_block_motion_traits.B06BlockMotionTraitsTests.test_registry_snapshot_covers_the_frozen_vanilla_blockstate_set) ... ok\ntest_unregistered_behavior_and_unknown_id_are_not_treated_as_ordinary (tests.motion_nav.test_b06_block_motion_traits.B06BlockMotionTraitsTests.test_unregistered_behavior_and_unknown_id_are_not_treated_as_ordinary) ... ok\n\n----------------------------------------------------------------------\nRan 5 tests in 0.003s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 68708,
+            "create_time": 1792482043.694224
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 68708,
+            "create_time": 1792482043.694224
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_b06_environment_identity",
+      "file": "tests/motion_nav/test_b06_environment_identity.py",
+      "status": "passed",
+      "duration_seconds": 0.37769410014152527,
+      "return_code": 0,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_hash_or_version_change_is_rejected_before_profiles_load (tests.motion_nav.test_b06_environment_identity.B06EnvironmentIdentityTests.test_hash_or_version_change_is_rejected_before_profiles_load) ... ok\ntest_profiles_must_name_the_same_environment (tests.motion_nav.test_b06_environment_identity.B06EnvironmentIdentityTests.test_profiles_must_name_the_same_environment) ... ok\ntest_public_motion_navigation_entry_exports_b06_contracts (tests.motion_nav.test_b06_environment_identity.B06EnvironmentIdentityTests.test_public_motion_navigation_entry_exports_b06_contracts) ... ok\ntest_public_motion_navigation_entry_exports_b07_contracts (tests.motion_nav.test_b06_environment_identity.B06EnvironmentIdentityTests.test_public_motion_navigation_entry_exports_b07_contracts) ... ok\ntest_public_motion_navigation_entry_exports_b08_contracts (tests.motion_nav.test_b06_environment_identity.B06EnvironmentIdentityTests.test_public_motion_navigation_entry_exports_b08_contracts) ... ok\ntest_repository_environment_is_frozen_to_the_existing_fabric_stack (tests.motion_nav.test_b06_environment_identity.B06EnvironmentIdentityTests.test_repository_environment_is_frozen_to_the_existing_fabric_stack) ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.003s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 13344,
+            "create_time": 1792482044.0774376
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 13344,
+            "create_time": 1792482044.0774376
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_b06_fabric_material_probe",
+      "file": "tests/motion_nav/test_b06_fabric_material_probe.py",
+      "status": "passed",
+      "duration_seconds": 0.3776338000316173,
+      "return_code": 0,
+      "tests_run": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_material_check_reads_the_world_fact_block_field (tests.motion_nav.test_b06_fabric_material_probe.B06FabricMaterialProbeTests.test_material_check_reads_the_world_fact_block_field) ... ok\ntest_probe_covers_every_declared_ordinary_material_once (tests.motion_nav.test_b06_fabric_material_probe.B06FabricMaterialProbeTests.test_probe_covers_every_declared_ordinary_material_once) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.001s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 16500,
+            "create_time": 1792482044.4597733
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 16500,
+            "create_time": 1792482044.4597733
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_b06_movement_contracts",
+      "file": "tests/motion_nav/test_b06_movement_contracts.py",
+      "status": "passed",
+      "duration_seconds": 0.6872109998948872,
+      "return_code": 0,
+      "tests_run": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_action_route_can_cancel_while_waiting_for_missing_ground_information (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_action_route_can_cancel_while_waiting_for_missing_ground_information) ... ok\ntest_action_route_completes_only_after_observed_goal_state (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_action_route_completes_only_after_observed_goal_state) ... ok\ntest_action_route_does_not_complete_outside_declared_goal_region (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_action_route_does_not_complete_outside_declared_goal_region) ... ok\ntest_action_segment_carries_the_planner_transition (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_action_segment_carries_the_planner_transition) ... ok\ntest_b06_planning_and_admission_preserve_the_shared_transition (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_b06_planning_and_admission_preserve_the_shared_transition) ... ok\ntest_final_walk_accepts_a_safe_stop_inside_the_goal_region (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_final_walk_accepts_a_safe_stop_inside_the_goal_region) ... ok\ntest_goal_alignment_obeys_cancel_input_loss_session_and_terminal_state (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_goal_alignment_obeys_cancel_input_loss_session_and_terminal_state) ... ok\ntest_goal_checks_region_support_mode_pose_speed_and_resources (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_goal_checks_region_support_mode_pose_speed_and_resources) ... ok\ntest_goal_heading_and_risk_policy_are_part_of_completion (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_goal_heading_and_risk_policy_are_part_of_completion) ... ok\ntest_grounded_fabric_gravity_velocity_does_not_prevent_goal_completion (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_grounded_fabric_gravity_velocity_does_not_prevent_goal_completion) ... ok\ntest_resource_changing_walk_edges_keep_their_order_during_admission (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_resource_changing_walk_edges_keep_their_order_during_admission) ... ok\ntest_resource_recovery_cannot_exceed_the_declared_initial_capacity (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_resource_recovery_cannot_exceed_the_declared_initial_capacity) ... ok\ntest_resource_search_keeps_slower_nondominated_prefix (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_resource_search_keeps_slower_nondominated_prefix) ... ok\ntest_resource_search_rejects_an_implicit_negative_balance (tests.motion_nav.test_b06_movement_contracts.B06MovementContractTests.test_resource_search_rejects_an_implicit_negative_balance) ... ok\n\n----------------------------------------------------------------------\nRan 14 tests in 0.270s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 53964,
+            "create_time": 1792482044.8420875
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 53964,
+            "create_time": 1792482044.8420875
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_b06_ordinary_profiles",
+      "file": "tests/motion_nav/test_b06_ordinary_profiles.py",
+      "status": "passed",
+      "duration_seconds": 0.7481347001157701,
+      "return_code": 0,
+      "tests_run": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_each_ordinary_representative_builds_walk_and_jump_edges (tests.motion_nav.test_b06_ordinary_profiles.B06OrdinaryProfilesTests.test_each_ordinary_representative_builds_walk_and_jump_edges) ... ok\ntest_jump_up_rejects_deferred_volume_block (tests.motion_nav.test_b06_ordinary_profiles.B06OrdinaryProfilesTests.test_jump_up_rejects_deferred_volume_block) ... ok\ntest_new_profiles_resolve_materials_from_one_ground_model (tests.motion_nav.test_b06_ordinary_profiles.B06OrdinaryProfilesTests.test_new_profiles_resolve_materials_from_one_ground_model) ... ok\ntest_ordinary_material_with_abnormal_shape_is_rejected_as_support (tests.motion_nav.test_b06_ordinary_profiles.B06OrdinaryProfilesTests.test_ordinary_material_with_abnormal_shape_is_rejected_as_support) ... ok\ntest_profile_metadata_records_the_fabric_replacement_check (tests.motion_nav.test_b06_ordinary_profiles.B06OrdinaryProfilesTests.test_profile_metadata_records_the_fabric_replacement_check) ... ok\ntest_special_empty_block_is_rejected_by_planning_and_direct_execution (tests.motion_nav.test_b06_ordinary_profiles.B06OrdinaryProfilesTests.test_special_empty_block_is_rejected_by_planning_and_direct_execution) ... ok\ntest_special_surface_remains_outside_the_ordinary_profiles (tests.motion_nav.test_b06_ordinary_profiles.B06OrdinaryProfilesTests.test_special_surface_remains_outside_the_ordinary_profiles) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 0.302s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 26644,
+            "create_time": 1792482045.53414
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 26644,
+            "create_time": 1792482045.53414
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    },
+    {
+      "module": "tests.motion_nav.test_b06_registry_export",
+      "file": "tests/motion_nav/test_b06_registry_export.py",
+      "status": "passed",
+      "duration_seconds": 0.16192000010050833,
+      "return_code": 0,
+      "tests_run": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "stdout": "test_export_is_sorted_namespaced_and_records_source_hash (tests.motion_nav.test_b06_registry_export.B06RegistryExportTests.test_export_is_sorted_namespaced_and_records_source_hash) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.005s\n\nOK\n",
+      "stderr": "",
+      "diagnostic": null,
+      "cleanup": {
+        "status": "passed",
+        "registered_processes": 1,
+        "attempted": [
+          {
+            "pid": 31464,
+            "create_time": 1792482046.2872837
+          }
+        ],
+        "stopped": [
+          {
+            "pid": 31464,
+            "create_time": 1792482046.2872837
+          }
+        ],
+        "surviving": [],
+        "errors": [],
+        "isolation": "windows_job",
+        "job_closed": true
+      }
+    }
+  ],
+  "posix_subreaper": {
+    "status": "not_applicable"
+  }
+}

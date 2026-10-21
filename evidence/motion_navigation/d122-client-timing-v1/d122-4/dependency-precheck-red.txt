@@ -1,0 +1,14 @@
+E
+======================================================================
+ERROR: test_all_proof_dependencies_are_declared_observed_facts_in_every_direction (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_all_proof_dependencies_are_declared_observed_facts_in_every_direction)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 85, in test_all_proof_dependencies_are_declared_observed_facts_in_every_direction
+    manifest = probe.fabric_dependency_manifest(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'scripts.d122_fabric_timing' has no attribute 'fabric_dependency_manifest'
+
+----------------------------------------------------------------------
+Ran 1 test in 7.941s
+
+FAILED (errors=1)

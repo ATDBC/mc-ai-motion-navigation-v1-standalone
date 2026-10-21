@@ -1,0 +1,28 @@
+{
+  "schema": "mc2p.d121-release-repair-task4.v1",
+  "result": "DIAGNOSTIC_AND_DOCUMENTATION_REPAIRED",
+  "d121_status": "PARTIAL_STOPPED",
+  "transport_matrix_result": "FAILED_STOPPED",
+  "d122_started": false,
+  "task5_blockers": [
+    "Two export tests require final release-repair production fingerprints after Task3; old fingerprint evidence must remain unchanged."
+  ],
+  "files": {
+    "design-metrics.json": "35f5833ca7008ebbdb0131068181fae70788379edd172c7041d9c06db2123dce",
+    "document-checks.json": "aabef59052abfa6e923ad08f85c6e9e06e0add982cbd68a451f584e8d728cb02",
+    "export-verify.json": "7f2c089fb70d4d0532ad746667dc082a3a2832f9ea45a0ad899ed74d8af7c032",
+    "export-verify.txt": "d5ab9f95c468d5aa7d0acde1d7ac30f3bc1f7f38b0789efdec908a03fe9492d2",
+    "green-adjacent.json": "90aed4dd5cdf1b22dfe8c1a0e766a37e6b67bb76079702e9dbb7e2878bdfd75d",
+    "green-adjacent.txt": "5d304df711d168c1cfc9733c0a9b9bdeff94a41bda20735a0c29da08ddf2a7fc",
+    "green-direct.json": "5dc049b039f8f933ab0c933f898edf8e3012fecfb03cb17d9672f5bb7ab7012b",
+    "green-direct.txt": "a78d609f422bccccdc8eabb7bf1f866159c64ded006a0438b775c954e8bb95e0",
+    "history-integrity-and-comparison.json": "0ce0afc84623921436d3fdc418d0aa7198d64834a908875d636044dce31c282e",
+    "matrix-v2.json": "ac2d2c786881de3a607eef29a56bb57588ccb1905cf52807a32429c22d83aab6",
+    "matrix.json": "a59e47377eaeeb74d91373b61a67be2f492eff0336f63bbb89c8feb1606ebd92",
+    "matrix.txt": "c71e1331a6600de79635ea0bb2073229c91391b04a0bc99aea127abe6c0d9835",
+    "README.md": "6c84bf4c9e8256c2c426e2b09e4bb9407eef7c3392fb1633d8800746f59f116c",
+    "red.json": "ba0fe661d09cbe3bdabf9c064678dea6e160b5208f4e567d4e993cd5ca1a2534",
+    "red.txt": "8201d2dee8400eeaedff43c6a3d3713b72f8eaf992b2e32117fff3c5e222a989",
+    "source-hashes.json": "ab0612ab84c42ba6e7db88e2dd2c85288e1067fee234815f95f8c8c1d126e339"
+  }
+}

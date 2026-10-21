@@ -1162,7 +1162,7 @@ class D058RuntimeValidationTests(unittest.TestCase):
             world, route, unmapped_cell, lambda: None,
         )
 
-    def test_four_forward_unknown_air_confirmations_keep_formal_route_running(self):
+    def test_four_shadowed_air_confirmations_do_not_revalidate_formal_route(self):
         session = WorldSessionId("d058-four-air-confirmations")
         world = WorldKnowledge(session)
         observed = ObservationStamp(session, 1, 1, "test-clock", 50_000_000)
@@ -1184,6 +1184,11 @@ class D058RuntimeValidationTests(unittest.TestCase):
             world, request, candidate, candidate.path[0].position,
         )
         changed_positions = tuple((x, -1, 1) for x in range(1, 5))
+        bound_dependencies = {
+            item.position for item in route.validation_plan.dependency_provenance
+        }
+        self.assertTrue(all(position not in bound_dependencies
+                            for position in changed_positions))
         self.assertTrue(all(
             world.view().cell(position).knowledge is CellKnowledge.UNKNOWN
             for position in changed_positions
@@ -1221,13 +1226,14 @@ class D058RuntimeValidationTests(unittest.TestCase):
             reasons.append(advance.route_advance.decision.reason_code)
 
         self.assertTrue(all(
-            result.disposition is ActiveRouteValidationDisposition.CONTINUE
-            and result.reason is ActiveRouteValidationReason.REVALIDATED
+            result.disposition is ActiveRouteValidationDisposition.UNAFFECTED
+            and result.reason is ActiveRouteValidationReason.NO_INTERSECTION
+            and result.queries_used == 0
             for result in validations
         ))
         self.assertEqual(
             tuple(result.affected_cells for result in validations),
-            tuple((position,) for position in changed_positions),
+            ((), (), (), ()),
         )
         self.assertNotIn("cancel_braking", reasons)
         self.assertEqual(supervisor.async_work_diagnostics, ())

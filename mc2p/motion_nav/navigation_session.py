@@ -4716,10 +4716,60 @@ class NavigationSession:
                     route_decision,
                 )
             now = self._clock()
+            # Timing capability belongs to the Runtime input ledger for this
+            # control frame. It must not depend on one concrete route executor
+            # or a prepared-controller test substitute.
+            timing_ledger = self._control_ledger
+            timing_v2 = (
+                timing_ledger is not None
+                and timing_ledger.action_timing_v2
+            )
+            safe_default = (
+                None if route_decision is None or not timing_v2
+                else route_decision.safe_default
+            )
             expires = min(deadline_ns, now + 250_000_000)
+            if safe_default is not None:
+                movement_tick = self._frame.body.movement_tick_id
+                if movement_tick is None:
+                    raise ContractViolation(
+                        "safe default requires an observed movement tick"
+                    )
+                wait_ticks = max(
+                    0, safe_default.activation_tick - (movement_tick + 1),
+                )
+                required = (
+                    wait_ticks * 50_000_000
+                    + safe_default.wall_budget_ns
+                )
+                if deadline_ns - now <= required:
+                    raise ContractViolation(
+                        "navigation owner deadline cannot cover safe default"
+                    )
+                expires = deadline_ns
+            else:
+                movement_tick = self._frame.body.movement_tick_id
+                response_hold = (0 if movement_tick is None
+                    or timing_ledger is None else
+                    timing_ledger.active_default_response_hold_ns(
+                        next_tick=movement_tick + 1,
+                    ))
+                if response_hold:
+                    if deadline_ns - now <= response_hold:
+                        raise ContractViolation(
+                            "navigation owner deadline cannot cover default response hold"
+                        )
+                    expires = deadline_ns
             if expires <= now:
                 raise ContractViolation("navigation intent window expired")
-            input_window = (None if route_decision is None else decision_input_window(route_decision))
+            # Keep the established internal execution-window contract for v1
+            # ledgers. Runtime removes the optional field only at the v1 wire
+            # boundary; dropping it here would also remove proven late-start
+            # slack from arbitration and local application accounting.
+            input_window = (
+                None if route_decision is None
+                else decision_input_window(route_decision)
+            )
             if (input_window is not None and self._frame.body.movement_tick_id is not None
                     and input_window.latest_tick <= self._frame.body.movement_tick_id):
                 raise ContractViolation("navigation movement window expired")
@@ -4792,6 +4842,7 @@ class NavigationSession:
                     conditioned_look_intent_id if look_conditioned else None
                 ),
                 movement_tick_window=input_window,
+                safe_default=safe_default,
             )
             if prepared is not None:
                 prepared = StreamActivationProposal._from_native_references(

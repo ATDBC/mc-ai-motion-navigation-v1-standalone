@@ -1,0 +1,8 @@
+test_widening_successor_to_l_plus_two_is_detected (tests.motion_nav.test_d122_formal_timing.D122FormalTimingProjectionTests.test_widening_successor_to_l_plus_two_is_detected) ... ok
+test_replacing_the_proved_default_with_neutral_is_detected (tests.motion_nav.test_d122_formal_timing.D122FormalTimingProjectionTests.test_replacing_the_proved_default_with_neutral_is_detected) ... ok
+test_fallback_armed_and_window_pending_are_not_applications (tests.motion_nav.test_d122_formal_timing.D122FormalTimingProjectionTests.test_fallback_armed_and_window_pending_are_not_applications) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 5.271s
+
+OK

@@ -9,10 +9,14 @@ from mc2p.motion_nav.physics_types import (
     PhysicsEffect, PhysicsRuleset, PhysicsState, StateBuildResult, StateBuildStatus,
     WorldShapeQuery,
 )
-from mc2p.motion_nav.geometry import unknown_shape_owner_is_fully_covered
+from mc2p.motion_nav.geometry import (
+    occupied_cells_for_sweep, query_support, required_cells_for_sweep,
+    shape_owner_is_shadowed_by_full_cube,
+)
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_model import (
-    BlockPos, CellKnowledge, WorldSessionId, WorldView, block_section,
+    Aabb, BlockPos, CellKnowledge, WorldQueryCache, WorldSessionId, WorldView,
+    block_section,
 )
 
 
@@ -132,14 +136,22 @@ class PhysicsWorldView:
         return cls(WorldView.from_sealed_snapshot(snapshot), snapshot.identity.ruleset)
 
     def __init__(self, world: WorldView, ruleset: PhysicsRuleset,
-                 *, expected_session: WorldSessionId | None = None) -> None:
+                 *, expected_session: WorldSessionId | None = None,
+                 query_cache: WorldQueryCache | None = None) -> None:
         if type(world) is not WorldView or type(ruleset) is not PhysicsRuleset:
             raise ContractViolation("physics world requires a world view and ruleset")
         if expected_session is not None and world.session != expected_session:
             raise ContractViolation("physics world belongs to another session")
+        if query_cache is not None:
+            if type(query_cache) is not WorldQueryCache:
+                raise ContractViolation("physics world query cache must be typed")
+            query_cache.validate_for(world)
         self._world = world
         self.ruleset = ruleset
-        self._shape_cache: dict[tuple[BlockPos, ...], WorldShapeQuery] = {}
+        self._query_cache = query_cache
+        self._shape_cache: dict[
+            tuple[tuple[BlockPos, ...], tuple[BlockPos, ...]], WorldShapeQuery,
+        ] = {}
 
     def __getstate__(self):
         """Legacy explicit serialization exports facts, never a live world owner.
@@ -160,7 +172,8 @@ class PhysicsWorldView:
                          for position, fact in section.items()}
                 world = WorldView.detached(world.session, world.geometry_revision,
                                            world.evidence_revision, facts)
-        return {"_world": world, "ruleset": self.ruleset, "_shape_cache": {}}
+        return {"_world": world, "ruleset": self.ruleset,
+                "_query_cache": None, "_shape_cache": {}}
 
     @property
     def session(self) -> WorldSessionId:
@@ -182,7 +195,7 @@ class PhysicsWorldView:
             for y in range(bounds.min_y, bounds.max_y + 1):
                 for z in range(bounds.min_z, bounds.max_z + 1):
                     position = (x, y, z)
-                    fact = self._world.cell(position)
+                    fact = self.cell(position)
                     if fact.knowledge is not CellKnowledge.UNKNOWN:
                         facts[position] = fact
         detached = WorldView.detached(
@@ -192,13 +205,57 @@ class PhysicsWorldView:
         return PhysicsWorldView(detached, self.ruleset)
 
     def cell(self, position: BlockPos):
-        return self._world.cell(position)
+        return (self._world.cell(position) if self._query_cache is None
+                else self._query_cache.cell(position))
+
+    def collision_boxes(self, position: BlockPos) -> tuple[Aabb, ...]:
+        if self._query_cache is not None:
+            return self._query_cache.collision_boxes(position)
+        fact = self._world.cell(position)
+        return () if fact.block is None else fact.block.world_boxes(position)
+
+    def support(self, body: Aabb, *, vertical_tolerance: float = 0.05):
+        """Public support query sharing this physics view's fact source."""
+        return query_support(
+            body, self._world, vertical_tolerance=vertical_tolerance,
+            query_cache=self._query_cache,
+        )
 
     def shapes(self, positions: tuple[BlockPos, ...]) -> WorldShapeQuery:
+        """Conservative query when the caller cannot identify direct cells."""
+        return self._shapes(positions, positions)
+
+    def shapes_for_sweeps(
+            self,
+            sweeps: tuple[tuple[Aabb, tuple[float, float, float]], ...],
+            ) -> WorldShapeQuery:
+        """Query shapes while separating occupied cells from lower owners."""
+        if type(sweeps) is not tuple or not sweeps:
+            raise ContractViolation("shape sweep query requires immutable sweeps")
+        direct: set[BlockPos] = set()
+        broad: set[BlockPos] = set()
+        for body, delta in sweeps:
+            direct.update(occupied_cells_for_sweep(body, delta))
+            broad.update(required_cells_for_sweep(body, delta))
+        return self._shapes(tuple(sorted(broad)), tuple(sorted(direct)))
+
+    def shapes_for_sweep(
+            self, body: Aabb, delta: tuple[float, float, float],
+            ) -> WorldShapeQuery:
+        return self.shapes_for_sweeps(((body, delta),))
+
+    def _shapes(
+            self, positions: tuple[BlockPos, ...],
+            direct_positions: tuple[BlockPos, ...],
+            ) -> WorldShapeQuery:
         if type(positions) is not tuple:
             raise ContractViolation("shape positions must be immutable")
-        dependencies = tuple(sorted(set(positions)))
-        cached = self._shape_cache.get(dependencies)
+        broad = tuple(sorted(set(positions)))
+        direct = tuple(sorted(set(direct_positions)))
+        if not set(direct).issubset(broad):
+            raise ContractViolation("direct shape cells must belong to the broad query")
+        cache_key = (broad, direct)
+        cached = self._shape_cache.get(cache_key)
         if cached is not None:
             # A live WorldView must still reject cached geometry after any
             # dependency section changes. Check section revisions in one
@@ -210,32 +267,29 @@ class PhysicsWorldView:
         boxes = []
         missing = []
         unsupported = []
-        complete_dependencies = set(dependencies)
-        for position in dependencies:
-            fact = self._world.cell(position)
+        complete_dependencies: set[BlockPos] = set()
+        direct_set = set(direct)
+        for position in broad:
+            if (position not in direct_set
+                    and shape_owner_is_shadowed_by_full_cube(
+                        self._world, position, query_cache=self._query_cache)):
+                complete_dependencies.add((position[0], position[1] + 1, position[2]))
+                continue
+            complete_dependencies.add(position)
+            fact = self.cell(position)
             if fact.knowledge is CellKnowledge.UNKNOWN:
-                # Shapes owned by the cell below may reach one block upward.
-                # A known full-width collision surface at the top of the cell
-                # above fixes the highest possible surface of every supported
-                # vanilla shape below.  Keep both cells as dependencies while
-                # avoiding an impossible underground information requirement.
-                above = (position[0], position[1] + 1, position[2])
-                complete_dependencies.add(above)
-                if unknown_shape_owner_is_fully_covered(
-                        self._world, position):
-                    continue
                 missing.append(position)
             elif fact.knowledge is CellKnowledge.BLOCK:
                 assert fact.block is not None
                 if fact.block.fluid or fact.block.collision_kind == "unsupported":
                     unsupported.append(position)
                 else:
-                    boxes.extend(fact.block.world_boxes(position))
+                    boxes.extend(self.collision_boxes(position))
         result = WorldShapeQuery(
             tuple(boxes), tuple(sorted(complete_dependencies)),
             tuple(missing), tuple(unsupported),
         )
         if len(self._shape_cache) >= self._MAX_SHAPE_CACHE_ENTRIES:
             self._shape_cache.clear()
-        self._shape_cache[dependencies] = result
+        self._shape_cache[cache_key] = result
         return result

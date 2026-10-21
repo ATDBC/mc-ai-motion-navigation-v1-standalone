@@ -1,0 +1,32 @@
+test_replaced_pending_finishes_even_when_its_successor_misses (tests.test_d122_python_timing_repair.TimingRepairTests.test_replaced_pending_finishes_even_when_its_successor_misses) ... FAIL
+test_exhausted_and_neutral_at_same_tick_do_not_rearm_parent (tests.test_d122_python_timing_repair.TimingRepairTests.test_exhausted_and_neutral_at_same_tick_do_not_rearm_parent) ... FAIL
+
+======================================================================
+FAIL: test_replaced_pending_finishes_even_when_its_successor_misses (tests.test_d122_python_timing_repair.TimingRepairTests.test_replaced_pending_finishes_even_when_its_successor_misses)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_python_timing_repair.py", line 197, in test_replaced_pending_finishes_even_when_its_successor_misses
+    self.assertTrue(input_application_has_finished(ledger.record(26)))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_exhausted_and_neutral_at_same_tick_do_not_rearm_parent (tests.test_d122_python_timing_repair.TimingRepairTests.test_exhausted_and_neutral_at_same_tick_do_not_rearm_parent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_python_timing_repair.py", line 211, in test_exhausted_and_neutral_at_same_tick_do_not_rearm_parent
+    self.assertEqual(ledger.record(25).applied_ticks, (26,))
+AssertionError: Tuples differ: (26, 35) != (26,)
+
+First tuple contains 1 additional elements.
+First extra element 1:
+35
+
+- (26, 35)
+?     ---
+
++ (26,)
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.014s
+
+FAILED (failures=2)

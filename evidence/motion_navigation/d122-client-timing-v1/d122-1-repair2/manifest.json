@@ -1,0 +1,42 @@
+{
+  "schema": "mc2p.d122-1-repair2-manifest.v1",
+  "source_base": "6696e57f",
+  "platform": "Windows",
+  "scope": "D122-1 response holding and explicit client arrangement membership",
+  "checks": {
+    "adjacent": 219,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "mutations_detected": 19,
+    "v1_identical_requests": 120,
+    "final_focused": 102
+  },
+  "not_run": [
+    "Java",
+    "D121 producer integration",
+    "full Windows",
+    "standalone full checks",
+    "Fabric",
+    "performance acceptance"
+  ],
+  "outstanding": [
+    "D122-3 formal v2 construction and current export fingerprints"
+  ],
+  "code_sha256": {
+    "mc2p/motion_nav/online_motion.py": "87f5e52b5d98a89fcb3645cb32b23aac685f5c6410dfbb17683e9f8684f6c2de",
+    "tests/sim/backend.py": "c67db6a6d7004cb93e739d0f9b75ace800df1358e58faa885b3379fe41027993",
+    "tests/sim/client_timing.py": "498de5805089cff57bc814eac3ed02fd9962145317e1e0384aabd650149ae0cf",
+    "tests/test_d122_python_timing_repair.py": "d96a0cac0ad4c050db8f4afe6ff447538362cb58cfcd7eed2a8ccb631b40e2a6",
+    "scripts/d122_python_contract_probe.py": "959c74c658acc1a7870b83a00b01d552abc86dbf561e135dba13afd24d1d4b79"
+  },
+  "evidence_sha256": {
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair2/adjacent-checks.txt": "2c01f679ef0f019433a1b3748245177b7d6d06db6bf31221be32fdfbd9ba7578",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair2/final-adjacent-checks.txt": "cef2a5f6e5bff036bffa7db85b0c855f2abc014b5741b3fb48c7ad9ec1e4137f",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair2/final-focused-checks.txt": "af92f1ce9085ab7f094276960d384515887f8cb63e9e9141a93ac67673e43c97",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair2/mutations-and-v1-pair.json": "fed42abb4285f405e6abafc506c78dba02d2f0f0c40e8a15a26a87929c16b973",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair2/pending-red.txt": "c57cf4b9d03b519b19b60e3fb7b5c238ff9147d3388c5b97fd44605a095f9fd6",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair2/README.md": "3abc4799bb14e10f2cf31a7677e55b733bc4a6776916d13671377c33177e93ca",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair2/red.txt": "bc9b9b0f230fe9bddc9c52f9254cf463afa275b2bd794bcadc15ad718faad2f6"
+  }
+}

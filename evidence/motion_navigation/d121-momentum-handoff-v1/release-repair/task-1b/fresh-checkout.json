@@ -1,0 +1,27 @@
+{
+  "path": "evidence/motion_navigation/continuous-motion-d101-v1/manifest.json",
+  "restored": {
+    "sha256": "f3189c60dff31c701c53bf199250e8bcf3d6931bd04e375d688fb5abd4640395",
+    "bytes": 8417,
+    "crlf": 201,
+    "lf": 201
+  },
+  "fresh_index_checkout": [
+    {
+      "core_autocrlf": "false",
+      "sha256": "f3189c60dff31c701c53bf199250e8bcf3d6931bd04e375d688fb5abd4640395",
+      "bytes": 8417,
+      "crlf": 201,
+      "lf": 201,
+      "exact": true
+    },
+    {
+      "core_autocrlf": "true",
+      "sha256": "f3189c60dff31c701c53bf199250e8bcf3d6931bd04e375d688fb5abd4640395",
+      "bytes": 8417,
+      "crlf": 201,
+      "lf": 201,
+      "exact": true
+    }
+  ]
+}

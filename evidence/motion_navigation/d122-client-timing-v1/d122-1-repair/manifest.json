@@ -1,0 +1,51 @@
+{
+  "schema": "mc2p.d122-1-repair-manifest.v1",
+  "source_base": "423b5bd1",
+  "platform": "Windows",
+  "scope": "D122-1 Python safety duration and input ledger only",
+  "checks": {
+    "adjacent": 214,
+    "final_repair_module": 11,
+    "unique_checks": 215,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "mutations_detected": 14,
+    "v1_identical_requests": 120,
+    "export_unit_checks": {
+      "checks": 28,
+      "passed": 26,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0,
+      "reason": "current fingerprints not yet migrated; D122-3"
+    }
+  },
+  "not_run": [
+    "Java",
+    "D121 producer integration",
+    "full Windows",
+    "standalone full checks",
+    "Fabric",
+    "performance acceptance"
+  ],
+  "code_sha256": {
+    "mc2p/contracts/action_v1.py": "565b93ec210e817a06bd2cdbcf93700343c497cbca46ef36cbd22190416c6555",
+    "mc2p/motion_nav/online_motion.py": "2862f0cdcd761d6394740b55d9cf5e6df46535ae8f2ed2870ebd48bbe3d728d9",
+    "tests/sim/client_timing.py": "d155e6bb38ff776bd4516ebcaaa5bb45c962b589c6fe7dcdd2f2510066aab453",
+    "tests/sim/d122_timing_oracle.py": "9995ed4b5920030d0bfb9c43b5a7508258c13c17b144e4bd7724920a1e476df6",
+    "tests/test_d122_python_timing.py": "fd154c6cfab7c8c24d69ebad3a270f0549202a8f16cbea41efda2120846ab52d",
+    "tests/test_d122_python_timing_repair.py": "700a492636591f11b70fa30995ab1889e1b7821c43a28555c348778743d3664c",
+    "tests/motion_nav/test_d122_timing_contract.py": "17532071736acf6260c0edf801bf3173aad1da7f6585aaf570d250ad16bcc49f",
+    "scripts/d122_python_contract_probe.py": "7b58b954790cfc91ed7925dbe80efafdc6ddc22a4b1c711e73d0490d6c8562f1"
+  },
+  "evidence_sha256": {
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair/adjacent-checks.txt": "cdc26eafc07e8df6a1a06c313d49b5fd160b50b28fe27a3641e5bf2d3659caea",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair/cancel-red.txt": "94ff74988975ed1ebb7d48c63afca5506bc4c2761a8ad6ee962383c5377bedcb",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair/export-checks.json": "66b2f9493d3195150980919815c337e494cfb141e299d91521675225064cc89e",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair/final-repair-checks.txt": "261b1ce0825f5c3cd276d6fafc7b90f7a41f3c23cb24b9b5a68a484b88e829de",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair/mutations-and-v1-pair.json": "c857f1cf56dd31359c30574b40924a5e6fe860610105bd13685ab8d64fd43b40",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair/README.md": "ab5debbeb852c15785a067d66fcbdc3ca27dae11c689c54c741b62c624f5e166",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-1-repair/red.txt": "9b96ece428da5d5a0c515a19336bd6859f6251936bde261a985212e33b19b3d8"
+  }
+}

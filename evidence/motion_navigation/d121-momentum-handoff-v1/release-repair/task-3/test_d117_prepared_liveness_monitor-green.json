@@ -1,0 +1,13 @@
+{
+  "module": "tests.motion_nav.test_d117_prepared_liveness_monitor",
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d117_prepared_liveness_monitor",
+    "-v"
+  ],
+  "exit_code": 0,
+  "duration_seconds": 0.3000958999618888,
+  "output": "test_activity_rejects_reason_strings_and_untyped_controller_state (tests.motion_nav.test_d117_prepared_liveness_monitor.D117PreparedLivenessMonitorTests.test_activity_rejects_reason_strings_and_untyped_controller_state) ... ok\ntest_boundary_wait_exceeding_tick_limit_is_reported (tests.motion_nav.test_d117_prepared_liveness_monitor.D117PreparedLivenessMonitorTests.test_boundary_wait_exceeding_tick_limit_is_reported) ... ok\ntest_clearing_typed_state_resets_each_wait (tests.motion_nav.test_d117_prepared_liveness_monitor.D117PreparedLivenessMonitorTests.test_clearing_typed_state_resets_each_wait) ... ok\ntest_recovery_exceeding_tick_limit_is_reported (tests.motion_nav.test_d117_prepared_liveness_monitor.D117PreparedLivenessMonitorTests.test_recovery_exceeding_tick_limit_is_reported) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.000s\n\nOK\n"
+}

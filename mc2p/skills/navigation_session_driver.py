@@ -86,6 +86,7 @@ class RuntimeNavigationDriver:
         *,
         clock_ns: Callable[[], int] = time.perf_counter_ns,
         observation_request: ObservationRequestV3 | None = None,
+        step_window_ns: int = _STEP_WINDOW_NS,
     ) -> None:
         if type(runtime) is not PlayerRuntimeV1:
             raise ContractViolation("runtime navigation requires formal Runtime")
@@ -98,6 +99,11 @@ class RuntimeNavigationDriver:
         if (observation_request is not None
                 and type(observation_request) is not ObservationRequestV3):
             raise ContractViolation("runtime navigation observation request is invalid")
+        if (type(step_window_ns) is not int
+                or not 50_000_000 <= step_window_ns <= 30_000_000_000):
+            raise ContractViolation(
+                "runtime navigation step window must be within 50 ms..30 s"
+            )
         session.attach_observation_adapter(
             runtime.navigation_observation_adapter,
         )
@@ -107,6 +113,7 @@ class RuntimeNavigationDriver:
         self._observation_request = observation_request or ObservationRequestV3(
             "navigation_v1"
         )
+        self._step_window_ns = step_window_ns
         self.source: IntentSourceV1 | None = None
         self._state = RuntimeNavigationDriverState.READY
         self.reason = "not_started"
@@ -266,6 +273,32 @@ class RuntimeNavigationDriver:
             # existing body handoff path so an airborne controller keeps its
             # landing responsibility and a grounded task ends cleanly.
             return self.stop(profile, "owner_heartbeat_lost")
+        return self.advance_prepared(profile, proposals=proposals)
+
+    def advance_prepared(
+        self,
+        profile: BehaviorProfileV0,
+        *,
+        proposals: tuple[ControlFrameProposalV1, ...],
+    ) -> RuntimeStepResultV1:
+        """Advance one frame already prepared by this driver.
+
+        Shared parent loops may time proposal preparation separately, but the
+        Runtime call, exception cleanup and result adoption remain one driver
+        lifecycle.  Callers must never reproduce this sequence themselves.
+        """
+        if type(profile) is not BehaviorProfileV0:
+            raise ContractViolation(
+                "prepared runtime navigation requires BehaviorProfileV0"
+            )
+        if self._prepared_deadline_ns is None:
+            raise ContractViolation("runtime navigation has no prepared frame")
+        if (type(proposals) is not tuple
+                or any(type(item) is not ControlFrameProposalV1
+                       for item in proposals)):
+            raise ContractViolation(
+                "prepared runtime navigation requires control proposals"
+            )
         assert self._prepared_deadline_ns is not None
         deadline = self._prepared_deadline_ns
         try:
@@ -295,7 +328,7 @@ class RuntimeNavigationDriver:
             raise ContractViolation("runtime navigation driver cannot prepare")
         now = self._clock()
         require_nonnegative_int(owner_deadline_ns, "runtime navigation owner deadline")
-        deadline = min(owner_deadline_ns, now + _STEP_WINDOW_NS)
+        deadline = min(owner_deadline_ns, now + self._step_window_ns)
         if deadline <= now:
             raise _OwnerDeadlineExpired(
                 "runtime navigation action window expired"

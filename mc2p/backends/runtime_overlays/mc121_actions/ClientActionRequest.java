@@ -13,13 +13,53 @@ import java.util.Set;
 /** Strict bounded decoder. No arbitrary Java calls, commands, keys, or coercions. */
 public record ClientActionRequest(String episode, long sequence, long observation,
         long budgetNs, long observationBudgetNs, int ticks, int forward, int strafe, boolean jump, boolean sneak,
-        boolean sprint, float yawDelta, float pitchDelta, JsonObject operation, Long cancel) {
+        boolean sprint, float yawDelta, float pitchDelta, JsonObject operation, Long cancel,
+        FirstEffectWindow firstEffectWindow, SafeDefault safeDefault) {
+
+    public record Movement(int forward, int strafe, boolean jump, boolean sneak, boolean sprint) {}
+    public record FirstEffectWindow(long earliestTick, long latestTick) {}
+    public record SafeDefault(long activationTick, Movement movement, int validForTicks, long wallBudgetNs) {}
 
     public String operationKind() {
         return operation == null ? "neutral" : operation.get("kind").getAsString();
     }
 
+    public long requiredSafeDefaultBudgetNs(long nextMovementTick) {
+        if (nextMovementTick < 0) throw new IllegalArgumentException("invalid next movement tick");
+        if (safeDefault == null) return 0;
+        long wait = Math.max(0L, safeDefault.activationTick - nextMovementTick);
+        if (wait > (Long.MAX_VALUE - safeDefault.wallBudgetNs) / 50_000_000L)
+            return Long.MAX_VALUE;
+        return wait * 50_000_000L + safeDefault.wallBudgetNs;
+    }
+
+    public String windowedActivationDenial() {
+        if (firstEffectWindow != null && operation != null) return "windowed_operation_unsupported";
+        return null;
+    }
+
+    public String timingAdmissionDenial(long nextMovementTick) {
+        String windowed = windowedActivationDenial();
+        if (windowed != null) return windowed;
+        if (nextMovementTick < 0) return "invalid_movement_tick";
+        if (safeDefault == null) return null;
+        long base = nextMovementTick;
+        if (firstEffectWindow != null) {
+            if (firstEffectWindow.earliestTick != firstEffectWindow.latestTick)
+                return "safe_default_requires_exact_window";
+            base = firstEffectWindow.earliestTick;
+        }
+        if (base > Long.MAX_VALUE - ticks
+                || safeDefault.activationTick != base + ticks)
+            return "safe_default_activation_mismatch";
+        return null;
+    }
+
     public static ClientActionRequest decode(byte[] bytes) {
+        return decode(bytes, "mc2p.client_action.v1");
+    }
+
+    public static ClientActionRequest decode(byte[] bytes, String negotiatedSchema) {
         if (bytes == null || bytes.length == 0 || bytes.length > 16384)
             throw new IllegalArgumentException("action size");
         try {
@@ -33,12 +73,22 @@ public record ClientActionRequest(String episode, long sequence, long observatio
                 if (reader.peek() != JsonToken.END_DOCUMENT || !value.isJsonObject())
                     throw new IllegalArgumentException("action root");
                 JsonObject root = value.getAsJsonObject();
-                keys(root, "schema_version", "episode_id", "request_sequence_id",
-                        "observation_sequence_id", "remaining_budget_ns", "valid_for_ticks",
-                        "observation_budget_ns",
-                        "movement", "look", "operation", "cancel_request_sequence_id");
-                if (!string(root, "schema_version").equals("mc2p.client_action.v1"))
+                if (!Set.of("mc2p.client_action.v1", "mc2p.client_action.v2").contains(negotiatedSchema))
+                    throw new IllegalArgumentException("negotiated action schema");
+                String schema = string(root, "schema_version");
+                if (!schema.equals(negotiatedSchema))
                     throw new IllegalArgumentException("action schema");
+                if (schema.equals("mc2p.client_action.v1")) {
+                    keys(root, "schema_version", "episode_id", "request_sequence_id",
+                            "observation_sequence_id", "remaining_budget_ns", "valid_for_ticks",
+                            "observation_budget_ns", "movement", "look", "operation",
+                            "cancel_request_sequence_id");
+                } else {
+                    keys(root, "schema_version", "episode_id", "request_sequence_id",
+                            "observation_sequence_id", "remaining_budget_ns", "valid_for_ticks",
+                            "observation_budget_ns", "movement", "look", "operation",
+                            "cancel_request_sequence_id", "first_effect_window", "safe_default");
+                }
                 String episode = string(root, "episode_id");
                 if (!episode.matches("[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}"))
                     throw new IllegalArgumentException("episode");
@@ -59,11 +109,41 @@ public record ClientActionRequest(String episode, long sequence, long observatio
                 if (operation != null) validateOperation(operation);
                 Long cancel = root.get("cancel_request_sequence_id").isJsonNull() ? null
                         : integer(root, "cancel_request_sequence_id", 0, Long.MAX_VALUE);
+                FirstEffectWindow window = null;
+                SafeDefault safeDefault = null;
+                if (schema.equals("mc2p.client_action.v2")) {
+                    if (!root.get("first_effect_window").isJsonNull()) {
+                        JsonObject windowValue = object(root, "first_effect_window");
+                        keys(windowValue, "earliest_tick", "latest_tick");
+                        long earliest = integer(windowValue, "earliest_tick", 0, Long.MAX_VALUE);
+                        long latest = integer(windowValue, "latest_tick", 0, Long.MAX_VALUE);
+                        if (latest < earliest) throw new IllegalArgumentException("reversed first effect window");
+                        window = new FirstEffectWindow(earliest, latest);
+                    }
+                    if (!root.get("safe_default").isJsonNull()) {
+                        JsonObject defaultValue = object(root, "safe_default");
+                        keys(defaultValue, "activation_tick", "movement", "valid_for_ticks", "wall_budget_ns");
+                        long activation = integer(defaultValue, "activation_tick", 0, Long.MAX_VALUE);
+                        JsonObject defaultMove = object(defaultValue, "movement");
+                        keys(defaultMove, "forward", "strafe", "jump", "sneak", "sprint");
+                        Movement movement = new Movement(
+                                (int) integer(defaultMove, "forward", -1, 1),
+                                (int) integer(defaultMove, "strafe", -1, 1),
+                                bool(defaultMove, "jump"), bool(defaultMove, "sneak"),
+                                bool(defaultMove, "sprint"));
+                        int duration = (int) integer(defaultValue, "valid_for_ticks", 1, 20);
+                        long wallBudget = integer(defaultValue, "wall_budget_ns", 1, 30_000_000_000L);
+                        if (wallBudget < duration * 50_000_000L)
+                            throw new IllegalArgumentException("safe default wall budget");
+                        safeDefault = new SafeDefault(activation, movement, duration, wallBudget);
+                    }
+                }
                 if (cancel != null && (cancel >= sequence || operation != null || forward != 0
-                        || strafe != 0 || jump || sneak || sprint || yaw != 0 || pitch != 0))
+                        || strafe != 0 || jump || sneak || sprint || yaw != 0 || pitch != 0
+                        || window != null || safeDefault != null))
                     throw new IllegalArgumentException("cancel cannot introduce new behavior");
                 return new ClientActionRequest(episode, sequence, observation, budget, observationBudget, ticks,
-                        forward, strafe, jump, sneak, sprint, yaw, pitch, operation, cancel);
+                        forward, strafe, jump, sneak, sprint, yaw, pitch, operation, cancel, window, safeDefault);
             }
         } catch (IOException | IllegalStateException | NumberFormatException error) {
             throw new IllegalArgumentException("invalid action payload", error);

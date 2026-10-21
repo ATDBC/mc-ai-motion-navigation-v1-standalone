@@ -7,8 +7,8 @@ import math
 from uuid import uuid4
 
 from mc2p.contracts.action_receipt import (
-    ClientBehaviorReceipt, ClientBehaviorReceiptV2, ClientBehaviorReceiptV3,
-    ClientInputApplicationV1,
+    ClientBehaviorReceipt, ClientBehaviorReceiptV2, ClientBehaviorReceiptV3, ClientBehaviorReceiptV4,
+    ClientInputApplicationV1, ClientTimingStatusV1,
 )
 from mc2p.contracts.action_v1 import ActionSnapshotV1, LookV1, MovementV1
 from mc2p.contracts.motion_activation import InputStreamCommandFact
@@ -24,6 +24,7 @@ class InputApplicationStatus(StrEnum):
     APPLIED_OUTSIDE_WINDOW = "applied_outside_window"
     EXPIRED = "expired"
     REJECTED = "rejected"
+    CANCELLED = "cancelled"
     AMBIGUOUS = "ambiguous"
     SUPERSEDED = "superseded"
 
@@ -181,6 +182,8 @@ class InputApplicationRecord:
     samples: tuple[ClientInputApplicationV1, ...] = ()
     resolved_at_tick: int | None = None
     stream_command: InputStreamCommandFact | None = None
+    default_samples: tuple[ClientInputApplicationV1, ...] = ()
+    default_resolved_at_tick: int | None = None
 
     def __post_init__(self) -> None:
         if type(self.session) is not WorldSessionId or type(self.action) is not ActionSnapshotV1:
@@ -214,9 +217,14 @@ def input_application_has_finished(record: InputApplicationRecord, *, by_tick: i
         return False
     if by_tick is not None and record.resolved_at_tick > by_tick:
         return False
-    if record.status in {InputApplicationStatus.REJECTED, InputApplicationStatus.EXPIRED}:
+    if record.status in {InputApplicationStatus.REJECTED, InputApplicationStatus.EXPIRED,
+                         InputApplicationStatus.CANCELLED}:
         return True
     if record.status in {InputApplicationStatus.APPLIED, InputApplicationStatus.APPLIED_OUTSIDE_WINDOW}:
+        if (record.action.safe_default is not None
+                and (record.default_resolved_at_tick is None
+                     or (by_tick is not None and record.default_resolved_at_tick > by_tick))):
+            return False
         return (len(record.applied_ticks) >= record.action.valid_for_ticks
                 and (by_tick is None or record.applied_ticks[-1] <= by_tick))
     if record.status is InputApplicationStatus.SUPERSEDED:
@@ -232,10 +240,14 @@ def input_application_has_finished(record: InputApplicationRecord, *, by_tick: i
 class InputApplicationLedger:
     """Bounded application history maintained by the eventual MotorGateway."""
 
-    def __init__(self, *, max_records: int = 64) -> None:
+    def __init__(self, *, max_records: int = 64,
+                 action_timing_v2: bool = False) -> None:
         if type(max_records) is not int or max_records < 1:
             raise ContractViolation("input ledger limit must be positive")
+        if type(action_timing_v2) is not bool:
+            raise ContractViolation("input ledger timing capability must be bool")
         self._max_records = max_records
+        self._action_timing_v2 = action_timing_v2
         self._ledger_identity = "ledger-" + uuid4().hex
         self._records: dict[int, InputApplicationRecord] = {}
         self._observed_samples: dict[int, ClientInputApplicationV1] = {}
@@ -246,10 +258,20 @@ class InputApplicationLedger:
         self._baseline_session: WorldSessionId | None = None
         self._baseline_episode_id: str | None = None
         self._baseline_movement_tick_id: int | None = None
+        # Membership facts from the client's existing v4 channel, not history.
+        self._client_current_sequence: int | None = None
+        self._client_pending_sequence: int | None = None
+        self._client_default_sequence: int | None = None
+        self._client_arrangement_tick = -1
 
     @property
     def ledger_identity(self) -> str:
         return self._ledger_identity
+
+    @property
+    def action_timing_v2(self) -> bool:
+        """Whether reset negotiated client-side windows and safe defaults."""
+        return self._action_timing_v2
 
     def bind_stream(self, sequence: int, *, generation_id: str, command_index: int) -> InputStreamCommandFact:
         """Annotate an actual submitted command; never reserve a future sequence."""
@@ -329,7 +351,7 @@ class InputApplicationLedger:
         if latest_allowed_first_tick < requested_first_tick:
             raise ContractViolation("input start window is reversed")
         if (latest_allowed_first_tick != requested_first_tick
-                and action.valid_for_ticks != 1):
+                and action.valid_for_ticks != 1 and action.first_effect_window is None):
             raise ContractViolation(
                 "a widened start window currently supports only one-tick commands"
             )
@@ -354,6 +376,38 @@ class InputApplicationLedger:
         """Return one immutable command record without exposing ledger ownership."""
         require_nonnegative_int(control_sequence, "control sequence")
         return self._records.get(control_sequence)
+
+    def prearmed_default_can_be_replaced(
+        self, record: InputApplicationRecord, *, at_tick: int,
+    ) -> bool:
+        """Whether an exact successor may replace this installed fallback."""
+        if type(record) is not InputApplicationRecord:
+            raise ContractViolation("prearmed default check requires an input record")
+        require_nonnegative_int(at_tick, "prearmed default replacement tick")
+        current = self._records.get(record.control_sequence)
+        default = record.action.safe_default
+        return (
+            current is record
+            and default is not None
+            and self._client_default_sequence == record.control_sequence
+            and record.status is InputApplicationStatus.APPLIED
+            and record.applied_ticks == (record.requested_first_tick,)
+            and not record.default_samples
+            and record.default_resolved_at_tick is None
+            and default.activation_tick == at_tick
+        )
+
+    def active_default_response_hold_ns(self, *, next_tick: int) -> int:
+        """Nominal time through the installed default's exhaustion boundary."""
+        require_nonnegative_int(next_tick, "default response next tick")
+        sequence = self._client_default_sequence
+        record = None if sequence is None else self._records.get(sequence)
+        if (record is None or record.default_resolved_at_tick is not None
+                or record.action.safe_default is None):
+            return 0
+        default = record.action.safe_default
+        exhaustion_tick = default.activation_tick + default.valid_for_ticks
+        return max(0, exhaustion_tick - next_tick + 1) * 50_000_000
 
     def sample(self, movement_tick_id: int) -> ClientInputApplicationV1 | None:
         """Return the exact client input consumed by one movement tick, if retained."""
@@ -405,9 +459,28 @@ class InputApplicationLedger:
         record = self._records.get(sample.request_sequence_id)
         if record is None or record.action.episode_id != sample.episode_id:
             raise ContractViolation("input sample has no submitted command")
+        if sample.state == "default_active":
+            default = record.action.safe_default
+            if (default is None or sample.movement_tick_id < default.activation_tick
+                    or sample.movement_tick_id >= default.activation_tick + default.valid_for_ticks
+                    or (sample.forward, sample.strafe, sample.jump, sample.sneak, sample.sprint)
+                    != (default.movement.forward, default.movement.strafe, default.movement.jump,
+                        default.movement.sneak, default.movement.sprint)
+                    or len(record.default_samples) >= default.valid_for_ticks):
+                raise ContractViolation("default application differs from its parent declaration")
+            updated = replace(record, default_samples=record.default_samples + (sample,))
+            self._records[record.control_sequence] = updated
+            return updated
         if sample.state == "disallowed":
             return self.reject(record.control_sequence, at_tick=sample.movement_tick_id)
+        default = record.action.safe_default
+        if (sample.state == "neutral" and default is not None
+                and sample.movement_tick_id >= default.activation_tick + default.valid_for_ticks
+                and not any((sample.forward, sample.strafe, sample.jump, sample.sneak, sample.sprint))):
+            return record  # Post-default neutral is not another parent command.
         if sample.state in {"expired", "lease_exhausted"}:
+            if record.action.safe_default is not None and record.default_resolved_at_tick is None:
+                return record  # v4 exhaustion/cancel or actual takeover resolves it.
             return self.expire(record.control_sequence, at_tick=sample.movement_tick_id)
         if sample.state not in {"leased", "neutral"}:
             return record
@@ -423,10 +496,10 @@ class InputApplicationLedger:
             )
             fully_applied = in_window
         else:
-            expected_ticks = tuple(range(
-                record.requested_first_tick, record.requested_last_tick + 1,
-            ))
-            in_window = all(tick in expected_ticks for tick in ticks)
+            first_tick = ticks[0] if record.action.first_effect_window is not None else record.requested_first_tick
+            expected_ticks = tuple(range(first_tick, first_tick + record.action.valid_for_ticks))
+            in_window = (record.requested_first_tick <= first_tick <= record.latest_allowed_first_tick
+                         and all(tick in expected_ticks for tick in ticks))
             fully_applied = ticks == expected_ticks
         status = (InputApplicationStatus.APPLIED_OUTSIDE_WINDOW if not in_window
                   else InputApplicationStatus.APPLIED
@@ -450,29 +523,33 @@ class InputApplicationLedger:
     ) -> None:
         for sequence, candidate in tuple(self._records.items()):
             if (sequence >= current_sequence or candidate.session != session
-                    or candidate.status not in {
+                    or (candidate.status not in {
                         InputApplicationStatus.IN_FLIGHT,
                         InputApplicationStatus.PARTIALLY_APPLIED,
-                    }):
+                    } and not (candidate.action.safe_default is not None
+                               and candidate.default_resolved_at_tick is None
+                               and candidate.status in {InputApplicationStatus.APPLIED,
+                                                        InputApplicationStatus.APPLIED_OUTSIDE_WINDOW}))):
                 continue
             self._records[sequence] = replace(
                 candidate,
                 status=InputApplicationStatus.SUPERSEDED,
                 resolved_at_tick=movement_tick_id,
+                default_resolved_at_tick=movement_tick_id if candidate.action.safe_default is not None else None,
             )
 
     def observe_receipt(self, receipt: ClientBehaviorReceipt) -> tuple[InputApplicationRecord, ...]:
-        if type(receipt) not in (ClientBehaviorReceiptV2, ClientBehaviorReceiptV3):
+        if type(receipt) not in (ClientBehaviorReceiptV2, ClientBehaviorReceiptV3, ClientBehaviorReceiptV4):
             raise ContractViolation("input ledger requires a formal behavior receipt")
         if (self._last_input_samples is not None
                 and receipt.input_samples < self._last_input_samples):
             raise ContractViolation("input sample counter regressed")
-        if (type(receipt) is ClientBehaviorReceiptV3
+        if (type(receipt) in (ClientBehaviorReceiptV3, ClientBehaviorReceiptV4)
                 and self._last_dropped_input_samples is not None
                 and receipt.dropped_input_samples < self._last_dropped_input_samples):
             raise ContractViolation("dropped input sample counter regressed")
         changed: list[InputApplicationRecord] = []
-        if type(receipt) is ClientBehaviorReceiptV3:
+        if type(receipt) in (ClientBehaviorReceiptV3, ClientBehaviorReceiptV4):
             for application in receipt.input_applications:
                 record = self.observe_sample(application)
                 if record is not None:
@@ -504,7 +581,7 @@ class InputApplicationLedger:
                 }:
                     changed.append(self.mark_ambiguous(
                         record.control_sequence, at_tick=receipt.input_samples))
-        if type(receipt) is ClientBehaviorReceiptV3:
+        if type(receipt) in (ClientBehaviorReceiptV3, ClientBehaviorReceiptV4):
             previous_dropped = self._last_dropped_input_samples or 0
             if receipt.dropped_input_samples > previous_dropped:
                 for record in tuple(self._records.values()):
@@ -517,13 +594,109 @@ class InputApplicationLedger:
                         ))
             self._last_dropped_input_samples = receipt.dropped_input_samples
         self._last_input_samples = receipt.input_samples
+        if type(receipt) is ClientBehaviorReceiptV4:
+            for event in receipt.timing_events:
+                record = self._records.get(event.request_sequence_id)
+                if record is None or record.action.episode_id != event.episode_id:
+                    continue
+                if event.status is ClientTimingStatusV1.WINDOW_MISSED:
+                    changed.append(self.reject(event.request_sequence_id, at_tick=event.movement_tick_id))
+                elif event.status is ClientTimingStatusV1.DEFAULT_EXHAUSTED:
+                    if record.default_resolved_at_tick is not None:
+                        if event.movement_tick_id < record.default_resolved_at_tick:
+                            raise ContractViolation("default exhaustion precedes its actual termination")
+                        continue  # Already resolved by real takeover or accepted cancel.
+                    default = record.action.safe_default
+                    expected = () if default is None else tuple(range(
+                        default.activation_tick, default.activation_tick + default.valid_for_ticks))
+                    observed = tuple(item.movement_tick_id for item in record.default_samples)
+                    if (default is None or event.movement_tick_id < default.activation_tick + default.valid_for_ticks
+                            or observed != expected):
+                        raise ContractViolation("default exhaustion lacks complete declared samples")
+                    updated = replace(record, default_resolved_at_tick=event.movement_tick_id)
+                    self._records[record.control_sequence] = updated
+                    changed.append(updated)
+            changed.extend(self._observe_client_arrangement(receipt))
         sequence = receipt.request_sequence_id
         if sequence is not None and sequence in self._records:
             record = self._records[sequence]
-            if receipt.status in {"rejected", "cancelled"}:
+            cancel_target = record.action.cancel_request_sequence_id
+            if (type(receipt) is ClientBehaviorReceiptV4 and cancel_target is not None
+                    and receipt.episode_id == record.action.episode_id
+                    and receipt.status in {"executed", "confirmed_local", "cancelled"}):
+                target = self._records.get(cancel_target)
+                members = {self._client_current_sequence, self._client_pending_sequence,
+                           self._client_default_sequence} - {None}
+                if (target is None or target.action.episode_id != record.action.episode_id
+                        or cancel_target not in members):
+                    raise ContractViolation("accepted cancel has no submitted target")
+                # This accepted cancel clears the client's one old arrangement.
+                # It resolves input responsibility, not the body's safety.
+                for old in tuple(self._records.values()):
+                    if (old.control_sequence in members and old.action.episode_id == receipt.episode_id
+                            and not input_application_has_finished(old)):
+                        retired = replace(old, status=InputApplicationStatus.CANCELLED,
+                                          resolved_at_tick=receipt.input_samples,
+                                          default_resolved_at_tick=(receipt.input_samples
+                                              if old.action.safe_default is not None else None))
+                        self._records[old.control_sequence] = retired
+                        changed.append(retired)
+                changed.append(self._resolve(sequence, InputApplicationStatus.CANCELLED,
+                                             receipt.input_samples))
+                self._client_current_sequence = self._client_pending_sequence = self._client_default_sequence = None
+            elif receipt.status in {"rejected", "cancelled"}:
                 changed.append(self.reject(sequence, at_tick=receipt.input_samples))
             elif receipt.status == "timed_out":
                 changed.append(self.expire(sequence, at_tick=receipt.input_samples))
+        return tuple(changed)
+
+    def _observe_client_arrangement(self, receipt: ClientBehaviorReceiptV4) -> tuple[InputApplicationRecord, ...]:
+        """Apply only fresh client membership facts in physical tick order."""
+        changed = []
+
+        def retire_pending(tick, replacement):
+            previous = self._client_pending_sequence
+            if previous is not None and previous != replacement and previous in self._records:
+                changed.append(self._resolve(previous, InputApplicationStatus.CANCELLED, tick))
+            self._client_pending_sequence = None
+
+        facts = [(event.movement_tick_id, 0, event) for event in receipt.timing_events]
+        facts += [(sample.movement_tick_id, 1, sample) for sample in receipt.input_applications]
+        for tick, kind, fact in sorted(facts, key=lambda item: item[:2]):
+            if tick <= self._client_arrangement_tick:
+                continue
+            sequence = fact.request_sequence_id
+            record = self._records.get(sequence)
+            if record is None or record.action.episode_id != fact.episode_id:
+                continue
+            if kind == 0:
+                status = fact.status
+                if status is ClientTimingStatusV1.WINDOW_PENDING:
+                    retire_pending(tick, sequence)
+                    self._client_pending_sequence = sequence
+                elif status in {ClientTimingStatusV1.WINDOW_APPLIED, ClientTimingStatusV1.FALLBACK_ARMED}:
+                    self._client_current_sequence = sequence
+                    retire_pending(tick, sequence)
+                    self._client_default_sequence = sequence if record.action.safe_default is not None else None
+                elif status is ClientTimingStatusV1.WINDOW_MISSED and self._client_pending_sequence == sequence:
+                    self._client_pending_sequence = None
+                elif status is ClientTimingStatusV1.DEFAULT_EXHAUSTED and self._client_default_sequence == sequence:
+                    self._client_default_sequence = None
+                    if self._client_current_sequence == sequence:
+                        self._client_current_sequence = None
+            elif fact.state == "default_active":
+                self._client_current_sequence = None
+                self._client_default_sequence = sequence
+            elif (fact.state in {"leased", "neutral"}
+                  and sequence != self._client_current_sequence):
+                default = record.action.safe_default
+                if (default is not None and fact.state == "neutral"
+                        and tick >= default.activation_tick + default.valid_for_ticks):
+                    continue
+                self._client_current_sequence = sequence
+                self._client_default_sequence = sequence if record.action.safe_default is not None else None
+                retire_pending(tick, sequence)
+        self._client_arrangement_tick = max(self._client_arrangement_tick, receipt.input_samples)
         return tuple(changed)
 
     def expire(self, control_sequence: int, *, at_tick: int) -> InputApplicationRecord:

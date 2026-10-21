@@ -1,0 +1,26 @@
+{
+  "public_byte_base": "3889d10e298fec57ce7b0a82a63bef331c431bb7",
+  "files": [
+    {
+      "path": "tests/sim/manifests/navigation-product-r28-v8.json",
+      "sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+      "expected_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+      "bytes": 11142,
+      "restored_exact": true
+    },
+    {
+      "path": "evidence/motion_navigation/F2REC-recovery-v1/r0/tool-provenance.json",
+      "sha256": "57da769896dd269e0a862c12bed413b956a3570217d4ce2e10680834ec3f4644",
+      "expected_sha256": "57da769896dd269e0a862c12bed413b956a3570217d4ce2e10680834ec3f4644",
+      "bytes": 3625,
+      "restored_exact": true
+    },
+    {
+      "path": "experiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json",
+      "sha256": "99c144d6806e16e5e217d33062f0cf6b6a94de11d39b831d91ac5b103747740d",
+      "expected_sha256": "99c144d6806e16e5e217d33062f0cf6b6a94de11d39b831d91ac5b103747740d",
+      "bytes": 12732,
+      "restored_exact": true
+    }
+  ]
+}

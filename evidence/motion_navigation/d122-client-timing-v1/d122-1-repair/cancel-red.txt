@@ -1,0 +1,34 @@
+test_accepted_cancel_retires_target_default_and_cancel_record (tests.test_d122_python_timing_repair.TimingRepairTests.test_accepted_cancel_retires_target_default_and_cancel_record) ... FAIL
+test_armed_default_finishes_real_ticks_despite_wall_expiry (tests.test_d122_python_timing_repair.TimingRepairTests.test_armed_default_finishes_real_ticks_despite_wall_expiry) ... ok
+test_cancel_clears_the_whole_default_and_pending_arrangement (tests.test_d122_python_timing_repair.TimingRepairTests.test_cancel_clears_the_whole_default_and_pending_arrangement) ... FAIL
+test_complete_default_samples_and_exhaustion_retire_parent (tests.test_d122_python_timing_repair.TimingRepairTests.test_complete_default_samples_and_exhaustion_retire_parent) ... ok
+test_default_budget_must_cover_nominal_proof_duration (tests.test_d122_python_timing_repair.TimingRepairTests.test_default_budget_must_cover_nominal_proof_duration) ... ok
+test_exhausted_before_activation_cannot_retire_parent (tests.test_d122_python_timing_repair.TimingRepairTests.test_exhausted_before_activation_cannot_retire_parent) ... ok
+test_exhausted_without_complete_real_samples_cannot_retire_parent (tests.test_d122_python_timing_repair.TimingRepairTests.test_exhausted_without_complete_real_samples_cannot_retire_parent) ... ok
+test_inactive_sample_alone_cannot_end_a_proved_default (tests.test_d122_python_timing_repair.TimingRepairTests.test_inactive_sample_alone_cannot_end_a_proved_default) ... ok
+test_replacement_must_have_a_real_sample_and_retires_old_default (tests.test_d122_python_timing_repair.TimingRepairTests.test_replacement_must_have_a_real_sample_and_retires_old_default) ... ok
+test_unaccepted_cancel_does_not_retire_default (tests.test_d122_python_timing_repair.TimingRepairTests.test_unaccepted_cancel_does_not_retire_default) ... ok
+
+======================================================================
+FAIL: test_accepted_cancel_retires_target_default_and_cancel_record (tests.test_d122_python_timing_repair.TimingRepairTests.test_accepted_cancel_retires_target_default_and_cancel_record)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_python_timing_repair.py", line 120, in test_accepted_cancel_retires_target_default_and_cancel_record
+    self.assertEqual(ledger.record(26).status.value, "cancelled")
+AssertionError: 'rejected' != 'cancelled'
+- rejected
++ cancelled
+
+
+======================================================================
+FAIL: test_cancel_clears_the_whole_default_and_pending_arrangement (tests.test_d122_python_timing_repair.TimingRepairTests.test_cancel_clears_the_whole_default_and_pending_arrangement)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_python_timing_repair.py", line 107, in test_cancel_clears_the_whole_default_and_pending_arrangement
+    self.assertNotEqual(ledger.record(sequence).status, InputApplicationStatus.REJECTED)
+AssertionError: <InputApplicationStatus.REJECTED: 'rejected'> == <InputApplicationStatus.REJECTED: 'rejected'>
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.029s
+
+FAILED (failures=2)

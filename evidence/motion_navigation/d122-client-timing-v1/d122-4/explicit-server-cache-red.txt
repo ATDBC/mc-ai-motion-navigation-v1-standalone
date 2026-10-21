@@ -1,0 +1,13 @@
+E
+======================================================================
+ERROR: test_server_jar_uses_the_same_explicit_real_gradle_home_without_mutation (tests.test_deployment_sandbox.DeploymentSandboxTests.test_server_jar_uses_the_same_explicit_real_gradle_home_without_mutation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_deployment_sandbox.py", line 13, in test_server_jar_uses_the_same_explicit_real_gradle_home_without_mutation
+    from scripts.fabric_deployment_sandbox import select_server_jar
+ImportError: cannot import name 'select_server_jar' from 'scripts.fabric_deployment_sandbox' (D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\fabric_deployment_sandbox.py)
+
+----------------------------------------------------------------------
+Ran 1 test in 0.022s
+
+FAILED (errors=1)

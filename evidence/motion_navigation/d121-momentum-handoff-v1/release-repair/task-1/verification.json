@@ -1,0 +1,180 @@
+{
+  "checkout_scope": "Fresh index checkout of the three staged blobs with core.autocrlf=false and true; no extra full worktree or public export was created.",
+  "fresh_checkout": [
+    {
+      "core_autocrlf": "false",
+      "path": "tests/sim/manifests/navigation-product-r28-v8.json",
+      "staged_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+      "fresh_checkout_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+      "expected_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+      "exact": true
+    },
+    {
+      "core_autocrlf": "false",
+      "path": "evidence/motion_navigation/F2REC-recovery-v1/r0/tool-provenance.json",
+      "staged_sha256": "57da769896dd269e0a862c12bed413b956a3570217d4ce2e10680834ec3f4644",
+      "fresh_checkout_sha256": "57da769896dd269e0a862c12bed413b956a3570217d4ce2e10680834ec3f4644",
+      "expected_sha256": "57da769896dd269e0a862c12bed413b956a3570217d4ce2e10680834ec3f4644",
+      "exact": true
+    },
+    {
+      "core_autocrlf": "false",
+      "path": "experiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json",
+      "staged_sha256": "99c144d6806e16e5e217d33062f0cf6b6a94de11d39b831d91ac5b103747740d",
+      "fresh_checkout_sha256": "99c144d6806e16e5e217d33062f0cf6b6a94de11d39b831d91ac5b103747740d",
+      "expected_sha256": "99c144d6806e16e5e217d33062f0cf6b6a94de11d39b831d91ac5b103747740d",
+      "exact": true
+    },
+    {
+      "core_autocrlf": "true",
+      "path": "tests/sim/manifests/navigation-product-r28-v8.json",
+      "staged_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+      "fresh_checkout_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+      "expected_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+      "exact": true
+    },
+    {
+      "core_autocrlf": "true",
+      "path": "evidence/motion_navigation/F2REC-recovery-v1/r0/tool-provenance.json",
+      "staged_sha256": "57da769896dd269e0a862c12bed413b956a3570217d4ce2e10680834ec3f4644",
+      "fresh_checkout_sha256": "57da769896dd269e0a862c12bed413b956a3570217d4ce2e10680834ec3f4644",
+      "expected_sha256": "57da769896dd269e0a862c12bed413b956a3570217d4ce2e10680834ec3f4644",
+      "exact": true
+    },
+    {
+      "core_autocrlf": "true",
+      "path": "experiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json",
+      "staged_sha256": "99c144d6806e16e5e217d33062f0cf6b6a94de11d39b831d91ac5b103747740d",
+      "fresh_checkout_sha256": "99c144d6806e16e5e217d33062f0cf6b6a94de11d39b831d91ac5b103747740d",
+      "expected_sha256": "99c144d6806e16e5e217d33062f0cf6b6a94de11d39b831d91ac5b103747740d",
+      "exact": true
+    }
+  ],
+  "module_results": {
+    "red": [
+      {
+        "module": "tests.motion_nav.test_action_entry_handoff_repair",
+        "total": 9,
+        "failures": 0,
+        "errors": 6,
+        "skipped": 0,
+        "exit_code": 1,
+        "duration_seconds": 2.905999999959022
+      },
+      {
+        "module": "tests.motion_nav.test_f2rec_r0_baseline",
+        "total": 5,
+        "failures": 1,
+        "errors": 1,
+        "skipped": 0,
+        "exit_code": 1,
+        "duration_seconds": 2.202999999979511
+      },
+      {
+        "module": "tests.motion_nav.test_f2rec_r1_region_geometry",
+        "total": 7,
+        "failures": 0,
+        "errors": 5,
+        "skipped": 0,
+        "exit_code": 1,
+        "duration_seconds": 0.4690000000409782
+      },
+      {
+        "module": "tests.motion_nav.test_reference_baselines",
+        "total": 3,
+        "failures": 0,
+        "errors": 1,
+        "skipped": 0,
+        "exit_code": 1,
+        "duration_seconds": 0.3279999999795109
+      }
+    ],
+    "green": [
+      {
+        "module": "tests.motion_nav.test_action_entry_handoff_repair",
+        "total": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "exit_code": 0,
+        "duration_seconds": 7.827999999979511
+      },
+      {
+        "module": "tests.motion_nav.test_f2rec_r0_baseline",
+        "total": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "exit_code": 0,
+        "duration_seconds": 2.202999999979511
+      },
+      {
+        "module": "tests.motion_nav.test_f2rec_r1_region_geometry",
+        "total": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "exit_code": 0,
+        "duration_seconds": 0.8279999999795109
+      },
+      {
+        "module": "tests.motion_nav.test_reference_baselines",
+        "total": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "exit_code": 0,
+        "duration_seconds": 0.3130000000819564
+      }
+    ]
+  },
+  "checks": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--ignore-space-at-eol",
+        "--exit-code",
+        "--",
+        "tests/sim/manifests/navigation-product-r28-v8.json",
+        "evidence/motion_navigation/F2REC-recovery-v1/r0/tool-provenance.json",
+        "experiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json"
+      ],
+      "exit_code": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "git",
+        "check-attr",
+        "text",
+        "whitespace",
+        "--",
+        "tests/sim/manifests/navigation-product-r28-v8.json",
+        "evidence/motion_navigation/F2REC-recovery-v1/r0/tool-provenance.json",
+        "experiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json"
+      ],
+      "exit_code": 0,
+      "output": "tests/sim/manifests/navigation-product-r28-v8.json: text: unset\ntests/sim/manifests/navigation-product-r28-v8.json: whitespace: blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol\nevidence/motion_navigation/F2REC-recovery-v1/r0/tool-provenance.json: text: unset\nevidence/motion_navigation/F2REC-recovery-v1/r0/tool-provenance.json: whitespace: blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol\nexperiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json: text: unset\nexperiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json: whitespace: blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol\n"
+    }
+  ]
+}

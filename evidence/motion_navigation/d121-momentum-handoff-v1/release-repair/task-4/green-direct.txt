@@ -1,0 +1,17 @@
+test_actual_route_proof_world_and_prepared_content_have_equal_semantics (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_actual_route_proof_world_and_prepared_content_have_equal_semantics) ... ok
+test_l2_probe_records_real_expired_jump_before_ledger_rejection (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_l2_probe_records_real_expired_jump_before_ledger_rejection) ... ok
+test_l2_queue_and_physics_precede_the_truthful_receipt (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_l2_queue_and_physics_precede_the_truthful_receipt) ... ok
+test_matrix_does_not_pass_with_late_body_responsibility_unresolved (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_matrix_does_not_pass_with_late_body_responsibility_unresolved) ... ok
+test_matrix_does_not_treat_nonapplication_as_prephysics_rejection (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_matrix_does_not_treat_nonapplication_as_prephysics_rejection) ... ok
+test_matrix_requires_semantic_equality_as_well_as_the_final_action (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_matrix_requires_semantic_equality_as_well_as_the_final_action) ... ok
+test_never_applied_is_distinct_from_l2_physical_application (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_never_applied_is_distinct_from_l2_physical_application) ... ok
+test_only_transport_policy_changes_the_submitted_successor (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_only_transport_policy_changes_the_submitted_successor) ... ok
+test_semantic_projection_detects_real_state_world_and_command_changes (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_semantic_projection_detects_real_state_world_and_command_changes) ... ok
+test_snapshot_and_wire_have_no_exact_movement_tick_window (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_snapshot_and_wire_have_no_exact_movement_tick_window) ... ok
+test_timely_control_uses_exact_python_window_and_l1_physics (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_timely_control_uses_exact_python_window_and_l1_physics) ... ok
+test_transport_dispositions_do_not_claim_unperformed_protocol_rejection (tests.motion_nav.test_d121_transport_late.D121TransportLateTests.test_transport_dispositions_do_not_claim_unperformed_protocol_rejection) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 12.198s
+
+OK

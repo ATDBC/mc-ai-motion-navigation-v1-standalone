@@ -1,0 +1,11 @@
+{
+  "status": "AUDIT_EXPECTATION_CORRECTED",
+  "reason": "Initial audit expected only exporter to have real edits among historical EOL-only paths; Task 3 intentionally changed two test files too.",
+  "actual_real_changes": [
+    "scripts/export_motion_navigation_standalone.py",
+    "tests/motion_nav/test_action_continuity_solver_limits.py",
+    "tests/motion_nav/test_navigation_session.py"
+  ],
+  "production_or_exporter_changed": false,
+  "snapshot_verify_passed_before_assertion": true
+}

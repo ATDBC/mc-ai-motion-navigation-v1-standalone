@@ -26,14 +26,56 @@ MIXINS = {"BehaviorInputMixin", "BehaviorPlayerMixin", "BehaviorKeyboardMixin", 
           "ScreenshotGuardMixin", "NativeImageGuardMixin", "ClientClockTickMixin", "ClientClockWorldMixin", "ClientClockPacketMixin"}
 MIXINS.add("ClientDamagePacketMixin")
 MIXINS.add("SurfaceChunkStateMixin")
+EXPLICIT_GRADLE_HOME = "MC2P_FABRIC_PROBE_GRADLE_HOME"
 
 
-def inspect_classpath(entries: object, *, repository_root: Path = ROOT) -> int:
+def _reject_reparse_ancestors(path: Path) -> None:
+    for component in (*reversed(path.parents), path):
+        info = component.lstat()
+        if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
+            raise ValueError("Gradle home or an ancestor is a symlink/reparse point")
+
+
+def validate_probe_gradle_home(
+    selected: Path, *, repository_root: Path = ROOT,
+) -> Path:
+    """Validate one already-selected cache without consulting caller environment."""
+    repository_root = repository_root.absolute()
+    if not selected.is_absolute():
+        raise ValueError("explicit Gradle home must be absolute")
+    selected = selected.absolute()
+    if (selected.drive.casefold() != repository_root.drive.casefold()
+            or not selected.is_relative_to(repository_root)
+            or not selected.is_dir()):
+        raise ValueError("Gradle home must be an existing repository-local directory on the same volume")
+    _reject_reparse_ancestors(selected)
+    return selected
+
+
+def select_probe_gradle_home(*, repository_root: Path = ROOT,
+                             environment: dict[str, str] | os._Environ[str] | None = None) -> Path:
+    """Select a real, repository-local cache for the independent acceptance build."""
+    values = os.environ if environment is None else environment
+    raw = values.get(EXPLICIT_GRADLE_HOME)
+    selected = Path(raw) if raw else repository_root / ".gradle"
+    if raw and not selected.is_absolute():
+        raise ValueError("explicit Gradle home must be absolute")
+    return validate_probe_gradle_home(selected, repository_root=repository_root)
+
+
+def inspect_classpath(entries: object, *, repository_root: Path = ROOT,
+                      gradle_home: Path | None = None) -> int:
     """Verify actual JavaCompile files, including local file dependencies absent from coordinates."""
     if type(entries) is not list or not entries:
         raise ValueError("missing actual compile classpath")
     seen = set()
-    allowed = (PurePosixPath(".gradle/caches"),
+    repository_root = repository_root.absolute()
+    gradle_home = (repository_root / ".gradle") if gradle_home is None else gradle_home.absolute()
+    try:
+        cache_root = PurePosixPath(gradle_home.relative_to(repository_root).as_posix()) / "caches"
+    except ValueError as error:
+        raise ValueError("Gradle home escaped repository root") from error
+    allowed = (cache_root,
                PurePosixPath("deployment/fabric-observation-probe/.gradle/loom-cache"))
     for entry in entries:
         if type(entry) is not dict or set(entry) != {"path", "size", "sha256"}:
@@ -88,8 +130,9 @@ def inspect_classpath(entries: object, *, repository_root: Path = ROOT) -> int:
     return len(entries)
 
 
-def inspect_probe(jar: Path) -> dict[str, object]:
+def inspect_probe(jar: Path, *, gradle_home: Path | None = None) -> dict[str, object]:
     """Fail closed on artifact/source-root/classpath drift; no source string success markers."""
+    gradle_home = select_probe_gradle_home() if gradle_home is None else gradle_home
     with ZipFile(jar) as archive:
         names = set(archive.namelist())
         descriptor = json.loads(archive.read("fabric.mod.json"))
@@ -98,7 +141,8 @@ def inspect_probe(jar: Path) -> dict[str, object]:
         provenance = json.loads(archive.read("mc2p-compiled-sources.json"))
         if provenance["schema_version"] != "mc2p.compiled_sources.v2":
             raise ValueError("invalid compiled source schema")
-        verified_classpath_files = inspect_classpath(provenance.get("classpath_files"))
+        verified_classpath_files = inspect_classpath(
+            provenance.get("classpath_files"), gradle_home=gradle_home)
         expected_sources = {
             path.relative_to(ROOT).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
             for directory in (*SHARED_ROOTS, ADAPTER_ROOT) for path in (ROOT / directory).rglob("*.java")}
@@ -136,7 +180,7 @@ def inspect_probe(jar: Path) -> dict[str, object]:
         return evidence
 
 
-def build_probe(*, timeout_seconds: float = 180) -> Path:
+def build_probe(*, timeout_seconds: float = 180, gradle_home: Path | None = None) -> Path:
     # Reuse the existing exact PID/create_time build supervisor, not its CraftGround launcher.
     from scripts.surface_depth_probe.build import build_native
     from scripts.bounded_process import run_bounded_process
@@ -146,11 +190,13 @@ def build_probe(*, timeout_seconds: float = 180) -> Path:
 
     build_native()
     java_tools = discover_java_tools()
-    gradle, = (ROOT / ".gradle/wrapper/dists/gradle-8.8-bin").glob("*/gradle-8.8/bin/gradle.bat")
+    gradle_home = select_probe_gradle_home() if gradle_home is None else select_probe_gradle_home(
+        environment={EXPLICIT_GRADLE_HOME: str(gradle_home)})
+    gradle, = (gradle_home / "wrapper/dists/gradle-8.8-bin").glob("*/gradle-8.8/bin/gradle.bat")
     environment = dict(
         os.environ,
         JAVA_HOME=str(java_tools.java.parent.parent),
-        GRADLE_USER_HOME=str(ROOT / ".gradle"),
+        GRADLE_USER_HOME=str(gradle_home),
     )
     log_dir = ROOT / "artifacts/fabric-deployment-build" / (
         datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ") + "-" + uuid.uuid4().hex[:8])
@@ -162,8 +208,10 @@ def build_probe(*, timeout_seconds: float = 180) -> Path:
     if result.return_code != 0 or result.primary_failure or result.cleanup_failures or not result.process_stopped:
         raise RuntimeError(f"independent offline build failed; evidence: {log_dir}")
     jar = PROJECT / "build/libs/mc2p-deployment-probe-0.1.0.jar"
-    evidence = inspect_probe(jar)
-    write_json_atomic(log_dir / "artifact.json", {"jar": str(jar), "sha256": hashlib.sha256(jar.read_bytes()).hexdigest(), **evidence})
+    evidence = inspect_probe(jar, gradle_home=gradle_home)
+    write_json_atomic(log_dir / "artifact.json", {
+        "jar": str(jar), "sha256": hashlib.sha256(jar.read_bytes()).hexdigest(),
+        "gradle_user_home": str(gradle_home), **evidence})
     return jar
 
 

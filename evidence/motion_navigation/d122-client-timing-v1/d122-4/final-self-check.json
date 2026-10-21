@@ -1,0 +1,283 @@
+{
+  "schema": "mc2p.d122-4-final-self-check.v1",
+  "stage_status": "PARTIAL_STOPPED",
+  "d122_3_status": "PASSED",
+  "d122_4_real_protocol_samples": "0/3",
+  "d122_4_full_matrix_run": false,
+  "checks": [
+    {
+      "name": "v1_v8_history_semantics",
+      "passed": true,
+      "versions": {
+        "1": {
+          "version": 1,
+          "status": "failed",
+          "return_code": 1,
+          "source_run": null,
+          "source_status": null,
+          "failure_type": null,
+          "trial_count": 0,
+          "summary": "evidence/motion_navigation/d122-client-timing-v1/d122-4/fabric-smoke-v1/summary.json",
+          "sha256": "4d653144541e9c3551360a12d40fe8d2dcfb0a903df7ea3da5e23810f21b0e42"
+        },
+        "2": {
+          "version": 2,
+          "status": "failed",
+          "return_code": 1,
+          "source_run": null,
+          "source_status": null,
+          "failure_type": null,
+          "trial_count": 0,
+          "summary": "evidence/motion_navigation/d122-client-timing-v1/d122-4/fabric-smoke-v2/summary.json",
+          "sha256": "4d653144541e9c3551360a12d40fe8d2dcfb0a903df7ea3da5e23810f21b0e42"
+        },
+        "3": {
+          "version": 3,
+          "status": "failed",
+          "return_code": 1,
+          "source_run": null,
+          "source_status": null,
+          "failure_type": null,
+          "trial_count": 0,
+          "summary": "evidence/motion_navigation/d122-client-timing-v1/d122-4/fabric-smoke-v3/summary.json",
+          "sha256": "4d653144541e9c3551360a12d40fe8d2dcfb0a903df7ea3da5e23810f21b0e42"
+        },
+        "4": {
+          "version": 4,
+          "status": "failed",
+          "return_code": 1,
+          "source_run": null,
+          "source_status": null,
+          "failure_type": null,
+          "trial_count": 0,
+          "summary": "evidence/motion_navigation/d122-client-timing-v1/d122-4/fabric-smoke-v4/summary.json",
+          "sha256": "4d653144541e9c3551360a12d40fe8d2dcfb0a903df7ea3da5e23810f21b0e42"
+        },
+        "5": {
+          "version": 5,
+          "status": "failed",
+          "return_code": 1,
+          "source_run": "20261020T113015069455Z-9339b944",
+          "source_status": "failed",
+          "failure_type": "ValueError",
+          "trial_count": 0,
+          "summary": "evidence/motion_navigation/d122-client-timing-v1/d122-4/fabric-smoke-v5/summary.json",
+          "sha256": "b4218bdbe67b71afc8eae88a32dc52287cfa9e54272cf09a4e6a22c271e3c9a6"
+        },
+        "6": {
+          "version": 6,
+          "status": "failed",
+          "return_code": 1,
+          "source_run": "20261020T113255672053Z-4500b836",
+          "source_status": "failed",
+          "failure_type": "ModuleNotFoundError",
+          "trial_count": 0,
+          "summary": "evidence/motion_navigation/d122-client-timing-v1/d122-4/fabric-smoke-v6/summary.json",
+          "sha256": "7b32a1969aa1bb0bdecbc866f953116b53fffb9472d1e163fbd286b5651d7f61"
+        },
+        "7": {
+          "version": 7,
+          "status": "failed",
+          "return_code": 1,
+          "source_run": "20261020T113835759757Z-d5255eb7",
+          "source_status": "failed",
+          "failure_type": "RuntimeError",
+          "trial_count": 0,
+          "summary": "evidence/motion_navigation/d122-client-timing-v1/d122-4/fabric-smoke-v7/summary.json",
+          "sha256": "c85d5ac174ef4d6db4380029d9fb5e39b6cdafe98a6b13c3d136d8a178b0e53a"
+        },
+        "8": {
+          "version": 8,
+          "status": "failed",
+          "return_code": 1,
+          "source_run": "20261020T115158638012Z-bc79106d",
+          "source_status": "failed",
+          "failure_type": "RuntimeError",
+          "trial_count": 0,
+          "summary": "evidence/motion_navigation/d122-client-timing-v1/d122-4/fabric-smoke-v8/summary.json",
+          "sha256": "97522ed294176755f5b3239dcdc52e28404629f688943d9860839ea50c902ee9"
+        }
+      }
+    },
+    {
+      "name": "v8_preflight_hash_bound",
+      "passed": true,
+      "actual_sha256": "2b1de4cd419822203b369f19c46b622700c6bedb9472fe55960a09011a65cb12",
+      "summary_sha256": "2b1de4cd419822203b369f19c46b622700c6bedb9472fe55960a09011a65cb12",
+      "stop_sha256": "2b1de4cd419822203b369f19c46b622700c6bedb9472fe55960a09011a65cb12"
+    },
+    {
+      "name": "v8_trace_hash_bound",
+      "passed": true,
+      "trace": "artifacts/fabric-deployment/20261020T115158638012Z-bc79106d/client-0/trace.jsonl",
+      "actual_sha256": "a893782ad9121847e7fa6ff5cb489cd90f5fecf0dd78a9c30238c08d2cdb3bf4",
+      "stop_sha256": "a893782ad9121847e7fa6ff5cb489cd90f5fecf0dd78a9c30238c08d2cdb3bf4"
+    },
+    {
+      "name": "actor_observation_boundary",
+      "passed": true,
+      "required": 67,
+      "known": 55,
+      "unknown": 12,
+      "mismatch": 0,
+      "statuses": {
+        "occluded": 10,
+        "outside_view": 2
+      }
+    },
+    {
+      "name": "no_protocol_or_full_matrix_run",
+      "passed": true,
+      "fabric_protocol_trials_run": 0,
+      "full_matrix_started": false
+    },
+    {
+      "name": "unknown_not_air",
+      "passed": true,
+      "conclusion": "fixture declared the cells AIR, but the actor received outside_view/occluded evidence; UNKNOWN remained UNKNOWN"
+    },
+    {
+      "name": "published_status_consistent",
+      "passed": true,
+      "files": [
+        "AGENTS.md",
+        "packaging/motion-navigation-standalone/README.md",
+        "packaging/motion-navigation-standalone/AGENTS.md",
+        "docs/motion_navigation/decisions/0122-enforce-first-effect-window-and-prearm-safe-default.md",
+        "docs/motion_navigation/stages/d122-client-timing-and-safe-default-plan.md",
+        "docs/motion_navigation/acceptance/d122-client-timing-and-safe-default.md"
+      ]
+    },
+    {
+      "name": "current_component_preflight_revalidates",
+      "passed": true,
+      "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/component-preflight-review-fixes.json",
+      "sha256": "9eea87f230049b9618f70f830c14efdbfd7c89f6933af69cf868016cfbddbc65",
+      "row_failures": [
+        [],
+        [],
+        []
+      ],
+      "historical_pre_review": "component-preflight.json"
+    },
+    {
+      "name": "future_fabric_binds_27_production_files",
+      "passed": true,
+      "binding": {
+        "record": "evidence/motion_navigation/d122-client-timing-v1/d122-3/production-semantic-hashes.json",
+        "record_sha256": "03f55e45b1c77a79ddd33b76090dc5a0d36b6c6ddc6dc22254acddcdfe8de482",
+        "normalization": "CRLF_TO_LF",
+        "file_count": 27,
+        "files": {
+          "mc2p/backends/client_behavior_payload.py": "188607ea647f0c5686b203e516146b6e37dc5ceea06d73ee7ed4a7fbd5953acf",
+          "mc2p/backends/fabric_behavior.py": "07a50812745a7afa36e5ad9b465f7c824fcb116479ad1791d5a71296d6393be5",
+          "mc2p/backends/runtime_overlays/mc121_actions/ClientActionRequest.java": "d1493166b0e149fb198eb862906d34cfdf78b221deb3b632d7f7d028f5aaaaeb",
+          "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java": "e555465a2256661cfe1c8ebd4552179fea9cacb4d5ff9ad10aee144b256804b6",
+          "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java": "a2f809abed99acab54687cf2e1fa4614fc8cc451cf1ae4bcc91b1669196b8726",
+          "mc2p/backends/runtime_overlays/mc121_actions/ClientRequestGate.java": "8bbf93ba6cc4f37b304d4aec35a0e776b9714d9f709966a4cc6a99460cfb2ad9",
+          "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingAdmission.java": "33c94e744d2c868ea5547ff5f20144463eed1d572cdfc25adad63bb9b9505b1e",
+          "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingSchedule.java": "99b3316e616784e512e9f54891f3aa7fefcefeef97f882cbb7881794ae0eb74c",
+          "mc2p/contracts/action_receipt.py": "a63ae3e0043813aeb6acf1867f0792e647af99141737921b48c47cdf58aa45a8",
+          "mc2p/contracts/action_v1.py": "5fa7d80b6b8a221ec5147a9084a307b6169a42b55885df64736151d1bdc7a2a0",
+          "mc2p/contracts/motion_activation.py": "1528e0bf595325473b1e8cc8efea0df4b95ddafa98dc229834e2be41096e18a2",
+          "mc2p/motion_nav/action_route_executor.py": "c8ae0122e9914d8ef3b80d11bd8d504c99d9f19c501f15f0d72a6c04e619ae84",
+          "mc2p/motion_nav/execution_supervisor.py": "1c3a15b90f7007f5f6bc77dcd316d45eee69f3d5c24c86d8cca5654223e3f127",
+          "mc2p/motion_nav/motion_candidate.py": "4a53e440faecc8ca8d5177bac538ae808a560527df710c985365c7ba56235064",
+          "mc2p/motion_nav/motion_chain.py": "af3f111d6560d4e1cf1861f42e92ec220fc36b4eead0bd374f82890b2c16e822",
+          "mc2p/motion_nav/motion_coordination.py": "fcd760c2a1a9815a292135b8ee59732cd340c88a1448db7ac6e12359e40fdf72",
+          "mc2p/motion_nav/motion_solver.py": "615d5455f0fdc540548c4f31ea988aca77b7ff69f57d8e15dd8a879cf3ecc998",
+          "mc2p/motion_nav/motion_worker.py": "f0532679e97351722e158d9098dc202b01cca6231761914c568f0454590eb5c2",
+          "mc2p/motion_nav/navigation_session.py": "bee15531311b200c3c0b272840bed808f2ac1983b3fb6961cc5ae1060476a800",
+          "mc2p/motion_nav/online_motion.py": "b5b0a69c7deaa0b0978931857418ab6f136dfea30b8549ccfc3693a999643648",
+          "mc2p/motion_nav/prepared_motion.py": "bf1c233e7ad0aa58b140b34dbc3a146dfd7ea25cd3e22c208d14c76b7ac492e2",
+          "mc2p/motion_nav/prepared_motion_proof.py": "fd1fb0929f5de35c1e5d587aea1bcb16160b1544a54a8e2c4be2c227905908ab",
+          "mc2p/motion_nav/route_body_controller.py": "48131c6af49607e1158ad775c7f771d4bbbae5c71934fe310f3df01a3bc05252",
+          "mc2p/runtime/arbiter_v1.py": "86bec50410ea7b361260634c4e560399de340dd3ebd66a645b0c4bc1bbaf1834",
+          "mc2p/runtime/backend_v1.py": "ad112bc7dfc677ae3292cbb856a58f47a31aa9ec1e16a778575e9e32348ccfe6",
+          "mc2p/runtime/player_runtime_v1.py": "0ac0c38288b57f5a9ddfbb9dcc1be2c5b3d28283bd39c116255bc0befa92b480",
+          "mc2p/skills/navigation_session_driver.py": "a8486589d1feb0def78173f106f8f46e22289ed5ab0dec2cb1b68812523ab17e"
+        }
+      }
+    },
+    {
+      "name": "essential_evidence_present",
+      "passed": true,
+      "files": [
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/expected-files.json",
+          "sha256": "a3a3d492bf14f5ad7642b26d24cb630320b28ef3f6ef1ee45a734a134a4f6e7e"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/component-preflight-review-fixes.json",
+          "sha256": "9eea87f230049b9618f70f830c14efdbfd7c89f6933af69cf868016cfbddbc65"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/real-gradle-home.json",
+          "sha256": "ce3bd14ff3576d91cf8baad24e8f022d76fdfe313878de401663f2633f099001"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/dependency-precheck.json",
+          "sha256": "bf57d4bec3e5ba72fe46a70de58df89f5ff68cda041b7dc35cff60d7f33cc363"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/harness-semantic-hashes.json",
+          "sha256": "ad36f06153c4f81575b777d2ff83f6eb9701cd57940feae5c59c23313d2010b9"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/v8-preflight.json",
+          "sha256": "2b1de4cd419822203b369f19c46b622700c6bedb9472fe55960a09011a65cb12"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/environment-stop-history.json",
+          "sha256": "2b62c82987e048e815b638d2a940352f6605dd0077b7e56c8cc0144eae67a66b"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/fabric-smoke-v4/environment-stop.json",
+          "sha256": "063aa065adf5258174cd004eb8e5fda50143643b9f14568084e8a39619f36066"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/fabric-smoke-v8/observation-stop.json",
+          "sha256": "be49ca73b1eeff60dc4981dec41533975872541590fcb341060211598d7e154f"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/sandbox-clean-env-red.txt",
+          "sha256": "3cfbe8648f18baccc44f3abc8acee0df4d94faf8a52caf21a70bbe751fcf4102"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/sandbox-clean-env-green.txt",
+          "sha256": "11bb6e8b99d91d35c5ca2908de807ba00557e6ab3d14dada30b3ce5cfd6373d2"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/validator-mutation-red.txt",
+          "sha256": "e3088af444db67623ebccdf9f35a10f68e2d4c6292891261ff2db209efafc7dc"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/final-targeted-tests-review-fixes.txt",
+          "sha256": "ec1ce02353e91cd872cbec277c2c22f3bd294ae64dfb4b90164788ba25e3d583"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/final-targeted-tests-review-fixes-green.txt",
+          "sha256": "80be4e3118b733188556d1c044dcaae44c6df555c7994c0430edb05ffd5c0568"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/standalone-import-green.txt",
+          "sha256": "d6539a5865193a54d64f53b5b92d4b450b9cf759d3f80c5ac424524b66154905"
+        },
+        {
+          "path": "evidence/motion_navigation/d122-client-timing-v1/d122-4/final-standalone-review-fixes.txt",
+          "sha256": "102109f40f4b336c3bc7dc929b00840c6803ff2818d1bd44dbbdf1178f3d79d0"
+        }
+      ]
+    },
+    {
+      "name": "review_validator_and_clean_cache_green",
+      "passed": true,
+      "targeted_tests": 94,
+      "targeted_log": "evidence/motion_navigation/d122-client-timing-v1/d122-4/final-targeted-tests-review-fixes-green.txt",
+      "standalone_tests": 31,
+      "standalone_log": "evidence/motion_navigation/d122-client-timing-v1/d122-4/final-standalone-review-fixes.txt",
+      "red_94_result": "92/94 preserved: current-hash RED plus standalone import dependency RED"
+    }
+  ],
+  "status": "PASS"
+}

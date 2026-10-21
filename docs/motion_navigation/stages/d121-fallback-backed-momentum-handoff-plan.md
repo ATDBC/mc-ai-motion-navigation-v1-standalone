@@ -239,3 +239,9 @@ Task 5 只改测试、证据和文档。它复用 Task 4 的完整正式链、�
 证据：`evidence/motion_navigation/d121-momentum-handoff-v1/task-5-transport-late/`。初次矩阵、接口审计和5项测试记录原样保留。最终 `matrix-final-audited.json` 补齐 backend 收到的 action、队列、物理前后状态和 winner 来源；`protocol-source-review.json` 保存 Python 与 Java 的字段和采样源码依据。受影响与相邻126/126通过（222.177 s）；随后只补汇总门槛反例，最终诊断8/8、独立导出内诊断及metrics43/43通过，verify通过。测试通过表示探针准确识别并保存 RED，不表示 transport 门槛通过。late 场模拟 FIFO：旧 jump 在 tick28 采样，新 neutral 排在后面；这是一条当前协议不能排除的调度。never 的身体在落地前到达夹具已知世界边界，零伤害不构成安全签署。最终命令见 `checks-final-gates.json`、`export-tests-final-gates.json` 和 `export-verify-final-gates.json`。
 
 Task5独立审查修正追加在 `task-5-transport-late/review-repair/`。新矩阵比较12组实际语义字段和 L 帧 winner 类型／来源类别；运行身份、版本及摘要另列。三场语义内容一致，字面对象不相等。修改实际位置、方块、命令、路线内容的反例会改变语义指纹；最终 action 相同也不能替代世界／证明比较。源码和本轮新增文本统一LF；历史CRLF证据按现有evidence属性规则保留原字节，默认 `git diff --check` 通过。Task5 RED和D121停止结论不变。
+
+## 发布修复 Task 4：诊断与入口更正（2026-10-20）
+
+新的 Task 5 诊断使用 v2 schema，分别记录 `applied_in_window`、`applied_outside_window` 和 `not_delivered`。及时和未送达都没有执行“协议在物理前拒绝过期输入”的检查，因此 `expired_application_prevention=not_applicable`，兼容字段 `protocol_prevented_expired_application=null`。null 不表示成功；晚到后仍应用则明确为 `not_prevented` 和 false。
+
+原 Task 5 证据不回写。新结果追加到 `evidence/motion_navigation/d121-momentum-handoff-v1/release-repair/task-4/`；三场的物理、输入和停止结论保持不变，聚合仍为 `FAILED_STOPPED`。公开入口统一为 `PARTIAL／STOPPED`；D122 尚未开始，必须先完成发布修复的全量 Windows 与独立快照门禁。

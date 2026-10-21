@@ -231,6 +231,8 @@ class ActionArbiterV1:
             movement = winners.get("movement")
             action = replace(neutral,
                 movement=winners["movement"].movement if "movement" in winners else MovementV1(),
+                first_effect_window=movement.movement_tick_window if movement is not None else None,
+                safe_default=movement.safe_default if movement is not None else None,
                 look=winners["look"].look if "look" in winners else LookV1(),
                 operation=winners["operation"].operation if "operation" in winners else None,
                 valid_for_ticks=min((i.valid_for_ticks for i in winners.values()), default=1),
@@ -240,7 +242,8 @@ class ActionArbiterV1:
                 if (intent.movement is None or intent.movement_requires_look
                         or intent.movement_observed_yaw_limit_degrees is not None
                         or intent.movement_conditioned_look_intent_id is not None
-                        or intent.movement_tick_window is not None):
+                        or intent.movement_tick_window is not None
+                        or intent.safe_default is not None):
                     del self._intents[intent.intent_id]
                 elif intent.look is not None or intent.operation is not None:
                     self._intents[intent.intent_id] = replace(intent, look=None, operation=None)

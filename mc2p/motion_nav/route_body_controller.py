@@ -190,7 +190,7 @@ class RouteControl:
 
     @property
     def activation_registry(self) -> PreparedActivationRegistryPort | None:
-        registry = self.executor._prepared_result_inbox
+        registry = getattr(self.executor, "activation_registry", None)
         return registry if isinstance(registry, PreparedActivationRegistryPort) else None
 
     def prepare_prepared_activation_commit(

@@ -18,6 +18,14 @@ public class DeploymentSessionTest {
         DeploymentSession v2 = DeploymentSession.decode(bytes(good), TOKEN);
         if (!v2.episode().equals("deployment:1") || !v2.observationSchemaVersion().equals("mc2p.client_observation.v3"))
             throw new AssertionError("V3 session negotiation lost");
+        if (!v2.actionSchemaVersion().equals("mc2p.client_action.v1"))
+            throw new AssertionError("legacy action schema changed");
+        String timed = good.replace("deployment_session.v2", "deployment_session.v3")
+                .replace("}", ",\"action_schema_version\":\"mc2p.client_action.v2\"}");
+        DeploymentSession v3 = DeploymentSession.decode(bytes(timed), TOKEN);
+        if (!v3.actionSchemaVersion().equals("mc2p.client_action.v2"))
+            throw new AssertionError("V2 action schema negotiation lost");
+        reject(bytes(timed.replace("mc2p.client_action.v2", "mc2p.client_action.v1")));
         for (String bad : new String[]{"{}", "[]", good + " {}", good.replace("session.v2", "session.v0"),
                 good.replace("deployment:1", "../bad space"), good.replace("deployment:1", ""),
                 good.replace(TOKEN, "f".repeat(64)), good.replace("\"deployment:1\"", "42"),

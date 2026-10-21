@@ -15,7 +15,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if __package__ in {None, ""}:
     sys.path.insert(0, str(ROOT))
 
-from scripts.build_fabric_deployment_probe import PROJECT, build_probe, inspect_classpath, inspect_probe
+from scripts.build_fabric_deployment_probe import (
+    PROJECT, build_probe, inspect_classpath, inspect_probe,
+    select_probe_gradle_home, validate_probe_gradle_home,
+)
 from scripts.visibility_fixture_world import _no_links
 
 BUILD = "deployment/fabric-observation-probe/build"
@@ -36,7 +39,8 @@ def _verify_file(path: Path, evidence: dict) -> None:
         raise ValueError("launch input file changed")
 
 
-def inspect_launch(value: dict) -> dict:
+def inspect_launch(value: dict, *, gradle_home: Path | None = None) -> dict:
+    gradle_home = select_probe_gradle_home() if gradle_home is None else gradle_home
     if (type(value) is not dict or set(value) != {"schema_version", "main_class", "jvm_args", "game_args", "environment", "classpath", "remap_classpath", "auxiliary"}
             or value["schema_version"] != "mc2p.deployment_launch.v1"
             or value["main_class"] != "net.fabricmc.devlaunchinjector.Main" or value["environment"] != {}):
@@ -53,9 +57,9 @@ def inspect_launch(value: dict) -> dict:
         raise ValueError("missing launch classpath")
     jars, directories = [], set()
     dev_jar = PROJECT / "build/devlibs/mc2p-deployment-probe-0.1.0-dev.jar"
-    inspect_probe(PROJECT / "build/libs/mc2p-deployment-probe-0.1.0.jar")
+    inspect_probe(PROJECT / "build/libs/mc2p-deployment-probe-0.1.0.jar", gradle_home=gradle_home)
     _no_links(dev_jar)
-    inspect_probe(dev_jar)
+    inspect_probe(dev_jar, gradle_home=gradle_home)
     with ZipFile(dev_jar) as archive:
         for item in value["classpath"]:
             if type(item) is not dict:
@@ -78,7 +82,7 @@ def inspect_launch(value: dict) -> dict:
                 raise ValueError("unapproved runtime classpath entry")
     if directories != DIRECTORIES:
         raise ValueError("missing project classes or resources")
-    jar_count = inspect_classpath(jars)
+    jar_count = inspect_classpath(jars, gradle_home=gradle_home)
     if (type(value["auxiliary"]) is not dict
             or set(value["auxiliary"]) != {LOOM + "/launch.cfg", LOOM + "/log4j.xml", LOOM + "/remapClasspath.txt"}):
         raise ValueError("missing Loom launch configuration")
@@ -89,10 +93,10 @@ def inspect_launch(value: dict) -> dict:
     expected_config = ["commonProperties", "\tfabric.development=true",
         "\tfabric.remapClasspathFile=" + str(ROOT / LOOM / "remapClasspath.txt"),
         "\tlog4j.configurationFile=" + str(ROOT / LOOM / "log4j.xml"), "\tlog4j2.formatMsgNoLookups=true",
-        "clientArgs", "\t--assetIndex", "\t1.21-17", "\t--assetsDir", "\t" + str(ROOT / ".gradle/caches/fabric-loom/assets")]
+        "clientArgs", "\t--assetIndex", "\t1.21-17", "\t--assetsDir", "\t" + str(gradle_home / "caches/fabric-loom/assets")]
     if (ROOT / LOOM / "launch.cfg").read_text("utf-8").splitlines() != expected_config:
         raise ValueError("implicit DLI launch settings differ from approved client settings")
-    remap_count = inspect_classpath(value["remap_classpath"])
+    remap_count = inspect_classpath(value["remap_classpath"], gradle_home=gradle_home)
     actual_remap = (ROOT / LOOM / "remapClasspath.txt").read_text("utf-8").split(os.pathsep)
     if actual_remap != [str(ROOT / entry["path"]) for entry in value["remap_classpath"]]:
         raise ValueError("actual remap classpath differs from verified files")
@@ -100,13 +104,14 @@ def inspect_launch(value: dict) -> dict:
                 project_directory_count=len(directories), client_only=True)
 
 
-def verify_assets() -> dict:
-    metadata_path = ROOT / ".gradle/caches/fabric-loom/1.21/minecraft-info.json"
+def verify_assets(*, gradle_home: Path | None = None) -> dict:
+    gradle_home = select_probe_gradle_home() if gradle_home is None else gradle_home
+    metadata_path = gradle_home / "caches/fabric-loom/1.21/minecraft-info.json"
     _no_links(metadata_path)
     metadata = json.loads(metadata_path.read_text("utf-8"))
     if metadata["id"] != "1.21" or metadata["assetIndex"]["sha1"] != "6ae5eb70fe411facbb5c6c66003475c07a251a76":
         raise ValueError("asset metadata is not the locked Minecraft release")
-    assets = ROOT / ".gradle/caches/fabric-loom/assets"
+    assets = gradle_home / "caches/fabric-loom/assets"
     index = assets / "indexes/1.21-17.json"
     _no_links(index)
     if index.stat().st_size != metadata["assetIndex"]["size"] or _hash(index, "sha1") != metadata["assetIndex"]["sha1"]:
@@ -123,16 +128,19 @@ def verify_assets() -> dict:
     return dict(index_sha1=metadata["assetIndex"]["sha1"], object_count=len(objects), metadata_sha256=_hash(metadata_path))
 
 
-def export_launch(*, timeout_seconds: float = 180) -> Path:
+def export_launch(*, timeout_seconds: float = 180,
+                  gradle_home: Path | None = None) -> Path:
     from scripts.bounded_process import run_bounded_process
     from scripts.control_probe_core import write_json_atomic
     from mc2p.runtime.trace import trace_projection
-    build_probe(timeout_seconds=timeout_seconds)
-    gradle, = (ROOT / ".gradle/wrapper/dists/gradle-8.8-bin").glob("*/gradle-8.8/bin/gradle.bat")
+    gradle_home = (select_probe_gradle_home() if gradle_home is None
+                   else validate_probe_gradle_home(gradle_home))
+    build_probe(timeout_seconds=timeout_seconds, gradle_home=gradle_home)
+    gradle, = (gradle_home / "wrapper/dists/gradle-8.8-bin").glob("*/gradle-8.8/bin/gradle.bat")
     log_dir = ROOT / "artifacts/fabric-deployment-launch" / (
         datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ") + "-" + uuid.uuid4().hex[:8])
     log_dir.mkdir(parents=True, exist_ok=False)
-    environment = dict(os.environ, JAVA_HOME=str(ROOT / ".venv/Library"), GRADLE_USER_HOME=str(ROOT / ".gradle"))
+    environment = dict(os.environ, JAVA_HOME=str(ROOT / ".venv/Library"), GRADLE_USER_HOME=str(gradle_home))
     result = run_bounded_process([str(gradle), "--offline", "--no-daemon", "--console=plain", "exportClientLaunch"],
         cwd=PROJECT, environment=environment, log_path=log_dir / "export.log", timeout_seconds=timeout_seconds)
     write_json_atomic(log_dir / "result.json", trace_projection(result))
@@ -141,7 +149,11 @@ def export_launch(*, timeout_seconds: float = 180) -> Path:
     path = PROJECT / "build/launch/client-launch.json"
     value = json.loads(path.read_text("utf-8"))
     write_json_atomic(log_dir / "launch.json", value)
-    write_json_atomic(log_dir / "verified.json", {**inspect_launch(value), "assets": verify_assets()})
+    write_json_atomic(log_dir / "verified.json", {
+        **inspect_launch(value, gradle_home=gradle_home),
+        "assets": verify_assets(gradle_home=gradle_home),
+        "gradle_user_home": str(gradle_home),
+    })
     return path
 
 

@@ -1,0 +1,31 @@
+test_future_pending_does_not_replace_default_and_response_is_held (tests.test_d122_python_timing.CalculatorTimingTests.test_future_pending_does_not_replace_default_and_response_is_held) ... ok
+test_higher_pending_replaces_only_pending_and_resets_clear_old_inputs (unittest.loader._FailedTest.test_higher_pending_replaces_only_pending_and_resets_clear_old_inputs) ... ERROR
+TimingLedgerRepairTests (unittest.loader._FailedTest.TimingLedgerRepairTests) ... ERROR
+TimingLedgerRepairTests (unittest.loader._FailedTest.TimingLedgerRepairTests) ... ERROR
+TimingLedgerRepairTests (unittest.loader._FailedTest.TimingLedgerRepairTests) ... ERROR
+test_fallback_armed_and_window_pending_are_not_applications (tests.motion_nav.test_d122_formal_timing.D122FormalTimingProjectionTests.test_fallback_armed_and_window_pending_are_not_applications) ... ok
+
+======================================================================
+ERROR: test_higher_pending_replaces_only_pending_and_resets_clear_old_inputs (unittest.loader._FailedTest.test_higher_pending_replaces_only_pending_and_resets_clear_old_inputs)
+----------------------------------------------------------------------
+AttributeError: type object 'CalculatorTimingTests' has no attribute 'test_higher_pending_replaces_only_pending_and_resets_clear_old_inputs'
+
+======================================================================
+ERROR: TimingLedgerRepairTests (unittest.loader._FailedTest.TimingLedgerRepairTests)
+----------------------------------------------------------------------
+AttributeError: module 'tests.test_d122_python_timing_repair' has no attribute 'TimingLedgerRepairTests'
+
+======================================================================
+ERROR: TimingLedgerRepairTests (unittest.loader._FailedTest.TimingLedgerRepairTests)
+----------------------------------------------------------------------
+AttributeError: module 'tests.test_d122_python_timing_repair' has no attribute 'TimingLedgerRepairTests'
+
+======================================================================
+ERROR: TimingLedgerRepairTests (unittest.loader._FailedTest.TimingLedgerRepairTests)
+----------------------------------------------------------------------
+AttributeError: module 'tests.test_d122_python_timing_repair' has no attribute 'TimingLedgerRepairTests'
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.008s
+
+FAILED (errors=4)

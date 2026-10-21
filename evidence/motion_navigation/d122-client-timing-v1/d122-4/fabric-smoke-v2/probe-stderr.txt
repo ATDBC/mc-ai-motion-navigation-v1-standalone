@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\probe_fabric_deployment_observation.py", line 2729, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\probe_fabric_deployment_observation.py", line 2640, in main
+    launch_path = args.launch_json or export_launch()
+                                      ^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\fabric_deployment_launch.py", line 130, in export_launch
+    build_probe(timeout_seconds=timeout_seconds)
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py", line 163, in build_probe
+    raise RuntimeError(f"independent offline build failed; evidence: {log_dir}")
+RuntimeError: independent offline build failed; evidence: D:\My_project\mc_ai\.tmp\d121-revision-worktree\artifacts\fabric-deployment-build\20261020T111758849269Z-881b3273

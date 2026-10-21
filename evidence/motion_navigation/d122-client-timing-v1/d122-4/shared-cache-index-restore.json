@@ -1,0 +1,31 @@
+{
+  "schema": "d122-shared-cache-index-restore-v1",
+  "target": "D:\\My_project\\mc_ai\\.gradle\\caches\\modules-2\\metadata-2.106",
+  "native_jar_additions_retained": true,
+  "files": [
+    {
+      "name": "module-artifact.bin",
+      "expected_sha256": "c598668034dbb5b0eab7f1f4fd408c2dc020eb24359d366e0423506205b692e0",
+      "actual_sha256": "c598668034dbb5b0eab7f1f4fd408c2dc020eb24359d366e0423506205b692e0",
+      "restored": true
+    },
+    {
+      "name": "module-artifacts.bin",
+      "expected_sha256": "29a918b02310ecfb35c36f237e2461e885ac27f929b88295e0d5f7950a420ea8",
+      "actual_sha256": "29a918b02310ecfb35c36f237e2461e885ac27f929b88295e0d5f7950a420ea8",
+      "restored": true
+    },
+    {
+      "name": "module-metadata.bin",
+      "expected_sha256": "aa2197010dd39624246a29985ad336c4e9ca0a702581ad6bee267ea92130eee0",
+      "actual_sha256": "aa2197010dd39624246a29985ad336c4e9ca0a702581ad6bee267ea92130eee0",
+      "restored": true
+    },
+    {
+      "name": "resource-at-url.bin",
+      "expected_sha256": "d7a428d9b0d9809a32c3210902bcb92399620b29a7fb83d4b32b53925da46849",
+      "actual_sha256": "d7a428d9b0d9809a32c3210902bcb92399620b29a7fb83d4b32b53925da46849",
+      "restored": true
+    }
+  ]
+}

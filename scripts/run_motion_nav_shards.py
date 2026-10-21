@@ -641,6 +641,8 @@ def _capture_into(
     root_identity: ProcessIdentityV0,
     registered: dict[int, ProcessIdentityV0],
     diagnostics: list[str],
+    *,
+    job: _WindowsJob | None = None,
 ) -> None:
     try:
         snapshot = capture_registered_tree(root_identity)
@@ -648,8 +650,26 @@ def _capture_into(
         if not registered:
             diagnostics.append(str(error))
         return
+    reused_pid_observed = False
     for identity in snapshot.identities:
+        current = registered.get(identity.pid)
+        if current is not None and (
+            abs(current.create_time - identity.create_time) > 0.01
+        ):
+            reused_pid_observed = True
         _register_scanned_identity(identity, registered, diagnostics)
+    if job is not None and reused_pid_observed:
+        authorized = _container_authorized_identities(
+            None,
+            root_identity,
+            job=job,
+            diagnostics=diagnostics,
+        )
+        _reconcile_container_authorized_identities(
+            registered,
+            diagnostics,
+            authorized_identities=authorized,
+        )
 
 
 def _register_scanned_identity(
@@ -663,10 +683,50 @@ def _register_scanned_identity(
         return
     if abs(current.create_time - identity.create_time) <= 0.01:
         return
-    diagnostics.append(
-        f"pid {identity.pid} identity changed from "
-        f"{current.create_time} to {identity.create_time}; retained registered identity"
+    diagnostic = _scanned_identity_change_diagnostic(current, identity)
+    if diagnostic not in diagnostics:
+        diagnostics.append(diagnostic)
+
+
+def _scanned_identity_change_diagnostic(
+    current: ProcessIdentityV0,
+    replacement: ProcessIdentityV0,
+) -> str:
+    return (
+        f"pid {replacement.pid} identity changed from "
+        f"{current.create_time} to {replacement.create_time}; "
+        "retained registered identity"
     )
+
+
+def _reconcile_container_authorized_identities(
+    registered: dict[int, ProcessIdentityV0],
+    diagnostics: list[str],
+    *,
+    authorized_identities: dict[int, ProcessIdentityV0],
+) -> None:
+    """Accept PID reuse only when the owned container confirms the new process.
+
+    Polling may observe a descendant after Windows has already reused the PID of
+    an exited descendant.  A scan alone cannot grant cleanup authority, so the
+    first identity remains registered and the conflict stays fatal.  The
+    parent-owned Job Object (or the equally checked POSIX process group) is the
+    authority that may retire the dead identity and register the live one.
+    """
+    for identity in authorized_identities.values():
+        current = registered.get(identity.pid)
+        if current is None:
+            registered[identity.pid] = identity
+            continue
+        if abs(current.create_time - identity.create_time) <= 0.01:
+            continue
+        diagnostic = _scanned_identity_change_diagnostic(current, identity)
+        if _identity_is_alive(current):
+            if diagnostic not in diagnostics:
+                diagnostics.append(diagnostic)
+            continue
+        registered[identity.pid] = identity
+        diagnostics[:] = [item for item in diagnostics if item != diagnostic]
 
 
 def _merge_child_registration(
@@ -693,6 +753,13 @@ def _merge_child_registration(
         current = registered.get(identity.pid)
         if current is not None:
             if abs(current.create_time - identity.create_time) > 0.01:
+                authorized = authorized_identities.get(identity.pid)
+                if authorized is not None and (
+                    abs(identity.create_time - authorized.create_time) <= 0.01
+                ):
+                    # Reconciliation below decides whether the previous exact
+                    # identity has really exited before accepting this one.
+                    continue
                 diagnostics.append(
                     f"pid {identity.pid} identity changed in child report; "
                     "retained scan-confirmed identity"
@@ -710,6 +777,11 @@ def _merge_child_registration(
                 f"pid {identity.pid} child create_time differed; "
                 "used container-confirmed identity"
             )
+    _reconcile_container_authorized_identities(
+        registered,
+        diagnostics,
+        authorized_identities=authorized_identities,
+    )
 
 
 def _container_authorized_identities(
@@ -1155,7 +1227,12 @@ def _run_module(
     deadline = started + timeout_seconds
     timed_out = False
     while process.poll() is None:
-        _capture_into(root_identity, registered, registration_diagnostics)
+        _capture_into(
+            root_identity,
+            registered,
+            registration_diagnostics,
+            job=job,
+        )
         if subreaper_scope is not None:
             subreaper_scope.capture_adopted(
                 registered, registration_diagnostics,
@@ -1165,7 +1242,12 @@ def _run_module(
             timed_out = True
             break
         time.sleep(min(PROCESS_POLL_SECONDS, remaining))
-    _capture_into(root_identity, registered, registration_diagnostics)
+    _capture_into(
+        root_identity,
+        registered,
+        registration_diagnostics,
+        job=job,
+    )
     if subreaper_scope is not None:
         subreaper_scope.capture_adopted(registered, registration_diagnostics)
     child: dict | None = None
@@ -1182,6 +1264,12 @@ def _run_module(
     if child is not None:
         _merge_child_registration(
             child,
+            registered,
+            registration_diagnostics,
+            authorized_identities=authorized,
+        )
+    else:
+        _reconcile_container_authorized_identities(
             registered,
             registration_diagnostics,
             authorized_identities=authorized,

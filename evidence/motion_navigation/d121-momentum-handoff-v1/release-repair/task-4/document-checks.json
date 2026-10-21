@@ -1,0 +1,18 @@
+{
+  "packaging/motion-navigation-standalone/AGENTS.md": {
+    "partial_stopped": true,
+    "d122_not_started": true,
+    "not_in_progress": true
+  },
+  "packaging/motion-navigation-standalone/README.md": {
+    "partial_stopped": true,
+    "d122_not_started": true,
+    "not_in_progress": true
+  },
+  "historical_s2": {
+    "pinned_commit": true,
+    "withdrawn_note": true,
+    "pinned_script_exists": true,
+    "published_script_absent": true
+  }
+}

@@ -1,0 +1,16 @@
+Command:
+  .venv/python.exe -m unittest tests.motion_nav.test_d122_fabric_timing tests.motion_nav.test_d122_formal_timing tests.motion_nav.test_d122_timing_contract -v
+
+Result:
+  FAILED (errors=1)
+
+Failure:
+  tests.motion_nav.test_d122_fabric_timing could not import
+  scripts.d122_fabric_timing because the new harness imported
+  ActionPriorityV0 from the nonexistent mc2p.contracts.intent module.
+
+Boundary:
+  This was a harness import error before any Fabric process started. The other
+  D122 formal/contract checks in the command completed successfully. The import
+  was corrected to the repository's existing mc2p.contracts.action module; this
+  original RED is retained and is not rewritten as a passing run.

@@ -6,7 +6,9 @@ from enum import StrEnum
 import math
 from uuid import uuid4
 
-from mc2p.contracts.action_v1 import LookV1, MovementTickWindowV1, MovementV1
+from mc2p.contracts.action_v1 import (
+    LookV1, MovementTickWindowV1, MovementV1, SafeDefaultV1,
+)
 from mc2p.contracts.motion_activation import (
     ActivationRejectReason, ActivationResult, ActivationStatus, FirstStreamApplication,
     PreparedActivationAcceptance, PreparedActivationDelivery, PreparedActivationTransaction,
@@ -1140,6 +1142,45 @@ class VerifiedMotionExecutor:
             MovementTickWindowV1(self._expected_tick(), self._expected_tick()),
             self._command_index, owner_id, self)
         return self._runtime_fallback
+
+    def prearmed_exit_default(self, decision) -> SafeDefaultV1 | None:
+        """Expose the admitted proof's repeated exit fallback for transport."""
+        from mc2p.motion_nav.motion_chain import FallbackTerminalMode
+        if (self._candidate is None or self._start_variant is None
+                or self._committed_phase is not CommittedExecutionPhase.MAIN
+                or not decision.submittable_as_verified_command
+                or decision.expected_movement_tick is None
+                or decision.latest_movement_tick != decision.expected_movement_tick
+                or decision.input_lease_ticks != 1
+                or self._command_index
+                    != len(self._candidate.proof.commands) - 1):
+            return None
+        boundary = len(self._candidate.proof.commands)
+        tails = self._start_variant.fallback_tails
+        if boundary >= len(tails):
+            return None
+        tail = tails[boundary]
+        if (tail.boundary_index != boundary
+                or tail.recovery_boundary_index != boundary
+                or tail.candidate.terminal_mode
+                    is not FallbackTerminalMode.SNEAK_EDGE_STABLE
+                or not 1 <= len(tail.inputs) <= 20
+                or tail.release_witness_input is None
+                or tail.release_witness_state is None):
+            return None
+        if any(value.forward != 0 or value.strafe != 0
+               for value in tail.inputs):
+            return None
+        movements = tuple(MovementV1(
+            0, 0, value.jump, value.sneak, value.sprint,
+        ) for value in tail.inputs)
+        if (len(set(movements)) != 1
+                or movements[0] != MovementV1(sneak=True)):
+            return None
+        return SafeDefaultV1(
+            decision.expected_movement_tick + decision.input_lease_ticks,
+            movements[0], len(movements), len(movements) * 50_000_000,
+        )
 
     def cached_incumbent_fallback(self, action):
         cached = self._runtime_fallback

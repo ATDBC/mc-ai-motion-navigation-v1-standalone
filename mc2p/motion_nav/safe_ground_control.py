@@ -5,15 +5,15 @@ import math
 from dataclasses import dataclass
 
 from mc2p.contracts.action_v1 import MovementV1
-from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep, unknown_shape_owner_is_fully_covered
+from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
 from mc2p.motion_nav.block_motion_traits import unsupported_motion_cells
 from mc2p.motion_nav.online_motion import ProjectionStatus, project_movement_command
 from mc2p.motion_nav.physics_1_21 import step as physics_step
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
-from mc2p.motion_nav.physics_types import CalculationStatus, JAVA_1_21_RULESET, PhysicsState, WorldShapeQuery
+from mc2p.motion_nav.physics_types import CalculationStatus, JAVA_1_21_RULESET, PhysicsState
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
-from mc2p.motion_nav.world_model import BlockPos, CellKnowledge, WorldQueryCache
+from mc2p.motion_nav.world_model import BlockPos, WorldQueryCache
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,29 +31,8 @@ class VerifiedGroundRouteCandidate:
 class _CachedGroundPhysicsWorld(PhysicsWorldView):
     """Calculator shapes and material reads share the current control-frame cache."""
     def __init__(self, frame: NavigationFrame, cache: WorldQueryCache):
-        super().__init__(frame.world, JAVA_1_21_RULESET)
+        super().__init__(frame.world, JAVA_1_21_RULESET, query_cache=cache)
         self.cache = cache
-
-    def cell(self, position):
-        return self.cache.cell(position)
-
-    def shapes(self, positions):
-        dependencies = set(positions)
-        boxes, missing, unsupported = [], [], []
-        for position in sorted(dependencies):
-            fact = self.cache.cell(position)
-            if fact.knowledge is CellKnowledge.UNKNOWN:
-                above = (position[0], position[1] + 1, position[2])
-                dependencies.add(above)
-                if not unknown_shape_owner_is_fully_covered(self.cache.world, position):
-                    missing.append(position)
-            elif fact.block is not None:
-                if fact.block.fluid or fact.block.collision_kind == "unsupported":
-                    unsupported.append(position)
-                else:
-                    boxes.extend(self.cache.collision_boxes(position))
-        return WorldShapeQuery(tuple(boxes), tuple(sorted(dependencies)),
-                               tuple(missing), tuple(unsupported))
 
 
 def ground_route_state_matches(frame: NavigationFrame, state: PhysicsState | None) -> bool:

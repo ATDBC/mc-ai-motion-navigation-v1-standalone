@@ -1,0 +1,39 @@
+{
+  "schema": "mc2p.d122-2-repair2-manifest.v1",
+  "source_base": "35b784c6",
+  "implementation_head": "91034d29",
+  "platform": "Windows",
+  "scope": "consume timing identity before semantic rejection",
+  "checks": {
+    "adjacent": 92,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "mutations_detected": 16,
+    "compile_java": "passed"
+  },
+  "not_run": [
+    "full Windows shards",
+    "standalone full checks",
+    "D122-3 formal component matrix",
+    "performance acceptance",
+    "Fabric"
+  ],
+  "code_sha256": {
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingAdmission.java": "bc3c195832f497361800efb64152ae7a2566b932243575950feab4f7ea408b88",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java": "697dbfca8a756befe1686e33e250c7d38b2c3d8a81b7a66f8448c7fbe3d1e8c6",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientActionRequest.java": "d1493166b0e149fb198eb862906d34cfdf78b221deb3b632d7f7d028f5aaaaeb",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientRequestGate.java": "8bbf93ba6cc4f37b304d4aec35a0e776b9714d9f709966a4cc6a99460cfb2ad9",
+    "scripts/d122_java_mutation_probe.py": "e3af2d28a53bc12db1c62884d0d4c8ab4e2f1ec37ffb75ac01c63d20f8783c42",
+    "tests/java/ClientTimingAdmissionTest.java": "2df1ff28dffc1cc7b4226a07e08026f0f7c1aae26d7b8b998e03073190a3a761",
+    "tests/test_d122_java_timing.py": "b16c473b3dcc2990916c5d6683f2bd0d71ec7e833541e70c32359db2804bc0e3"
+  },
+  "evidence_sha256": {
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair2/README.md": "ab22d431c20f4ef243bc4d24a48dbf258f68d65ad3535fdd19ba590b3d39ad01",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair2/red.txt": "4bac971b05df27aa75660a48da08c3de7047ae2c6746f2c15005a2ed84906c57",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair2/adjacent.txt": "61c4fc2b425c338d24192d9e47aa5c2685ad40e5bb5269f9e1f2e98a3a9ce6a2",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair2/compile-java.txt": "5777b837e36b77c2fc7ecc71552dfc994677d055236f1fa8e342d2e704b4c35b",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair2/mutation-run.txt": "0a771d2d2cfce4d0c2fc977443279a10c0fa7e13ac52a7926ba8e835898f75fe",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair2/mutations.json": "971324c7feabfe89e6a882eef99f030d62104a54adaac858d406821efcedb94f"
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "schema": "mc2p.d124-windows-gates.v1",
+  "status": "PASS",
+  "formal_platform": "Windows",
+  "runs": {
+    "source_forward": {
+      "raw_local_path": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\d124-raw\\windows\\source-forward-final2.json",
+      "bytes": 837463,
+      "sha256": "604185e68dc210b0e4494f4bb77f198b0a2880b317a5476a79bf9f6bab162dbf",
+      "state": "complete",
+      "modules": 209,
+      "tests": 2748,
+      "summary": {
+        "passed": 209,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "launch_error": 0
+      },
+      "cleanup": {
+        "passed": 209,
+        "failed": 0
+      }
+    },
+    "source_reverse": {
+      "raw_local_path": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\d124-raw\\windows\\source-reverse-final2.json",
+      "bytes": 838437,
+      "sha256": "2bf84f9e6c4caf2980b1d44bed360b853a788e32342a331bebe5147c9d1c43a5",
+      "state": "complete",
+      "modules": 209,
+      "tests": 2748,
+      "summary": {
+        "passed": 209,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "launch_error": 0
+      },
+      "cleanup": {
+        "passed": 209,
+        "failed": 0
+      }
+    },
+    "standalone_forward": {
+      "raw_local_path": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\d124-raw\\windows\\standalone-forward-final2.json",
+      "bytes": 809019,
+      "sha256": "056ce023e9ebd8d4391f73af0c073b481cee41e14598e9bf7b0426537efc327d",
+      "state": "complete",
+      "modules": 208,
+      "tests": 2724,
+      "summary": {
+        "passed": 208,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "launch_error": 0
+      },
+      "cleanup": {
+        "passed": 208,
+        "failed": 0
+      }
+    },
+    "standalone_reverse": {
+      "raw_local_path": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\d124-raw\\windows\\standalone-reverse-final2.json",
+      "bytes": 809076,
+      "sha256": "7285b666492a11b973ea6e85c2431d7ba77ca9f9d97e5bb3e908f0200b194073",
+      "state": "complete",
+      "modules": 208,
+      "tests": 2724,
+      "summary": {
+        "passed": 208,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "launch_error": 0
+      },
+      "cleanup": {
+        "passed": 208,
+        "failed": 0
+      }
+    },
+    "standalone_initial_failed": {
+      "raw_local_path": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.tmp\\d124-raw\\windows\\standalone-forward.json",
+      "bytes": 820729,
+      "sha256": "977935cafbfc05373771954e18d61d4bda8adad083c7db011cf420f69eb1de99",
+      "state": "complete",
+      "modules": 208,
+      "tests": 2723,
+      "summary": {
+        "passed": 203,
+        "failed": 0,
+        "error": 5,
+        "timeout": 0,
+        "launch_error": 0
+      },
+      "cleanup": {
+        "passed": 208,
+        "failed": 0
+      }
+    },
+    "source_initial_failed": {
+      "raw_local_path": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\evidence\\motion_navigation\\d124-proof-dependency-projection-v1\\windows\\source-forward-run-1-failed.json",
+      "bytes": 850314,
+      "sha256": "c4d99fc1fcc26107554ea1956ec49d4b4ca2544c79580251a212c26e8755753e",
+      "state": "complete",
+      "modules": 209,
+      "tests": 2742,
+      "summary": {
+        "passed": 203,
+        "failed": 5,
+        "error": 1,
+        "timeout": 0,
+        "launch_error": 0
+      },
+      "cleanup": {
+        "passed": 209,
+        "failed": 0
+      }
+    }
+  },
+  "java": {
+    "source": "3/3",
+    "standalone": "3/3",
+    "jdk_major": 21
+  },
+  "standalone_export": {
+    "files": 3195,
+    "verify": "PASS"
+  },
+  "fabric_run": false
+}

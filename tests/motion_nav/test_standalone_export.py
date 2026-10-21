@@ -1,24 +1,137 @@
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import hashlib
+from contextlib import redirect_stdout
+from io import StringIO
 import json
 import shutil
 import subprocess
 import sys
 import unittest
 import uuid
+from unittest.mock import patch
 
 from scripts.export_motion_navigation_standalone import (
     ExportViolation,
+    ExportManifest,
     export_tree,
     load_manifest,
+    main,
     verify_tree,
     _allowed_source,
 )
 
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+class ByteReconciliationTests(unittest.TestCase):
+    def setUp(self):
+        self.sandbox = ROOT / ".tmp" / f"byte-reconciliation-{uuid.uuid4().hex}"
+        self.source = self.sandbox / "source"
+        self.source.mkdir(parents=True)
+        self.base = self.source / ".tmp" / "base"
+        self.target = self.source / ".tmp" / "candidate"
+        self.files = {
+            "main.py": b"VALUE = 1\r\n",
+            "same.txt": b"alpha\r\nbeta\r\n",
+            "changed.txt": b"old\r\n",
+            "binary.bin": b"\xff\r\n",
+            "nul.bin": b"\0\r\n",
+            "bom.txt": b"\xef\xbb\xbftext\r\n",
+            "spaces.txt": b"word \r\n",
+            "deleted.txt": b"removed\r\n",
+            "requirements.txt": b"numpy==2.4.6\npsutil>=5.9\n",
+        }
+        for name, raw in self.files.items():
+            (self.source / name).write_bytes(raw)
+        manifest_path = self.source / "manifest.json"
+        manifest_path.write_text("{}", encoding="utf-8")
+        self.manifest = ExportManifest(
+            manifest_path, ((PurePosixPath("main.py"), PurePosixPath("entry.py")),),
+            tuple(name for name in self.files if name != "main.py"),
+            ("main.py",), (PurePosixPath("requirements.txt"),),
+        )
+        self.patches = [
+            patch("scripts.export_motion_navigation_standalone.ROOT", self.source),
+            patch("scripts.export_motion_navigation_standalone._source_commit", return_value="1" * 40),
+            patch("scripts.export_motion_navigation_standalone._source_dirty", return_value=False),
+        ]
+        for item in self.patches:
+            item.start()
+        self.addCleanup(self.cleanup)
+        export_tree(self.base, clean=True, manifest=self.manifest)
+
+    def cleanup(self):
+        for item in reversed(self.patches):
+            item.stop()
+        shutil.rmtree(self.sandbox)
+
+    def candidate_manifest(self):
+        from dataclasses import replace
+        (self.source / "deleted.txt").unlink(missing_ok=True)
+        (self.source / "added.txt").write_bytes(b"new\n")
+        return replace(
+            self.manifest,
+            include_globs=tuple(name for name in self.manifest.include_globs if name != "deleted.txt") + ("added.txt",),
+            required_paths=self.manifest.required_paths + (PurePosixPath("added.txt"),),
+        )
+
+    def test_export_reuses_only_utf8_eol_equivalent_bytes_and_reports_changes(self):
+        (self.source / "same.txt").write_bytes(b"alpha\nbeta\n")
+        (self.source / "changed.txt").write_bytes(b"new\n")
+        (self.source / "binary.bin").write_bytes(b"\xff\n")
+        (self.source / "nul.bin").write_bytes(b"\0\n")
+        (self.source / "bom.txt").write_bytes(b"text\n")
+        (self.source / "spaces.txt").write_bytes(b"word\n")
+        reports = []
+        result = export_tree(
+            self.target, clean=True, manifest=self.candidate_manifest(),
+            byte_base_root=self.base, byte_report_sink=reports.append,
+        )
+        self.assertEqual(result, self.target)
+        self.assertEqual((self.target / "same.txt").read_bytes(), self.files["same.txt"])
+        for name in ("changed.txt", "binary.bin", "nul.bin", "bom.txt", "spaces.txt"):
+            self.assertEqual((self.target / name).read_bytes(), (self.source / name).read_bytes())
+        self.assertFalse((self.target / "deleted.txt").exists())
+        report, = reports
+        self.assertIn("same.txt", report.reused)
+        self.assertTrue({"changed.txt", "binary.bin", "nul.bin", "bom.txt", "spaces.txt", "EXPORT-METADATA.json", "SHA256SUMS.txt"} <= set(report.current))
+        self.assertEqual(report.added, ("added.txt",))
+        self.assertEqual(report.deleted, ("deleted.txt",))
+        verify_tree(self.target, manifest=self.candidate_manifest())
+
+    def test_no_report_sink_still_reconciles_and_metadata_stays_current(self):
+        (self.source / "same.txt").write_bytes(b"alpha\nbeta\n")
+        with patch("scripts.export_motion_navigation_standalone._source_commit", return_value="2" * 40):
+            export_tree(self.target, clean=True, manifest=self.manifest, byte_base_root=self.base)
+        self.assertEqual((self.target / "same.txt").read_bytes(), self.files["same.txt"])
+        self.assertEqual(json.loads((self.target / "EXPORT-METADATA.json").read_text())["source_commit"], "2" * 40)
+        self.assertNotEqual((self.target / "SHA256SUMS.txt").read_bytes(), (self.base / "SHA256SUMS.txt").read_bytes())
+        verify_tree(self.target, manifest=self.manifest)
+
+    def test_cli_reports_reconciliation_without_adding_report_files(self):
+        (self.source / "same.txt").write_bytes(b"alpha\nbeta\n")
+        output = StringIO()
+        with patch("scripts.export_motion_navigation_standalone.load_manifest", return_value=self.manifest):
+            with redirect_stdout(output):
+                status = main(["export", "--root", str(self.target), "--byte-base-root", str(self.base)])
+        self.assertEqual(status, 0)
+        lines = output.getvalue().splitlines()
+        report = json.loads(lines[1])["byte_reconciliation"]
+        self.assertIn("same.txt", report["reused"])
+        self.assertFalse((self.target / "byte-reconciliation.json").exists())
+        verify_tree(self.target, manifest=self.manifest)
+
+    def test_corrupt_base_is_rejected_before_cleaning_existing_target(self):
+        (self.base / "same.txt").write_bytes(b"tampered")
+        self.target.mkdir()
+        marker = self.target / "keep.txt"
+        marker.write_bytes(b"keep")
+        with self.assertRaises(ExportViolation):
+            export_tree(self.target, clean=True, manifest=self.manifest, byte_base_root=self.base)
+        self.assertEqual(marker.read_bytes(), b"keep")
 
 
 class StandaloneExportTests(unittest.TestCase):
@@ -32,6 +145,52 @@ class StandaloneExportTests(unittest.TestCase):
     def tearDownClass(cls) -> None:
         if cls.root.exists():
             shutil.rmtree(cls.root)
+
+    def test_d123_1_stop_evidence_and_its_compact_index_targets_are_required(self):
+        base = "evidence/motion_navigation/d123-proof-and-transport-v1/d123-1/"
+        for name in (base + "fixed-eye-run-2/stop.json", base + "index.json"):
+            self.assertIn(PurePosixPath(name), self.manifest.required_paths)
+            self.assertTrue((self.root / name).is_file(), name)
+        index = json.loads((self.root / (base + "index.json")).read_text("utf-8"))
+        for name, expected in index["evidence_sha256"].items():
+            self.assertIn(PurePosixPath(name), self.manifest.required_paths)
+            self.assertEqual(hashlib.sha256((self.root / name).read_bytes()).hexdigest(), expected)
+        stop = json.loads((self.root / (base + "fixed-eye-run-2/stop.json")).read_text("utf-8"))
+        self.assertEqual(stop["historical_actor"]["trace_sha256"],
+                         "a893782ad9121847e7fa6ff5cb489cd90f5fecf0dd78a9c30238c08d2cdb3bf4")
+        self.assertFalse((self.root / "artifacts").exists())
+
+    def test_manifest_rejects_omitting_each_d123_1_stop_evidence_selection(self):
+        from dataclasses import replace
+        from scripts.export_motion_navigation_standalone import collect_export_files
+        base = "evidence/motion_navigation/d123-proof-and-transport-v1/d123-1/"
+        for name in (base + "fixed-eye-run-2/stop.json", base + "index.json"):
+            with self.subTest(name=name):
+                changed = replace(self.manifest, include_globs=tuple(
+                    selected for selected in self.manifest.include_globs if selected != name))
+                with self.assertRaises(ExportViolation) as raised:
+                    collect_export_files(changed)
+                self.assertIn(name, str(raised.exception))
+
+    def test_required_d123_1_evidence_cannot_be_hidden_by_rewriting_snapshot_hash_list(self):
+        base = "evidence/motion_navigation/d123-proof-and-transport-v1/d123-1/"
+        hash_file = self.root / "SHA256SUMS.txt"
+        original_hashes = hash_file.read_bytes()
+        for name in (base + "fixed-eye-run-2/stop.json", base + "index.json"):
+            with self.subTest(name=name):
+                target = self.root / name
+                self.assertTrue(target.is_file(), name)
+                original = target.read_bytes()
+                try:
+                    target.unlink()
+                    hash_file.write_bytes(b"\n".join(line for line in original_hashes.splitlines()
+                        if not line.endswith(name.encode("utf-8"))) + b"\n")
+                    with self.assertRaises(ExportViolation) as raised:
+                        verify_tree(self.root, manifest=self.manifest)
+                    self.assertIn(name, str(raised.exception))
+                finally:
+                    target.write_bytes(original)
+                    hash_file.write_bytes(original_hashes)
 
     def test_real_export_has_a_closed_hash_manifest(self) -> None:
         report = verify_tree(self.root, manifest=self.manifest)
@@ -290,8 +449,38 @@ class StandaloneExportTests(unittest.TestCase):
             self.assertEqual(summary["status"],"failed")
             original = index["original_files"]["history/"+name+"/summary.json"]
             self.assertEqual(hashlib.sha256((self.root/base/"history"/name/"summary.json").read_bytes()).hexdigest(),original["sha256"])
+        current_harness_path = self.root / (
+            "evidence/motion_navigation/d122-client-timing-v1/d122-4/"
+            "harness-semantic-hashes.json"
+        )
+        current_harness = json.loads(current_harness_path.read_text("utf-8"))
+        d124_current = json.loads((
+            self.root / "evidence/motion_navigation/d124-proof-dependency-projection-v1/"
+            "production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
+        d124_harness_record = json.loads((
+            self.root / "evidence/motion_navigation/d124-proof-dependency-projection-v1/"
+            "harness-semantic-hashes.json"
+        ).read_text("utf-8"))
+        self.assertEqual(
+            d124_harness_record["previous_d122_harness_record_sha256"],
+            hashlib.sha256(current_harness_path.read_bytes()).hexdigest(),
+        )
+        d124_harness = d124_harness_record["files"]
+        self.assertEqual(
+            current_harness["previous_d120_index_sha256"],
+            hashlib.sha256((self.root / base / "index.json").read_bytes()).hexdigest(),
+        )
         for name,digest in index["implementation_semantic_hashes"].items():
-            self.assertEqual(hashlib.sha256((self.root/name).read_bytes().replace(b"\r\n",b"\n")).hexdigest(),digest,name)
+            expected = d124_current.get(name, current_harness["files"].get(name, digest))
+            self.assertEqual(hashlib.sha256((self.root/name).read_bytes().replace(b"\r\n",b"\n")).hexdigest(),expected,name)
+        for name, digest in current_harness["files"].items():
+            raw = (self.root / name).read_bytes().replace(b"\r\n", b"\n")
+            self.assertEqual(
+                hashlib.sha256(raw).hexdigest(),
+                d124_harness.get(name, digest),
+                name,
+            )
         self.assertIn("scripts/d120_momentum_calibration.py",required)
         self.assertIn("scripts/d120_momentum_entry_calibration.py",required)
         self.assertIn("tests/motion_nav/test_d120_momentum_entry_calibration.py",required)
@@ -340,7 +529,7 @@ class StandaloneExportTests(unittest.TestCase):
             "mc2p/motion_nav/prepared_motion_proof.py",
         })
         current_path = (self.root / "evidence/motion_navigation/d121-momentum-handoff-v1/"
-                        "task-4-execution/review-repair/production-semantic-hashes.json")
+                        "release-repair/final/production-semantic-hashes.json")
         self.assertIn(current_path.relative_to(self.root).as_posix(), required)
         current = json.loads(current_path.read_text("utf-8"))
         self.assertEqual(current["normalization"], "CRLF_TO_LF")
@@ -353,9 +542,218 @@ class StandaloneExportTests(unittest.TestCase):
         self.assertEqual(current["previous_task4_record_sha256"],
                          hashlib.sha256(task4_path.read_bytes()).hexdigest())
         self.assertTrue(set(report["files"]).issubset(current["files"]))
-        for name, expected in current["files"].items():
+
+    def test_d122_current_semantics_supersede_d121_without_rewriting_history(self):
+        relative = (
+            "evidence/motion_navigation/d122-client-timing-v1/d122-3/"
+            "production-semantic-hashes.json"
+        )
+        required = {path.as_posix() for path in self.manifest.required_paths}
+        self.assertIn(relative, required)
+        report = json.loads((self.root / relative).read_text("utf-8"))
+        self.assertEqual(report["schema"], "mc2p.public-production-semantic-hashes.v1")
+        self.assertEqual(report["normalization"], "CRLF_TO_LF")
+        self.assertEqual(report["status"], "current")
+        previous = self.root / (
+            "evidence/motion_navigation/d121-momentum-handoff-v1/"
+            "release-repair/final/production-semantic-hashes.json"
+        )
+        self.assertEqual(
+            report["previous_d121_release_repair_record_sha256"],
+            hashlib.sha256(previous.read_bytes()).hexdigest(),
+        )
+        d124_path = self.root / (
+            "evidence/motion_navigation/d124-proof-dependency-projection-v1/"
+            "production-semantic-hashes.json"
+        )
+        d124 = json.loads(d124_path.read_text("utf-8"))
+        self.assertEqual(
+            d124["previous_d122_current_record_sha256"],
+            hashlib.sha256((self.root / relative).read_bytes()).hexdigest(),
+        )
+        for name, expected in report["files"].items():
             raw = (self.root / name).read_bytes().replace(b"\r\n", b"\n")
-            self.assertEqual(hashlib.sha256(raw).hexdigest(), expected, name)
+            self.assertEqual(
+                hashlib.sha256(raw).hexdigest(),
+                d124["files"].get(name, expected),
+                name,
+            )
+
+    def test_d122_component_result_and_review_red_are_both_exported(self):
+        evidence_root = Path(
+            "evidence/motion_navigation/d122-client-timing-v1/d122-3"
+        )
+        required = {path.as_posix() for path in self.manifest.required_paths}
+        for name in (
+            "formal-matrix.json",
+            "formal-matrix-final.json",
+            "never-lifecycle-red.txt",
+            "d122-directed-final.txt",
+            "d122-directed-final2.txt",
+            "final-gates.json",
+        ):
+            self.assertIn((evidence_root / name).as_posix(), required)
+
+        historical = json.loads((self.root / evidence_root / "formal-matrix.json").read_text("utf-8"))
+        final = json.loads((self.root / evidence_root / "formal-matrix-final.json").read_text("utf-8"))
+        self.assertEqual(len(historical["runs"]), 12)
+        self.assertEqual(historical["result"], "PASS")
+        self.assertTrue(any(not run["source_released"] for run in historical["runs"]))
+        self.assertEqual(len(final["runs"]), 20)
+        self.assertEqual(final["result"], "PASS")
+        self.assertTrue(all(run["passed"] for run in final["runs"]))
+        self.assertTrue(all(run["source_released"] for run in final["runs"]))
+        gates = json.loads((self.root / evidence_root / "final-gates.json").read_text("utf-8"))
+        self.assertEqual(gates["status"], "PASS")
+        self.assertFalse(gates["fabric_run"])
+        self.assertEqual(gates["source"]["forward"]["tests"], 2680)
+        self.assertEqual(gates["standalone"]["forward"]["tests"], 2656)
+
+    def test_d124_exports_compact_dependency_projection_evidence(self):
+        evidence_root = Path(
+            "evidence/motion_navigation/d124-proof-dependency-projection-v1"
+        )
+        required = {path.as_posix() for path in self.manifest.required_paths}
+        for relative in (
+            "README.md",
+            "manifest.json",
+            "targeted/run-1/manifest.json",
+            "targeted/run-2/manifest.json",
+            "targeted/run-2/dependencies.json",
+            "targeted/run-2/minecraft-1_21-rules.json",
+            "targeted/run-2/source-boundaries.json",
+            "targeted/run-2/source-hashes.json",
+            "targeted/run-2/summary.json",
+            "targeted/run-3/manifest.json",
+            "targeted/run-3/dependencies.json",
+            "targeted/run-3/minecraft-1_21-rules.json",
+            "targeted/run-3/source-boundaries.json",
+            "targeted/run-3/source-hashes.json",
+            "targeted/run-3/summary.json",
+            "targeted/run-4/manifest.json",
+            "targeted/run-4/dependencies.json",
+            "targeted/run-4/minecraft-1_21-rules.json",
+            "targeted/run-4/source-boundaries.json",
+            "targeted/run-4/source-hashes.json",
+            "targeted/run-4/summary.json",
+            "targeted/run-5/manifest.json",
+            "targeted/run-5/dependencies.json",
+            "targeted/run-5/minecraft-1_21-rules.json",
+            "targeted/run-5/source-boundaries.json",
+            "targeted/run-5/source-hashes.json",
+            "targeted/run-5/action-transport.json",
+            "targeted/run-5/summary.json",
+            "targeted/run-6/manifest.json",
+            "targeted/run-6/dependencies.json",
+            "targeted/run-6/minecraft-1_21-rules.json",
+            "targeted/run-6/source-boundaries.json",
+            "targeted/run-6/source-hashes.json",
+            "targeted/run-6/action-transport.json",
+            "targeted/run-6/summary.json",
+            "targeted/run-7/manifest.json",
+            "targeted/run-7/environment.json",
+            "targeted/run-7/failure.json",
+            "targeted/run-8/manifest.json",
+            "targeted/run-8/dependencies.json",
+            "targeted/run-8/minecraft-1_21-rules.json",
+            "targeted/run-8/source-boundaries.json",
+            "targeted/run-8/source-hashes.json",
+            "targeted/run-8/action-transport.json",
+            "targeted/run-8/summary.json",
+            "production-semantic-hashes.json",
+            "harness-semantic-hashes.json",
+            "incremental-motion-proof-current.json",
+            "full-source-diagnostics/red.txt",
+            "full-source-diagnostics/green.txt",
+            "full-source-diagnostics/summary.json",
+            "d120/compact.json",
+            "d122/compact.json",
+            "d122/v1-compat.json",
+            "d122/smoke-history.json",
+            "performance/message-sizes.json",
+        ):
+            self.assertIn((evidence_root / relative).as_posix(), required)
+
+        manifest = json.loads((self.root / evidence_root / "manifest.json").read_text("utf-8"))
+        for relative, expected in manifest["files"].items():
+            actual = hashlib.sha256((self.root / evidence_root / relative).read_bytes()).hexdigest()
+            self.assertEqual(actual, expected, relative)
+
+        d120 = json.loads((self.root / evidence_root / "d120/compact.json").read_text("utf-8"))
+        self.assertTrue(d120["summary"]["all_exactly_equal"])
+        self.assertEqual(d120["summary"]["entrances"], 972)
+        self.assertEqual(d120["summary"]["suffixes"], 2916)
+        self.assertEqual(d120["summary"]["old_success_regressions"], 0)
+        self.assertTrue(all(row["equal"] for row in d120["directions"]))
+
+        d122 = json.loads((self.root / evidence_root / "d122/compact.json").read_text("utf-8"))
+        self.assertEqual(d122["result"], "PASS")
+        self.assertEqual(len(d122["runs"]), 20)
+        self.assertTrue(all(row["passed"] for row in d122["runs"]))
+        self.assertTrue(d122["performance"]["passed"])
+
+        for path in (self.root / evidence_root).rglob("*.json"):
+            with self.subTest(path=path.relative_to(self.root)):
+                json.loads(path.read_text("utf-8"))
+
+    def test_d122_fabric_stop_history_and_observation_boundary_are_exported(self):
+        evidence_root = Path(
+            "evidence/motion_navigation/d122-client-timing-v1/d122-4"
+        )
+        required = {path.as_posix() for path in self.manifest.required_paths}
+        expected = {
+            "expected-files.json",
+            "component-preflight.json",
+            "component-preflight-review-fixes.json",
+            "real-gradle-home.json",
+            "dependency-precheck.json",
+            "harness-semantic-hashes.json",
+            "v8-preflight.json",
+            "environment-stop-history.json",
+            "fabric-smoke-v4/environment-stop.json",
+            "fabric-smoke-v8/observation-stop.json",
+            "final-self-check.json",
+        }
+        expected.update(
+            f"fabric-smoke-v{version}/summary.json" for version in range(1, 9)
+        )
+        for name in expected:
+            self.assertIn((evidence_root / name).as_posix(), required)
+
+        from scripts import d122_fabric_timing as d122
+        current = json.loads((
+            self.root / evidence_root / "component-preflight-review-fixes.json"
+        ).read_text("utf-8"))
+        self.assertEqual(current["result"], "PASS")
+        self.assertEqual(
+            {row["policy"] for row in current["trials"]},
+            set(d122.POLICIES),
+        )
+        self.assertEqual(
+            [d122.validate_trial_result(row) for row in current["trials"]],
+            [(), (), ()],
+        )
+        historical = json.loads((
+            self.root / evidence_root / "component-preflight.json"
+        ).read_text("utf-8"))
+        self.assertTrue(any(
+            d122.validate_trial_result(row) for row in historical["trials"]
+        ))
+
+        stopped = json.loads(
+            (self.root / evidence_root / "fabric-smoke-v8/observation-stop.json")
+            .read_text("utf-8")
+        )
+        self.assertEqual(stopped["required_count"], 67)
+        self.assertEqual(stopped["known_count"], 55)
+        self.assertEqual(stopped["unknown_count"], 12)
+        self.assertEqual(
+            stopped["air_query_status_counts"],
+            {"occluded": 10, "outside_view": 2},
+        )
+        self.assertEqual(stopped["fabric_protocol_trials_run"], 0)
+        self.assertFalse(stopped["full_matrix_started"])
+        self.assertIn("UNKNOWN remained UNKNOWN", stopped["conclusion"])
 
     def test_d119_current_semantics_cover_zero_height_step_bytes(self):
         relative = (
@@ -375,9 +773,16 @@ class StandaloneExportTests(unittest.TestCase):
         self.assertEqual(set(report["files"]), {
             "mc2p/motion_nav/physics_1_21.py",
         })
-        for name, expected in report["files"].items():
-            raw = (self.root / name).read_bytes().replace(b"\r\n", b"\n")
-            self.assertEqual(hashlib.sha256(raw).hexdigest(), expected, name)
+        self.assertEqual(
+            report["files"]["mc2p/motion_nav/physics_1_21.py"],
+            "995641c686c89bb571c2bcd02a4c002ae5d07d715f3acd9d898f1eb138356688",
+        )
+        d124 = json.loads((
+            self.root / "evidence/motion_navigation/d124-proof-dependency-projection-v1/"
+            "production-semantic-hashes.json"
+        ).read_text("utf-8"))
+        current = (self.root / "mc2p/motion_nav/physics_1_21.py").read_bytes().replace(b"\r\n", b"\n")
+        self.assertEqual(hashlib.sha256(current).hexdigest(), d124["files"]["mc2p/motion_nav/physics_1_21.py"])
 
     def test_d110_historical_semantics_are_exported_without_claiming_current_bytes(self):
         relative = "evidence/motion_navigation/d110-evidence-lifecycle-v1/published-production-semantic-hashes.json"
@@ -590,13 +995,21 @@ class StandaloneExportTests(unittest.TestCase):
         ).read_text("utf-8"))["files"]
         d121_task4_repair = json.loads((
             self.root / "evidence/motion_navigation/d121-momentum-handoff-v1/"
-            "task-4-execution/review-repair/production-semantic-hashes.json"
+            "release-repair/final/production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
+        d122 = json.loads((
+            self.root / "evidence/motion_navigation/d122-client-timing-v1/d122-3/"
+            "production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
+        d124 = json.loads((
+            self.root / "evidence/motion_navigation/d124-proof-dependency-projection-v1/"
+            "production-semantic-hashes.json"
         ).read_text("utf-8"))["files"]
         current_semantics = {**canonical, **r1, **r2, **r3, **handoff,
                              **late_handoff, **post_loss, **tp0, **published,
                              **d105, **d107, **d108, **d109, **d112, **d113,
                              **d114, **d115, **d116, **d117, **d119, **d121, **d121_task3, **d121_task4,
-                             **d121_task4_repair}
+                             **d121_task4_repair, **d122, **d124}
         tp0_root = self.root / "evidence/motion_navigation/trajectory-proto-tp0-v1"
         frozen = json.loads((tp0_root / "frozen-control-manifest.json").read_text("utf-8"))
         audit = json.loads((tp0_root / "fabric/audit-summary.json").read_text("utf-8"))

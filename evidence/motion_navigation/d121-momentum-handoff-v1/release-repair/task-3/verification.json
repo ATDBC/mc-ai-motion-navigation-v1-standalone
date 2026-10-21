@@ -1,0 +1,24 @@
+{
+  "platform": "Windows",
+  "source_head": "2a4072f4",
+  "scope": "D121 release repair Task 3 only",
+  "passed_modules": 18,
+  "passed_tests": 601,
+  "skipped": 0,
+  "blocked_modules": [
+    {
+      "module": "tests.motion_nav.test_d102_evidence_contract",
+      "reason": "Independent historical evidence CRLF/LF byte regression; see fixture-ready log and historical-reference-byte-blocker.json",
+      "tests_run": 24
+    }
+  ],
+  "mutation_detected": true,
+  "production_files": [
+    "mc2p/motion_nav/action_route_executor.py",
+    "mc2p/motion_nav/route_body_controller.py"
+  ],
+  "solver_unchanged": true,
+  "original_failure_evidence_rewritten": false,
+  "full_windows_gate_run": false,
+  "fabric_run": false
+}

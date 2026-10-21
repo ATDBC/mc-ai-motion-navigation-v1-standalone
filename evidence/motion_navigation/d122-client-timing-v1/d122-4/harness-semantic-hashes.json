@@ -1,0 +1,14 @@
+{
+  "schema": "mc2p.d122-4-harness-semantic-hashes.v1",
+  "normalization": "CRLF_TO_LF",
+  "scope": "acceptance_harness_only",
+  "previous_d120_index_sha256": "c27e75bf067d45209ac88bd37745d2c37b4c2ef25cecb2363f0196bcf99d7de6",
+  "files": {
+    "scripts/build_fabric_deployment_probe.py": "30d23ece855b221b7461fcb142f34edf81fc4956a69c1275eb7d304f5966528c",
+    "scripts/d122_fabric_timing.py": "4011f5d25ff272a043f568c42cc5ca6c97ba0dea66673a361c3bbe7fab401790",
+    "scripts/d122_formal_timing_probe.py": "2ab613f4b4a71408f11e6261bbb1322429b803c7f19b61def88f7278e9196945",
+    "scripts/fabric_deployment_launch.py": "b2c347b03f3fe40587225a55f2e35203871ea5f64d3ae9c1e52d01fd9a1643e6",
+    "scripts/fabric_deployment_sandbox.py": "bdd3e3c18eaa018b98f54b5a26d8efad45c841af2b1b7d8ce1b5f75f5415da33",
+    "scripts/probe_fabric_deployment_observation.py": "cf4769f8b3e462adc1b15d155b77fb31cc53b8325a1a86cdc0e8a1a85cb06cde"
+  }
+}

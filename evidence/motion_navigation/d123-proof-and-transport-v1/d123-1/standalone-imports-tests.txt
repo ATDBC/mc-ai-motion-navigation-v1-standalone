@@ -1,0 +1,17 @@
+test_actor_unknown_and_known_mismatch_are_typed_and_keep_positions (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_actor_unknown_and_known_mismatch_are_typed_and_keep_positions) ... ok
+test_all_four_directions_retain_67_and_all_12_lower_cells (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_all_four_directions_retain_67_and_all_12_lower_cells) ... ok
+test_calibration_bound_expires_on_either_clock (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_calibration_bound_expires_on_either_clock) ... ok
+test_calibration_launch_receives_no_trial_capability (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_calibration_launch_receives_no_trial_capability) ... ok
+test_continuous_support_plane_argument_requires_opaque_support_and_eye_above (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_continuous_support_plane_argument_requires_opaque_support_and_eye_above) ... ok
+test_existing_formal_adapter_can_accumulate_two_observations (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_existing_formal_adapter_can_accumulate_two_observations) ... ok
+test_failed_offline_gate_cannot_launch_calibration (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_failed_offline_gate_cannot_launch_calibration) ... ok
+test_four_rotations_have_a_full_cube_blocker_without_dropping_dependencies (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_four_rotations_have_a_full_cube_blocker_without_dropping_dependencies) ... ok
+test_offline_semantic_proof_or_export_failure_happens_before_launch (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_offline_semantic_proof_or_export_failure_happens_before_launch) ... ok
+test_product_modes_cannot_launch_while_transport_is_red (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_product_modes_cannot_launch_while_transport_is_red) ... ok
+test_static_gate_rejects_airborne_moving_or_unhealthy_actor (tests.motion_nav.test_d123_actor_calibration.D123ActorCalibrationTests.test_static_gate_rejects_airborne_moving_or_unhealthy_actor) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 1.708s
+
+OK
+runner_imports 44

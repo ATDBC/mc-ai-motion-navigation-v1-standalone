@@ -1,0 +1,36 @@
+{
+  "schema": "mc2p.d122-2-repair5-manifest.v1",
+  "source_base": "dee97944",
+  "implementation_head": "eaf6db3a",
+  "platform": "Windows",
+  "scope": "only the timing installed by the current synchronous execute may be rejected",
+  "checks": {
+    "adjacent": 94,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "mutations_detected": 20,
+    "compile_java": "passed"
+  },
+  "not_run": [
+    "full Windows shards",
+    "standalone full checks",
+    "D122-3 formal component matrix",
+    "performance acceptance",
+    "Fabric"
+  ],
+  "code_sha256": {
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java": "e555465a2256661cfe1c8ebd4552179fea9cacb4d5ff9ad10aee144b256804b6",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java": "a2f809abed99acab54687cf2e1fa4614fc8cc451cf1ae4bcc91b1669196b8726",
+    "scripts/d122_java_mutation_probe.py": "5ff2f5c3fad7cd25cdaf0058af94ca70606aeeb5afd9ebe52dd2a6a3a0352807",
+    "tests/java/ClientTimingRejectIsolationTest.java": "0fd1fdb06a9a614f2e68567404108b4c068254d7270d035b318f49ca3fff0d43"
+  },
+  "evidence_sha256": {
+    "evidence\\motion_navigation\\d122-client-timing-v1\\d122-2-repair5\\README.md": "4be24acc9d3fb2dca31b58f8ca632bfebce9ea442dec060108e53fc1d0dae06f",
+    "evidence\\motion_navigation\\d122-client-timing-v1\\d122-2-repair5\\red.txt": "a9986aa6f089f00a386ae2994a1ee474554574dc406851eb4967ff4ef1b359b7",
+    "evidence\\motion_navigation\\d122-client-timing-v1\\d122-2-repair5\\adjacent.txt": "c8ac0d8f666b1f5c506844e4d48929098ef8b99596297c76a070d3674085c174",
+    "evidence\\motion_navigation\\d122-client-timing-v1\\d122-2-repair5\\compile-java.txt": "2b00da53b7f7b75f862c2e00e0845f9e5b34de57e98e9dc22bf9924c912c04c1",
+    "evidence\\motion_navigation\\d122-client-timing-v1\\d122-2-repair5\\mutation-run.txt": "f7ddcc6ae2c87529146dd34ed6b9167daefcba5bb0a28a11563318121f3f7835",
+    "evidence\\motion_navigation\\d122-client-timing-v1\\d122-2-repair5\\mutations.json": "e0a73dbd85b224db6b501486d721e8e459c3f2eacae5e5ddd72f6356ddbaa6db"
+  }
+}

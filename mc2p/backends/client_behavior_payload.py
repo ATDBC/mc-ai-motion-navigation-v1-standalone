@@ -11,6 +11,13 @@ from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 
 ACTION_FIELD_NUMBER = 50001
 MAX_ACTION_BYTES = 16_384
+ACTION_SCHEMA_V1 = "mc2p.client_action.v1"
+ACTION_SCHEMA_V2 = "mc2p.client_action.v2"
+
+
+class ActionCapabilityUnsupported(ContractViolation):
+    """The requested timing capability has not been negotiated for this session."""
+
 
 
 def _varint(value: int) -> bytes:
@@ -39,7 +46,8 @@ def behavior_action_message(action: ActionSnapshotV1, *, now_ns: int,
 
 
 def encode_behavior_action(action: ActionSnapshotV1, *, now_ns: int,
-                           observation_received_at_ns: int | None = None) -> bytes:
+                           observation_received_at_ns: int | None = None,
+                           negotiated_action_schema: str = ACTION_SCHEMA_V1) -> bytes:
     if type(action) is not ActionSnapshotV1:
         raise ContractViolation("formal action must be ActionSnapshotV1")
     require_nonnegative_int(now_ns, "now_ns")
@@ -52,7 +60,14 @@ def encode_behavior_action(action: ActionSnapshotV1, *, now_ns: int,
         raise ContractViolation("observation receive anchor is in the future")
     wire = asdict(action)
     del wire["deadline_monotonic_ns"]
-    wire["schema_version"] = "mc2p.client_action.v1"
+    if type(negotiated_action_schema) is not str or negotiated_action_schema not in {ACTION_SCHEMA_V1, ACTION_SCHEMA_V2}:
+        raise ActionCapabilityUnsupported("unsupported negotiated action schema")
+    if negotiated_action_schema == ACTION_SCHEMA_V1:
+        if action.first_effect_window is not None or action.safe_default is not None:
+            raise ActionCapabilityUnsupported("client action timing v2 was not negotiated")
+        del wire["first_effect_window"]
+        del wire["safe_default"]
+    wire["schema_version"] = negotiated_action_schema
     wire["remaining_budget_ns"] = min(budget, 30_000_000_000)
     # The JVM anchors this interval at observation generation, which necessarily
     # precedes Python receiving it. This is conservative without shared clock epochs.

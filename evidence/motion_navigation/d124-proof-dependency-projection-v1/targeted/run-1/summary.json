@@ -1,0 +1,1 @@
+{"d123_history_rewritten":false,"dependency_counts":[58,58,58,58],"fabric_run":false,"production_files_changed":["mc2p/motion_nav/geometry.py","mc2p/motion_nav/physics_adapter.py","mc2p/motion_nav/physics_1_21.py","mc2p/motion_nav/prepared_motion_proof.py"],"required_retained":true,"shadowed_removed":true,"stage":"D124-0-to-D124-2-targeted","status":"PASS"}

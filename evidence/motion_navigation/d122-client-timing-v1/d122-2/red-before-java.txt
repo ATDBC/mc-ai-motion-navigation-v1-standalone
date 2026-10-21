@@ -1,0 +1,66 @@
+[decoder] returncode=1
+
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientActionTimingDecodeTest.java:8: 错误: 无法将记录 ClientActionRequest中的方法 decode应用到给定类型;
+        try { ClientActionRequest.decode(bytes(payload), schema); }
+                                 ^
+  需要: byte[]
+  找到:    byte[],String
+  原因: 实际参数列表和形式参数列表长度不同
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientActionTimingDecodeTest.java:25: 错误: 无法将记录 ClientActionRequest中的方法 decode应用到给定类型;
+        ClientActionRequest parent = ClientActionRequest.decode(bytes(base), "mc2p.client_action.v2");
+                                                        ^
+  需要: byte[]
+  找到:    byte[],String
+  原因: 实际参数列表和形式参数列表长度不同
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientActionTimingDecodeTest.java:26: 错误: 找不到符号
+        yes(parent.safeDefault() != null && parent.safeDefault().movement().sneak());
+                  ^
+  符号:   方法 safeDefault()
+  位置: 类型为ClientActionRequest的变量 parent
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientActionTimingDecodeTest.java:26: 错误: 找不到符号
+        yes(parent.safeDefault() != null && parent.safeDefault().movement().sneak());
+                                                  ^
+  符号:   方法 safeDefault()
+  位置: 类型为ClientActionRequest的变量 parent
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientActionTimingDecodeTest.java:27: 错误: 找不到符号
+        yes(parent.safeDefault().activationTick() == 27 && parent.safeDefault().validForTicks() == 8);
+                  ^
+  符号:   方法 safeDefault()
+  位置: 类型为ClientActionRequest的变量 parent
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientActionTimingDecodeTest.java:27: 错误: 找不到符号
+        yes(parent.safeDefault().activationTick() == 27 && parent.safeDefault().validForTicks() == 8);
+                                                                 ^
+  符号:   方法 safeDefault()
+  位置: 类型为ClientActionRequest的变量 parent
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientActionTimingDecodeTest.java:33: 错误: 无法将记录 ClientActionRequest中的方法 decode应用到给定类型;
+        ClientActionRequest next = ClientActionRequest.decode(bytes(successor), "mc2p.client_action.v2");
+                                                      ^
+  需要: byte[]
+  找到:    byte[],String
+  原因: 实际参数列表和形式参数列表长度不同
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientActionTimingDecodeTest.java:34: 错误: 找不到符号
+        yes(next.firstEffectWindow().earliestTick() == 27 && next.jump());
+                ^
+  符号:   方法 firstEffectWindow()
+  位置: 类型为ClientActionRequest的变量 next
+8 个错误
+
+[session] returncode=1
+
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\DeploymentSessionTest.java:21: 错误: 找不到符号
+        if (!v2.actionSchemaVersion().equals("mc2p.client_action.v1"))
+               ^
+  符号:   方法 actionSchemaVersion()
+  位置: 类型为DeploymentSession的变量 v2
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\DeploymentSessionTest.java:26: 错误: 找不到符号
+        if (!v3.actionSchemaVersion().equals("mc2p.client_action.v2"))
+               ^
+  符号:   方法 actionSchemaVersion()
+  位置: 类型为DeploymentSession的变量 v3
+2 个错误
+
+[schedule] returncode=2
+
+错误: 无效的标记: D:\My_project\mc_ai\.tmp\d121-revision-worktree\mc2p\backends\runtime_overlays\mc121_actions\ClientTimingSchedule.java.missing
+用法: javac <选项> <源文件>
+使用 --help 可列出可能的选项

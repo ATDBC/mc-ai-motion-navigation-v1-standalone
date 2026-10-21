@@ -1,0 +1,105 @@
+{
+  "schema": "mc2p.d122-final-gates.v1",
+  "status": "PASS",
+  "platform": "Windows",
+  "fabric_run": false,
+  "source": {
+    "forward": {
+      "sha256": "9efd3d8b7f1e6cc0d0951981455448924e08c2c89a0d6ce2c6c81006ba8ab102",
+      "modules": 204,
+      "tests": 2680,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "cleanup_failures": 0,
+      "timeouts": 0,
+      "launch_errors": 0
+    },
+    "reverse": {
+      "sha256": "2cd6e83b40c55a15b9c043445b288d161d3021ae0be569be44046b114959a4d5",
+      "modules": 204,
+      "tests": 2680,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "cleanup_failures": 0,
+      "timeouts": 0,
+      "launch_errors": 0
+    }
+  },
+  "standalone": {
+    "verify_files_initial": 2963,
+    "forward": {
+      "sha256": "f159d7c5740da1ee2e458a9369eccaca9e6745a84a748472ccf8508e648983d6",
+      "modules": 203,
+      "tests": 2656,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "cleanup_failures": 0,
+      "timeouts": 0,
+      "launch_errors": 0
+    },
+    "reverse": {
+      "sha256": "ce1b8c4314319d9ea25fa94b1ed1fc20109c65dd66d52c05ad0c3448026467de",
+      "modules": 203,
+      "tests": 2656,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "cleanup_failures": 0,
+      "timeouts": 0,
+      "launch_errors": 0
+    },
+    "verify_files_final_indexed": 2969
+  },
+  "java": {
+    "initial_discovery": {
+      "status": "INVALID_ENVIRONMENT",
+      "sha256": "17e895a1bd7f7e89372020d92d5d3e54948f3ea980fac8f6e1fe629ef0f98ea0",
+      "entered_compilation": false
+    },
+    "discovery": {
+      "status": "PASS",
+      "sha256": "9716925dd4d04fafc43d6dbbdab3f135179a6c91a21a932ca1d3c9a197dc9515",
+      "major_version": 21
+    },
+    "gates": {
+      "status": "PASS",
+      "sha256": "b44a578e6bd6283288acb3058968b634a6975d57cbb89050aefa41195579fef1",
+      "tests": 94
+    },
+    "initial_overlay": {
+      "status": "INVALID_ENVIRONMENT_COMMAND",
+      "sha256": "05b0f2c1d0feaea9a6aef54375103269134165a100f262b0b9d8f7e1c014b940",
+      "entered_gradle": false
+    },
+    "overlay_compile": {
+      "status": "PASS",
+      "sha256": "2b00da53b7f7b75f862c2e00e0845f9e5b34de57e98e9dc22bf9924c912c04c1",
+      "task": "compileJava --rerun-tasks"
+    }
+  },
+  "component": {
+    "formal_matrix": {
+      "status": "PASS",
+      "sha256": "dad04e36cdd829dd758a4a0a1e2dc7e0e516ff9d334cdeb63aafebf71e6362b4",
+      "cases": 20
+    },
+    "directed": {
+      "status": "PASS",
+      "sha256": "1b364cd583e3c93b4385a10a85f4af37853fcc5435c7ca6b93b8f9524c88a438",
+      "tests": 64
+    }
+  },
+  "production_semantic_hashes_sha256": "03f55e45b1c77a79ddd33b76090dc5a0d36b6c6ddc6dc22254acddcdfe8de482",
+  "export_manifest_sha256": "4265ff9285965edc63037bd1a84cae68af93ef7831b2dae49a514738fc6b2721"
+}

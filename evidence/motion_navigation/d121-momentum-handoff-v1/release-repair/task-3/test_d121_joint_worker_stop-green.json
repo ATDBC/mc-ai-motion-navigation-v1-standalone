@@ -1,0 +1,13 @@
+{
+  "module": "tests.motion_nav.test_d121_joint_worker_stop",
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d121_joint_worker_stop",
+    "-v"
+  ],
+  "exit_code": 0,
+  "duration_seconds": 0.08977240021340549,
+  "output": "test_current_formal_messages_meet_the_half_limit (tests.motion_nav.test_d121_joint_worker_stop.D121S2StopTests.test_current_formal_messages_meet_the_half_limit) ... ok\ntest_historical_stop_and_current_preparation_are_required_exports (tests.motion_nav.test_d121_joint_worker_stop.D121S2StopTests.test_historical_stop_and_current_preparation_are_required_exports) ... ok\ntest_historical_stop_bytes_are_preserved (tests.motion_nav.test_d121_joint_worker_stop.D121S2StopTests.test_historical_stop_bytes_are_preserved) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.003s\n\nOK\n"
+}

@@ -77,6 +77,34 @@ def unknown_shape_owner_is_fully_covered(
     )
 
 
+def shape_owner_is_shadowed_by_full_cube(
+        world: WorldView, position: BlockPos, *,
+        query_cache: WorldQueryCache | None = None) -> bool:
+    """Whether the cell above geometrically subsumes an owner's upper reach.
+
+    This does not read ``position``.  It is valid only when the caller has
+    already established that ``position`` is a broad lower-owner candidate,
+    rather than a cell directly occupied by the queried sweep or support box.
+    """
+    if type(world) is not WorldView:
+        raise ContractViolation("shape-owner shadow requires a world view")
+    if (type(position) is not tuple or len(position) != 3
+            or any(type(value) is not int for value in position)):
+        raise ContractViolation("shape-owner shadow requires an integer cell")
+    if query_cache is not None and (
+            type(query_cache) is not WorldQueryCache
+            or query_cache.world is not world):
+        raise ContractViolation("shape-owner query cache belongs to another world view")
+    above = (position[0], position[1] + 1, position[2])
+    cover = world.cell(above) if query_cache is None else query_cache.cell(above)
+    return bool(
+        cover.knowledge is CellKnowledge.BLOCK
+        and cover.block is not None
+        and not cover.block.fluid
+        and cover.block.collision_kind == "full_cube"
+    )
+
+
 def _axis_cells(minimum: float, maximum: float) -> range:
     return range(math.floor(minimum + _EPSILON), math.floor(maximum - _EPSILON) + 1)
 
@@ -91,7 +119,7 @@ def _possible_owner_cells(cells: tuple[BlockPos, ...]) -> tuple[BlockPos, ...]:
     }))
 
 
-def required_cells_for_sweep(body: Aabb, delta: tuple[float, float, float]) -> tuple[BlockPos, ...]:
+def occupied_cells_for_sweep(body: Aabb, delta: tuple[float, float, float]) -> tuple[BlockPos, ...]:
     if type(body) is not Aabb or type(delta) is not tuple or len(delta) != 3:
         raise ContractViolation("sweep requires an AABB and a three-axis displacement")
     if any(type(value) not in (int, float) or not math.isfinite(float(value)) for value in delta):
@@ -103,6 +131,11 @@ def required_cells_for_sweep(body: Aabb, delta: tuple[float, float, float]) -> t
     occupied = tuple((x, y, z) for x in _axis_cells(broad.min_x, broad.max_x)
                      for y in _axis_cells(broad.min_y, broad.max_y)
                      for z in _axis_cells(broad.min_z, broad.max_z))
+    return occupied
+
+
+def required_cells_for_sweep(body: Aabb, delta: tuple[float, float, float]) -> tuple[BlockPos, ...]:
+    occupied = occupied_cells_for_sweep(body, delta)
     return _possible_owner_cells(occupied)
 
 
@@ -163,16 +196,21 @@ def sweep(
             type(query_cache) is not WorldQueryCache
             or query_cache.world is not world):
         raise ContractViolation("sweep query cache belongs to another world view")
+    direct_cells = set(occupied_cells_for_sweep(body, delta))
     cells = required_cells_for_sweep(body, delta)
+    dependencies = set()
     missing = []
     unsupported = False
     first: float | None = None
     for position in cells:
+        if (position not in direct_cells
+                and shape_owner_is_shadowed_by_full_cube(
+                    world, position, query_cache=query_cache)):
+            dependencies.add((position[0], position[1] + 1, position[2]))
+            continue
+        dependencies.add(position)
         fact = world.cell(position) if query_cache is None else query_cache.cell(position)
         if fact.knowledge is CellKnowledge.UNKNOWN:
-            if unknown_shape_owner_is_fully_covered(
-                    world, position, query_cache=query_cache):
-                continue
             missing.append(position)
             continue
         if fact.knowledge is CellKnowledge.AIR:
@@ -187,13 +225,13 @@ def sweep(
             fraction = _sweep_fraction(body, delta, obstacle)
             if fraction is not None and (first is None or fraction < first):
                 first = fraction
-    if first is not None:
-        return SweepResult(QueryStatus.BLOCKED, cells, tuple(missing), first)
     if unsupported:
-        return SweepResult(QueryStatus.UNSUPPORTED, cells, tuple(missing))
+        return SweepResult(QueryStatus.UNSUPPORTED, tuple(sorted(dependencies)), tuple(missing))
+    if first is not None:
+        return SweepResult(QueryStatus.BLOCKED, tuple(sorted(dependencies)), tuple(missing), first)
     if missing:
-        return SweepResult(QueryStatus.NEEDS_INFORMATION, cells, tuple(missing))
-    return SweepResult(QueryStatus.FEASIBLE, cells)
+        return SweepResult(QueryStatus.NEEDS_INFORMATION, tuple(sorted(dependencies)), tuple(missing))
+    return SweepResult(QueryStatus.FEASIBLE, tuple(sorted(dependencies)))
 
 
 def _rectangle_union_area(rectangles: list[tuple[float, float, float, float]]) -> float:
@@ -247,16 +285,21 @@ def query_support(
         for z in _axis_cells(body.min_z, body.max_z)
     )
     cells = _possible_owner_cells(contact_cells)
+    direct_cells = set(contact_cells)
+    dependencies = set()
     missing = []
     unsupported = False
     rectangles: list[tuple[float, float, float, float]] = []
     materials: set[str] = set()
     for position in cells:
+        if (position not in direct_cells
+                and shape_owner_is_shadowed_by_full_cube(
+                    world, position, query_cache=query_cache)):
+            dependencies.add((position[0], position[1] + 1, position[2]))
+            continue
+        dependencies.add(position)
         fact = world.cell(position) if query_cache is None else query_cache.cell(position)
         if fact.knowledge is CellKnowledge.UNKNOWN:
-            if unknown_shape_owner_is_fully_covered(
-                    world, position, query_cache=query_cache):
-                continue
             missing.append(position)
             continue
         if fact.knowledge is CellKnowledge.AIR:
@@ -278,11 +321,11 @@ def query_support(
     area = _rectangle_union_area(rectangles)
     footprint = (body.max_x - body.min_x) * (body.max_z - body.min_z)
     fraction = min(1.0, area / footprint)
-    if area > _EPSILON:
-        return SupportResult(QueryStatus.FEASIBLE, cells, area, fraction,
-                             tuple(missing), tuple(sorted(materials)))
     if unsupported:
-        return SupportResult(QueryStatus.UNSUPPORTED, cells, 0.0, 0.0, tuple(missing))
+        return SupportResult(QueryStatus.UNSUPPORTED, tuple(sorted(dependencies)), 0.0, 0.0, tuple(missing))
+    if area > _EPSILON:
+        return SupportResult(QueryStatus.FEASIBLE, tuple(sorted(dependencies)), area, fraction,
+                             tuple(missing), tuple(sorted(materials)))
     if missing:
-        return SupportResult(QueryStatus.NEEDS_INFORMATION, cells, 0.0, 0.0, tuple(missing))
-    return SupportResult(QueryStatus.BLOCKED, cells, 0.0, 0.0)
+        return SupportResult(QueryStatus.NEEDS_INFORMATION, tuple(sorted(dependencies)), 0.0, 0.0, tuple(missing))
+    return SupportResult(QueryStatus.BLOCKED, tuple(sorted(dependencies)), 0.0, 0.0)

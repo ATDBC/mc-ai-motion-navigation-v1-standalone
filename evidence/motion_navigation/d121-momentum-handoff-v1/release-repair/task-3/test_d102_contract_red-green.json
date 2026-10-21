@@ -1,0 +1,13 @@
+{
+  "module": "tests.motion_nav.test_d102_contract_red",
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d102_contract_red",
+    "-v"
+  ],
+  "exit_code": 0,
+  "duration_seconds": 13.589577100006863,
+  "output": "test_control_drain_is_not_receiver (tests.motion_nav.test_d102_contract_red.ContractRedTests.test_control_drain_is_not_receiver) ... ok\ntest_job_retirement_preserves_execution_refs (tests.motion_nav.test_d102_contract_red.ContractRedTests.test_job_retirement_preserves_execution_refs) ... ok\ntest_overdue_keeps_registered_tail (tests.motion_nav.test_d102_contract_red.ContractRedTests.test_overdue_keeps_registered_tail) ... ok\ntest_parent_inputs_are_independent (tests.motion_nav.test_d102_contract_red.ContractRedTests.test_parent_inputs_are_independent) ... ok\ntest_snapshot_graph_is_immutable (tests.motion_nav.test_d102_contract_red.ContractRedTests.test_snapshot_graph_is_immutable) ... ok\n\n----------------------------------------------------------------------\nRan 5 tests in 13.241s\n\nOK\n"
+}

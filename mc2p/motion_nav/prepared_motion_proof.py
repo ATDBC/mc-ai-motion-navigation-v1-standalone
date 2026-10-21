@@ -16,7 +16,7 @@ import pickle
 
 from mc2p.contracts.common import ContractViolation, require_identifier
 from mc2p.contracts.motion_activation import StreamStartBranch, validate_frozen_value
-from mc2p.motion_nav.geometry import QueryStatus, query_support, required_cells_for_sweep
+from mc2p.motion_nav.geometry import QueryStatus
 from mc2p.motion_nav.motion_risk import conservative_plain_fall_damage_points
 from mc2p.motion_nav.motion_chain import (
     FallbackCandidate, ProvenFallbackSelection,
@@ -31,7 +31,7 @@ from mc2p.motion_nav.prepared_motion import (
     PreparedMotionBundle, PreparedMotionProof, PreparedMotionRequest, PreparedSafetyTail,
 )
 from mc2p.motion_nav.online_motion import CandidateExecutionWindow
-from mc2p.motion_nav.world_model import CellKnowledge, WorldView
+from mc2p.motion_nav.world_model import CellKnowledge
 from mc2p.motion_nav.world_snapshot import SealedSnapshot, validate_sealed_snapshot
 
 
@@ -184,11 +184,7 @@ def _damage(states):
 
 
 def _support_fraction(state, world, dependencies):
-    cells = required_cells_for_sweep(state.body_box, (0., -.05, 0.))
-    facts = {position: world.cell(position) for position in cells}
-    dependencies.update(cells)
-    support = query_support(state.body_box, WorldView.detached(
-        world.session, world.geometry_revision, 0, facts))
+    support = world.support(state.body_box)
     dependencies.update(support.dependencies)
     if support.missing_cells:
         raise _ScanFailure(PreparedComputeStatus.MISSING_INFORMATION, support.missing_cells)

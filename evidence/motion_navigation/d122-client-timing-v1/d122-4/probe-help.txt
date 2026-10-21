@@ -1,0 +1,134 @@
+usage: probe_fabric_deployment_observation.py [-h]
+                                              [--seed {21001,21002,21003}]
+                                              [--server-port SERVER_PORT]
+                                              [--ipc-port IPC_PORT]
+                                              [--timeout-seconds TIMEOUT_SECONDS]
+                                              [--launch-json LAUNCH_JSON]
+                                              [--container-probe]
+                                              [--mining-probe]
+                                              [--time-diagnostics]
+                                              [--physics-tick-diagnostics]
+                                              [--ftick-diagnostics]
+                                              [--visibility-probe]
+                                              [--b02-air-probe]
+                                              [--b03-fixed-route-probe]
+                                              [--b03-shape-probe]
+                                              [--b04-known-map-probe]
+                                              [--r25-planning-information-probe]
+                                              [--b05-jump-calibration-probe]
+                                              [--b05-jump-route-probe]
+                                              [--b05-jump-acceptance-probe]
+                                              [--b06-ordinary-material-probe]
+                                              [--b07-step-probe]
+                                              [--b08-ground-modes-probe]
+                                              [--b09-air-motion-probe]
+                                              [--d118-motion-calibration-probe]
+                                              [--d118-full-matrix]
+                                              [--d120-motion-calibration-probe]
+                                              [--d120-full-matrix]
+                                              [--d122-client-timing-probe]
+                                              [--d122-full-matrix]
+                                              [--b10-gap-solver-probe]
+                                              [--b10-targeted-probe {coordinator-worker-delay-5-0-0}]
+                                              [--continuous-height-probe]
+                                              [--continuous-height-full-matrix]
+                                              [--navigation-review20-probe]
+                                              [--b11-world-change-probe]
+                                              [--input-buffer-idle-probe]
+                                              [--c1-fixed-melee-probe]
+                                              [--c1-moving-melee-probe]
+                                              [--c1-external-motion-probe]
+                                              [--c1r-control-frame-probe]
+                                              [--b12a-attack-evidence-probe]
+                                              [--b12b-partial-combat-probe]
+                                              [--surface-cost-probe]
+
+Supervised local vanilla server + independent Fabric client Runtime/reconnect
+probe.
+
+options:
+  -h, --help            show this help message and exit
+  --seed {21001,21002,21003}
+  --server-port SERVER_PORT
+  --ipc-port IPC_PORT
+  --timeout-seconds TIMEOUT_SECONDS
+  --launch-json LAUNCH_JSON
+  --container-probe     verify nonempty normal chest transfer and reconnect
+  --mining-probe        verify shared Runtime mining, pickup, placement and
+                        persisted server state
+  --time-diagnostics    record read-only tick/time-packet attribution outside
+                        actor payloads
+  --physics-tick-diagnostics
+                        join pre-state, sampled input and post-state for each
+                        actor movement tick
+  --ftick-diagnostics   record a read-only action-to-movement tick sidecar
+  --visibility-probe    run the shared original-speed visibility scene
+  --b02-air-probe       measure bounded positive-only air confirmation
+  --b03-fixed-route-probe
+                        run B03 fixed-route walking, cancellation and lease
+                        checks
+  --b03-shape-probe     run B03 rotating-view line and fixed-view circle
+                        trials
+  --b04-known-map-probe
+                        run B04 known-map background planning and execution
+  --r25-planning-information-probe
+                        verify profile-4 planning blockers and information
+                        acquisition
+  --b05-jump-calibration-probe
+                        calibrate one observed low-speed adjacent one-block
+                        JumpUp
+  --b05-jump-route-probe
+                        plan and execute one Fabric Walk-JumpUp-Walk route
+  --b05-jump-acceptance-probe
+                        run 100 repeated Fabric JumpUp acceptance trials
+  --b06-ordinary-material-probe
+                        validate ordinary-material Walk and JumpUp profile
+                        reuse
+  --b07-step-probe      calibrate observed half-block StepUp and StepDown
+  --b08-ground-modes-probe
+                        calibrate and validate Sprint and Crouch fixed routes
+  --b09-air-motion-probe
+                        calibrate and validate gap jumps and controlled drops
+  --d118-motion-calibration-probe
+                        run fixed-input momentum gap calibration
+  --d118-full-matrix    run D118 in four directions with three repetitions
+  --d120-motion-calibration-probe
+                        run the D120 sealed momentum entry calibration
+  --d120-full-matrix    run D120 three families in four directions three times
+  --d122-client-timing-probe
+                        run D122 exact first-effect and prearmed-default
+                        trials
+  --d122-full-matrix    run D122 three timing states in four directions three
+                        times
+  --b10-gap-solver-probe
+                        solve and validate one-cell gaps in a controlled
+                        session
+  --b10-targeted-probe {coordinator-worker-delay-5-0-0}
+                        run only the D113 5-tick diagnostic case; never formal
+                        acceptance
+  --continuous-height-probe
+                        run continuous low-height and descending routes
+  --continuous-height-full-matrix
+                        run a deterministic shard of the frozen M3 matrix
+  --navigation-review20-probe
+                        run review-20 interruption and late-input matrix
+  --b11-world-change-probe
+                        place full blocks and cross one-to-three-cell gaps
+  --input-buffer-idle-probe
+                        idle past the 64-sample input ledger and resume
+                        control
+  --c1-fixed-melee-probe
+                        run the frozen fixed-visible-target melee slice
+  --c1-moving-melee-probe
+                        run the frozen moving-target melee slice
+  --c1-external-motion-probe
+                        run the frozen real-damage external-motion slice
+  --c1r-control-frame-probe
+                        prove movement and fixed-target attack share one
+                        client tick
+  --b12a-attack-evidence-probe
+                        run B12-A game-dependent attack evidence negatives
+  --b12b-partial-combat-probe
+                        run B12-B bounded ground movement with melee
+  --surface-cost-probe  measure 200 stationary profile-4 frames in seven fixed
+                        scene classes

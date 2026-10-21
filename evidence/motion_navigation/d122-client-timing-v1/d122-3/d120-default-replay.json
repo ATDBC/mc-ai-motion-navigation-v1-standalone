@@ -1,0 +1,44 @@
+{
+  "schema": "mc2p.d122-d120-default-replay.v1",
+  "evidence_kind": "D120 physics tail replay plus D122 representative client sampling",
+  "sound_envelope": "unverified",
+  "manifest_sha256": "89c5ee269da0b8ac969d69be781a589c8f28449faf0b153fe69a6b2c2a433dd6",
+  "sample_count": 972,
+  "passed_count": 972,
+  "proof_selected_runtime_duration_ticks": 9,
+  "minimum_required_ticks": 8,
+  "directions": [
+    {
+      "direction_index": 0,
+      "samples": 243,
+      "passed": 243,
+      "minimum_ticks": 8,
+      "maximum_ticks": 8
+    },
+    {
+      "direction_index": 1,
+      "samples": 243,
+      "passed": 243,
+      "minimum_ticks": 8,
+      "maximum_ticks": 8
+    },
+    {
+      "direction_index": 2,
+      "samples": 243,
+      "passed": 243,
+      "minimum_ticks": 8,
+      "maximum_ticks": 8
+    },
+    {
+      "direction_index": 3,
+      "samples": 243,
+      "passed": 243,
+      "minimum_ticks": 8,
+      "maximum_ticks": 8
+    }
+  ],
+  "passed": true,
+  "d120_settle_tick_count": 8,
+  "runtime_proof_default_samples": 9,
+  "runtime_release_witness_boundary": 10
+}

@@ -1,0 +1,11 @@
+test_body_inside_lower_space_restores_unknown_requirement (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_body_inside_lower_space_restores_unknown_requirement) ... ok
+test_exact_d120_data_absent_never_becomes_small_success (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_exact_d120_data_absent_never_becomes_small_success) ... ok
+test_maximum_extent_material_read_is_independent_of_collision (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_maximum_extent_material_read_is_independent_of_collision) ... ok
+test_overlays_leave_frozen_source_unchanged (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_overlays_leave_frozen_source_unchanged) ... ok
+test_physics_equivalence_does_not_remove_dependency_gate (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_physics_equivalence_does_not_remove_dependency_gate) ... ok
+test_unknown_under_air_rejects_parent_and_successor (tests.motion_nav.test_d123_dependency_probe.D123DependencyProbeTests.test_unknown_under_air_rejects_parent_and_successor) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 2.869s
+
+OK

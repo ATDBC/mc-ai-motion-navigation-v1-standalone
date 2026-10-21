@@ -1,0 +1,14 @@
+E
+======================================================================
+ERROR: test_fabric_runner_resolves_every_lazy_dependency_without_starting_minecraft (tests.motion_nav.test_d122_fabric_timing.D122FabricTimingTests.test_fabric_runner_resolves_every_lazy_dependency_without_starting_minecraft)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\motion_nav\test_d122_fabric_timing.py", line 70, in test_fabric_runner_resolves_every_lazy_dependency_without_starting_minecraft
+    dependencies = probe.resolve_fabric_runner_dependencies()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'scripts.d122_fabric_timing' has no attribute 'resolve_fabric_runner_dependencies'
+
+----------------------------------------------------------------------
+Ran 1 test in 7.957s
+
+FAILED (errors=1)

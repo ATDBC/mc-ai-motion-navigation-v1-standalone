@@ -1,0 +1,1 @@
+{"java": "D:\\My_project\\mc_ai\\.venv\\Library\\lib\\jvm\\bin\\java.exe", "javac": "D:\\My_project\\mc_ai\\.venv\\Library\\lib\\jvm\\bin\\javac.exe", "major_version": 21}

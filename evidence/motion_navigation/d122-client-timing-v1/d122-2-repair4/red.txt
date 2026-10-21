@@ -1,0 +1,42 @@
+test_preinstall_rejection_preserves_incumbent_fallback (tests.test_d122_java_timing.D122JavaTimingTests.test_preinstall_rejection_preserves_incumbent_fallback) ... FAIL
+
+======================================================================
+FAIL: test_preinstall_rejection_preserves_incumbent_fallback (tests.test_d122_java_timing.D122JavaTimingTests.test_preinstall_rejection_preserves_incumbent_fallback)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_java_timing.py", line 43, in test_preinstall_rejection_preserves_incumbent_fallback
+    self.compile_run("CLIENT_TIMING_REJECT_ISOLATION_OK",
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_d122_java_timing.py", line 19, in compile_run
+    self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+AssertionError: 1 != 0 : D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientTimingRejectIsolationTest.java:39: ����: �Ҳ�������
+        yes(ClientTimingAdmission.holdIncumbentFallbackOnRejection(
+                                 ^
+  ����:   ���� holdIncumbentFallbackOnRejection(ClientActionRequest,String,boolean)
+  λ��: �� ClientTimingAdmission
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientTimingRejectIsolationTest.java:41: ����: �Ҳ�������
+        yes(ClientTimingAdmission.holdIncumbentFallbackOnRejection(
+                                 ^
+  ����:   ���� holdIncumbentFallbackOnRejection(ClientActionRequest,String,boolean)
+  λ��: �� ClientTimingAdmission
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientTimingRejectIsolationTest.java:43: ����: �Ҳ�������
+        yes(ClientTimingAdmission.holdIncumbentFallbackOnRejection(
+                                 ^
+  ����:   ���� holdIncumbentFallbackOnRejection(ClientActionRequest,String,boolean)
+  λ��: �� ClientTimingAdmission
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientTimingRejectIsolationTest.java:45: ����: �Ҳ�������
+        yes(!ClientTimingAdmission.holdIncumbentFallbackOnRejection(
+                                  ^
+  ����:   ���� holdIncumbentFallbackOnRejection(ClientActionRequest,String,boolean)
+  λ��: �� ClientTimingAdmission
+D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\java\ClientTimingRejectIsolationTest.java:47: ����: �Ҳ�������
+        yes(input.holdRejectedResponseForFallback());
+                 ^
+  ����:   ���� holdRejectedResponseForFallback()
+  λ��: ����ΪClientBehaviorInput�ı��� input
+5 ������
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.529s
+
+FAILED (failures=1)

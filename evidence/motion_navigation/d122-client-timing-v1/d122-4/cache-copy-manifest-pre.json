@@ -1,0 +1,210 @@
+{
+  "schema": "d122-cache-copy-v1",
+  "created_utc": "2026-10-20T11:21:28.1476335Z",
+  "source_cache": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle",
+  "destination_cache": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle",
+  "selection": "org.lwjgl/*/3.3.3/*natives-windows*.jar missing from destination",
+  "source_read_only": true,
+  "build_scripts_modified": false,
+  "descriptor_metadata": {
+    "source_and_destination_present": true,
+    "copied": false,
+    "reason": "all eight org.lwjgl 3.3.3 descriptor directories already existed with the same file counts"
+  },
+  "file_count": 24,
+  "total_bytes": 7488760,
+  "files": [
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-freetype\\3.3.3\\15a8c1de7f51d07a92eae7ce1222557073a0c0c3\\lwjgl-freetype-3.3.3-natives-windows-x86.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-freetype\\3.3.3\\15a8c1de7f51d07a92eae7ce1222557073a0c0c3\\lwjgl-freetype-3.3.3-natives-windows-x86.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-freetype/3.3.3/15a8c1de7f51d07a92eae7ce1222557073a0c0c3/lwjgl-freetype-3.3.3-natives-windows-x86.jar",
+      "size": 877480,
+      "sha256": "75a798a5f492e1376d05dc637a9105198e71d06f38a11e9bce1c5072e0d60b3a",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-freetype\\3.3.3\\81091b006dbb43fab04c8c638e9ac87c51b4096d\\lwjgl-freetype-3.3.3-natives-windows.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-freetype\\3.3.3\\81091b006dbb43fab04c8c638e9ac87c51b4096d\\lwjgl-freetype-3.3.3-natives-windows.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-freetype/3.3.3/81091b006dbb43fab04c8c638e9ac87c51b4096d/lwjgl-freetype-3.3.3-natives-windows.jar",
+      "size": 1035586,
+      "sha256": "022e59514b1ecb45249413ae62ad094971d7ac88c0dce9a32c627d06a3c01a1f",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-freetype\\3.3.3\\82028265a0a2ff33523ca75137ada7dc176e5210\\lwjgl-freetype-3.3.3-natives-windows-arm64.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-freetype\\3.3.3\\82028265a0a2ff33523ca75137ada7dc176e5210\\lwjgl-freetype-3.3.3-natives-windows-arm64.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-freetype/3.3.3/82028265a0a2ff33523ca75137ada7dc176e5210/lwjgl-freetype-3.3.3-natives-windows-arm64.jar",
+      "size": 886068,
+      "sha256": "b589983ec143ff09acd8d9a215b4ef3f80750855646c1b96279066ea5e44f40c",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-glfw\\3.3.3\\32334f3fd5270a59bad9939a93115acb6de36dcf\\lwjgl-glfw-3.3.3-natives-windows-x86.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-glfw\\3.3.3\\32334f3fd5270a59bad9939a93115acb6de36dcf\\lwjgl-glfw-3.3.3-natives-windows-x86.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.3.3/32334f3fd5270a59bad9939a93115acb6de36dcf/lwjgl-glfw-3.3.3-natives-windows-x86.jar",
+      "size": 157123,
+      "sha256": "9646555d405f0d2a3a9576b506f57c1632af64f69a8ae58cb0448ae04a9c7824",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-glfw\\3.3.3\\e449e28b4891fc423c54c85fbc5bb0b9efece67a\\lwjgl-glfw-3.3.3-natives-windows.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-glfw\\3.3.3\\e449e28b4891fc423c54c85fbc5bb0b9efece67a\\lwjgl-glfw-3.3.3-natives-windows.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.3.3/e449e28b4891fc423c54c85fbc5bb0b9efece67a/lwjgl-glfw-3.3.3-natives-windows.jar",
+      "size": 166368,
+      "sha256": "98155b451dfc6f585089dec77a12f9c05789c4dceb8da472f9d308160101a70d",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-glfw\\3.3.3\\f27018dc74f6289574502b46cce55d52817554e2\\lwjgl-glfw-3.3.3-natives-windows-arm64.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-glfw\\3.3.3\\f27018dc74f6289574502b46cce55d52817554e2\\lwjgl-glfw-3.3.3-natives-windows-arm64.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.3.3/f27018dc74f6289574502b46cce55d52817554e2/lwjgl-glfw-3.3.3-natives-windows-arm64.jar",
+      "size": 141970,
+      "sha256": "70ca9db0d2764cb9dbc8fb5fd425318c5af597173b134d03259e2030652e94b5",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-jemalloc\\3.3.3\\426222fc027602a5f21b9c0fe79cde6a4c7a011f\\lwjgl-jemalloc-3.3.3-natives-windows.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-jemalloc\\3.3.3\\426222fc027602a5f21b9c0fe79cde6a4c7a011f\\lwjgl-jemalloc-3.3.3-natives-windows.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-jemalloc/3.3.3/426222fc027602a5f21b9c0fe79cde6a4c7a011f/lwjgl-jemalloc-3.3.3-natives-windows.jar",
+      "size": 180344,
+      "sha256": "9949c8e49998bd0c878d842884011f1383e2851005091e0b2bcf7b7671b848eb",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-jemalloc\\3.3.3\\ba1f3fed0ee4be0217eaa41c5bbfb4b9b1383c33\\lwjgl-jemalloc-3.3.3-natives-windows-arm64.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-jemalloc\\3.3.3\\ba1f3fed0ee4be0217eaa41c5bbfb4b9b1383c33\\lwjgl-jemalloc-3.3.3-natives-windows-arm64.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-jemalloc/3.3.3/ba1f3fed0ee4be0217eaa41c5bbfb4b9b1383c33/lwjgl-jemalloc-3.3.3-natives-windows-arm64.jar",
+      "size": 154415,
+      "sha256": "1f204ace18e3512765003d83b9a853856f65dda70b63b9722638483f2d5d34c2",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-jemalloc\\3.3.3\\f6063b6e0f23be483c5c88d84ce51b39dc69126c\\lwjgl-jemalloc-3.3.3-natives-windows-x86.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-jemalloc\\3.3.3\\f6063b6e0f23be483c5c88d84ce51b39dc69126c\\lwjgl-jemalloc-3.3.3-natives-windows-x86.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-jemalloc/3.3.3/f6063b6e0f23be483c5c88d84ce51b39dc69126c/lwjgl-jemalloc-3.3.3-natives-windows-x86.jar",
+      "size": 148612,
+      "sha256": "d9b4e06e2a84205583fb05440d2238385a91cb01a060ddb1d376223ae225f14a",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-openal\\3.3.3\\87b8d5050e3adb46bb58fe1cb2669a4a48fce10d\\lwjgl-openal-3.3.3-natives-windows-x86.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-openal\\3.3.3\\87b8d5050e3adb46bb58fe1cb2669a4a48fce10d\\lwjgl-openal-3.3.3-natives-windows-x86.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-openal/3.3.3/87b8d5050e3adb46bb58fe1cb2669a4a48fce10d/lwjgl-openal-3.3.3-natives-windows-x86.jar",
+      "size": 638424,
+      "sha256": "852ca4e36b1fdfdd3efb6ce42f08b7d0f957b04c4bcfbd78057b0c799f399231",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-openal\\3.3.3\\8e0615235116b9e4160dfe87bec90f5f6378bf72\\lwjgl-openal-3.3.3-natives-windows-arm64.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-openal\\3.3.3\\8e0615235116b9e4160dfe87bec90f5f6378bf72\\lwjgl-openal-3.3.3-natives-windows-arm64.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-openal/3.3.3/8e0615235116b9e4160dfe87bec90f5f6378bf72/lwjgl-openal-3.3.3-natives-windows-arm64.jar",
+      "size": 630410,
+      "sha256": "875f81451731df2cac48bbe3c4559834a94d36fc15f461c933e4d4acdd2f1f26",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-openal\\3.3.3\\cf83862ae95d98496b26915024c7e666d8ab1c8f\\lwjgl-openal-3.3.3-natives-windows.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-openal\\3.3.3\\cf83862ae95d98496b26915024c7e666d8ab1c8f\\lwjgl-openal-3.3.3-natives-windows.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-openal/3.3.3/cf83862ae95d98496b26915024c7e666d8ab1c8f/lwjgl-openal-3.3.3-natives-windows.jar",
+      "size": 698720,
+      "sha256": "e3da7c3db25c81db8d425ef1e3dbfa15000b040d669f008b0813c94333ac96c8",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-opengl\\3.3.3\\65e956d3735a1abdc82eff4baec1b61174697d4b\\lwjgl-opengl-3.3.3-natives-windows-arm64.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-opengl\\3.3.3\\65e956d3735a1abdc82eff4baec1b61174697d4b\\lwjgl-opengl-3.3.3-natives-windows-arm64.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-opengl/3.3.3/65e956d3735a1abdc82eff4baec1b61174697d4b/lwjgl-opengl-3.3.3-natives-windows-arm64.jar",
+      "size": 83095,
+      "sha256": "68c8dbc41436e421ff0b3927e62d2aa533552d8f02d73de3fd928d7a51fd797a",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-opengl\\3.3.3\\d32d833dcaa2f355a886eaf21f0408b5f03241d\\lwjgl-opengl-3.3.3-natives-windows-x86.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-opengl\\3.3.3\\d32d833dcaa2f355a886eaf21f0408b5f03241d\\lwjgl-opengl-3.3.3-natives-windows-x86.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-opengl/3.3.3/d32d833dcaa2f355a886eaf21f0408b5f03241d/lwjgl-opengl-3.3.3-natives-windows-x86.jar",
+      "size": 88612,
+      "sha256": "9d99d203de4e31286cae753a1dfb981367c93734f1944644ba71be521b3af2cc",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-opengl\\3.3.3\\e6c1eec8be8a71951b830a4d69efc01c6531900c\\lwjgl-opengl-3.3.3-natives-windows.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-opengl\\3.3.3\\e6c1eec8be8a71951b830a4d69efc01c6531900c\\lwjgl-opengl-3.3.3-natives-windows.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-opengl/3.3.3/e6c1eec8be8a71951b830a4d69efc01c6531900c/lwjgl-opengl-3.3.3-natives-windows.jar",
+      "size": 101535,
+      "sha256": "f45e5f60596b03b2e3d8b98a123c855ebd0b5154c8155dc2a56b890ccc907477",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-stb\\3.3.3\\1d9facdf6541de114b0f963be33505b7679c78cb\\lwjgl-stb-3.3.3-natives-windows.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-stb\\3.3.3\\1d9facdf6541de114b0f963be33505b7679c78cb\\lwjgl-stb-3.3.3-natives-windows.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-stb/3.3.3/1d9facdf6541de114b0f963be33505b7679c78cb/lwjgl-stb-3.3.3-natives-windows.jar",
+      "size": 261297,
+      "sha256": "d12ab866fe1169e924ac5b4d6bb7767ae7842a9fc8652798682c0069bb73fcf2",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-stb\\3.3.3\\a584ab44de569708871f0a79561f4d8c37487f2c\\lwjgl-stb-3.3.3-natives-windows-arm64.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-stb\\3.3.3\\a584ab44de569708871f0a79561f4d8c37487f2c\\lwjgl-stb-3.3.3-natives-windows-arm64.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-stb/3.3.3/a584ab44de569708871f0a79561f4d8c37487f2c/lwjgl-stb-3.3.3-natives-windows-arm64.jar",
+      "size": 219511,
+      "sha256": "3d1454dfbad9e1b8a7da25e2928c16a4a63a14050b27da1912c3be0c60b02e7c",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-stb\\3.3.3\\b5c874687b9aac1a936501d4ed2c49567fd1b575\\lwjgl-stb-3.3.3-natives-windows-x86.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-stb\\3.3.3\\b5c874687b9aac1a936501d4ed2c49567fd1b575\\lwjgl-stb-3.3.3-natives-windows-x86.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-stb/3.3.3/b5c874687b9aac1a936501d4ed2c49567fd1b575/lwjgl-stb-3.3.3-natives-windows-x86.jar",
+      "size": 227800,
+      "sha256": "46424e45459733b26c4a7b0dd2695209cb6938dafa3a9012c6a5682c94a2c40e",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-tinyfd\\3.3.3\\a6697981b0449a5087c1d546fc08b4f73e8f98c9\\lwjgl-tinyfd-3.3.3-natives-windows.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-tinyfd\\3.3.3\\a6697981b0449a5087c1d546fc08b4f73e8f98c9\\lwjgl-tinyfd-3.3.3-natives-windows.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-tinyfd/3.3.3/a6697981b0449a5087c1d546fc08b4f73e8f98c9/lwjgl-tinyfd-3.3.3-natives-windows.jar",
+      "size": 130253,
+      "sha256": "02285911f1c881735fa4d0eb141ffeaafd9a2bb9349d98f7c1fb8a9cb49c0f58",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-tinyfd\\3.3.3\\a88c494f3006eb91a7433b12a3a55a9a6c20788b\\lwjgl-tinyfd-3.3.3-natives-windows-arm64.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-tinyfd\\3.3.3\\a88c494f3006eb91a7433b12a3a55a9a6c20788b\\lwjgl-tinyfd-3.3.3-natives-windows-arm64.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-tinyfd/3.3.3/a88c494f3006eb91a7433b12a3a55a9a6c20788b/lwjgl-tinyfd-3.3.3-natives-windows-arm64.jar",
+      "size": 110867,
+      "sha256": "71076fc5c01788577719f4b1983473026b2eb8cbb02d3dc736f8b5724a49fd8c",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-tinyfd\\3.3.3\\c336c84ee88cccb495c6ffa112395509e7378e8a\\lwjgl-tinyfd-3.3.3-natives-windows-x86.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl-tinyfd\\3.3.3\\c336c84ee88cccb495c6ffa112395509e7378e8a\\lwjgl-tinyfd-3.3.3-natives-windows-x86.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl-tinyfd/3.3.3/c336c84ee88cccb495c6ffa112395509e7378e8a/lwjgl-tinyfd-3.3.3-natives-windows-x86.jar",
+      "size": 111797,
+      "sha256": "43c9264f0661087b06ae29d78aab98121dfad69efe3202424e3419738d5e9994",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl\\3.3.3\\9e670718e050aeaeea0c2d5b907cffb142f2e58f\\lwjgl-3.3.3-natives-windows-x86.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl\\3.3.3\\9e670718e050aeaeea0c2d5b907cffb142f2e58f\\lwjgl-3.3.3-natives-windows-x86.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl/3.3.3/9e670718e050aeaeea0c2d5b907cffb142f2e58f/lwjgl-3.3.3-natives-windows-x86.jar",
+      "size": 139653,
+      "sha256": "22a22338262554eb5e133c8441deeedac84da082eb3bac84d032da4faf369749",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl\\3.3.3\\a5ed18a2b82fc91b81f40d717cb1f64c9dcb0540\\lwjgl-3.3.3-natives-windows.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl\\3.3.3\\a5ed18a2b82fc91b81f40d717cb1f64c9dcb0540\\lwjgl-3.3.3-natives-windows.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl/3.3.3/a5ed18a2b82fc91b81f40d717cb1f64c9dcb0540/lwjgl-3.3.3-natives-windows.jar",
+      "size": 165442,
+      "sha256": "5ee63a19187efe5bb8747fd24f7b13257db348df5ad641113a3695e43f213959",
+      "target_existed_before": false
+    },
+    {
+      "source": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl\\3.3.3\\e9aca8c5479b520a2a7f0d542a118140e812c5e8\\lwjgl-3.3.3-natives-windows-arm64.jar",
+      "destination": "D:\\My_project\\mc_ai\\.tmp\\d121-revision-worktree\\.gradle\\caches\\modules-2\\files-2.1\\org.lwjgl\\lwjgl\\3.3.3\\e9aca8c5479b520a2a7f0d542a118140e812c5e8\\lwjgl-3.3.3-natives-windows-arm64.jar",
+      "relative_path": "caches/modules-2/files-2.1/org.lwjgl/lwjgl/3.3.3/e9aca8c5479b520a2a7f0d542a118140e812c5e8/lwjgl-3.3.3-natives-windows-arm64.jar",
+      "size": 133378,
+      "sha256": "d35582ca7edff59d4a5c8f4a0edec779caea4ca8e26c9aff8244710049bb4350",
+      "target_existed_before": false
+    }
+  ]
+}

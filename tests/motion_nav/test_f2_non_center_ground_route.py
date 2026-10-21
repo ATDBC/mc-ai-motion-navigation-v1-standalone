@@ -62,6 +62,26 @@ class NonCenterGroundRouteTests(unittest.TestCase):
                                                 query_cache=WorldQueryCache(frame.world))
         self.assertIsNot(result.status, QueryStatus.FEASIBLE)
 
+    def test_ground_replay_reuses_one_world_query_cache_for_physics_and_support(self):
+        item = case("tangent")
+        backend = CalculatorBackend([0], f2_ground_route_scene(item), tuple(item["start"]))
+        profile = NavigationSessionProfiles.load(ROOT / "config/motion-navigation").ground
+        frame = _frame(backend.state, backend.world._world, 1)
+        cache = WorldQueryCache(frame.world)
+        first = verified_ground_route_candidate(
+            frame, backend.state, MovementV1(forward=1), control_ticks=2,
+            tail_ticks=30, minimum_support=.15, profile=profile, query_cache=cache,
+        )
+        self.assertIs(first.status, QueryStatus.FEASIBLE)
+        self.assertTrue(cache.touched_cells)
+        with patch.object(type(frame.world), "cell", autospec=True,
+                          side_effect=AssertionError("cache bypass")):
+            second = verified_ground_route_candidate(
+                frame, backend.state, MovementV1(forward=1), control_ticks=2,
+                tail_ticks=30, minimum_support=.15, profile=profile, query_cache=cache,
+            )
+        self.assertEqual(second, first)
+
     def test_contact_routes_complete_actual_closed_loop(self):
         for family in ("tangent", "corner"):
             with self.subTest(family=family):

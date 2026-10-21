@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "junction": ".venv",
+  "target": "D:/My_project/mc_ai/.venv",
+  "resolved_python": "D:/My_project/mc_ai/.venv/python.exe",
+  "command": [
+    ".venv/python.exe",
+    "-m",
+    "unittest",
+    "tests.motion_nav.test_d105_t2_evidence",
+    "-q"
+  ],
+  "tests": 7,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duration_seconds": 0.099,
+  "modifies_source_or_evidence": false,
+  "prior_run": "source-forward.json retained as ENVIRONMENT_INVALID",
+  "next_run": "source-forward-valid.json"
+}

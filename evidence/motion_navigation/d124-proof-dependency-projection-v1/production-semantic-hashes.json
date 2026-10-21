@@ -1,0 +1,14 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D124 current production semantics after proof dependency projection",
+  "normalization": "CRLF_TO_LF",
+  "status": "current",
+  "previous_d122_current_record_sha256": "03f55e45b1c77a79ddd33b76090dc5a0d36b6c6ddc6dc22254acddcdfe8de482",
+  "files": {
+    "mc2p/motion_nav/geometry.py": "6587d0bc5d637f2cb79f86b76fcf6ef3b64baa0d3285c2e449981a64035070fb",
+    "mc2p/motion_nav/physics_1_21.py": "43ee923079687bdcca4ec27cb0cd5bb774f261e3cab9968778ff15965fcc8181",
+    "mc2p/motion_nav/physics_adapter.py": "48d2516a8cb661cd75ef21bc091ff69a9dd760dba5c2f70b6e1f9c385f3695e2",
+    "mc2p/motion_nav/prepared_motion_proof.py": "f3df32e31184fb497f2cea87f90c55ea0b7f2ad56ec57ae074c98ef0c739c2bf",
+    "mc2p/motion_nav/safe_ground_control.py": "7d7f14d3eea5de9a887fedd77ad0cf8bc504bf8c663aeddeb78125880d8a6822"
+  }
+}

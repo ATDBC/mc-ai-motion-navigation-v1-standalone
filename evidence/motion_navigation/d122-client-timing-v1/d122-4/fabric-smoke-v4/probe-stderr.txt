@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\probe_fabric_deployment_observation.py", line 2729, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\probe_fabric_deployment_observation.py", line 2640, in main
+    launch_path = args.launch_json or export_launch()
+                                      ^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\fabric_deployment_launch.py", line 130, in export_launch
+    build_probe(timeout_seconds=timeout_seconds)
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py", line 165, in build_probe
+    evidence = inspect_probe(jar)
+               ^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py", line 101, in inspect_probe
+    verified_classpath_files = inspect_classpath(provenance.get("classpath_files"))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py", line 59, in inspect_classpath
+    raise ValueError("compile classpath contains a symlink/reparse point")
+ValueError: compile classpath contains a symlink/reparse point

@@ -31,6 +31,14 @@ public final class DeploymentStepV3Test {
         if (!decoded.observationRequest().entityTrackId().equals("entity-world-7"))
             throw new AssertionError("entity query decode lost");
         if (decoded.actionPayload().length == 0) throw new AssertionError("executor payload lost");
+        String actionV2 = action.replace("client_action.v1", "client_action.v2")
+                .replace("\"cancel_request_sequence_id\":null}",
+                        "\"cancel_request_sequence_id\":null,\"first_effect_window\":null,\"safe_default\":null}");
+        String goodV2 = good.replace(action, actionV2);
+        DeploymentStepV3 decodedV2 = DeploymentStepV3.decode(bytes(goodV2), "mc2p.client_action.v2");
+        if (decodedV2.action().firstEffectWindow() != null || decodedV2.action().safeDefault() != null)
+            throw new AssertionError("null v2 timing fields changed");
+        reject(bytes(goodV2));
 
         for (String bad : new String[]{"{}", "[]", good + " {}", good.replace("client_step.v3", "client_step.v2"),
                 good.replace("\"schema_version\":\"mc2p.client_step.v3\"", "\"schema_version\":\"mc2p.client_step.v3\",\"schema_version\":\"mc2p.client_step.v3\""),

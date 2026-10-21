@@ -1,0 +1,39 @@
+{
+  "schema": "mc2p.d122-2-repair3-manifest.v1",
+  "source_base": "ad0e4d29",
+  "implementation_head": "96e8f2cc",
+  "platform": "Windows",
+  "scope": "preserve incumbent fallback when an uninstalled successor is rejected",
+  "checks": {
+    "adjacent": 93,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "mutations_detected": 17,
+    "compile_java": "passed"
+  },
+  "not_run": [
+    "full Windows shards",
+    "standalone full checks",
+    "D122-3 formal component matrix",
+    "performance acceptance",
+    "Fabric"
+  ],
+  "code_sha256": {
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java": "b7a1ba785e61b1bcb3518c778d13b4df049185476b435c03e46cadfc965569a2",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java": "1fa17ee79d927eb7b542c5cf16a58a9ff6f99327ed474cade52a74dbdba9d9e8",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingSchedule.java": "addee535c88b0cbe9953d962a819f110473d59840ffb34a1c1a8481b88ef2e78",
+    "scripts/d122_java_mutation_probe.py": "58eed71b1fcfdae246de83f32cf13f820a37dddf96ad207f9b8b78c846309aee",
+    "tests/java/ClientTimingRejectIsolationTest.java": "5f11e62c7d75853c746c8cc61212261bb3239cf0f13b85288eaba368b4de0ce2",
+    "tests/java/ClientTimingScheduleTest.java": "34cc3202b43becc686f506b188a66bc68531c21a04fecce705fb6cc612288e0b",
+    "tests/test_d122_java_timing.py": "7ba989f9b5d4a2559f9080d5ce55d11f37a77d27d1e94cfdcbba736fc3c8b61b"
+  },
+  "evidence_sha256": {
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair3/README.md": "b1a5cb91819f3e62951571282bae96422f327e27566d95bd87ede63ca40a0800",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair3/red.txt": "fe33dad0ff8cf9e06526e9219ad1f88947365b7009bc541fa97ed549cc56e0e3",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair3/adjacent.txt": "04fc542a8afbda3631d7392170fe6a3584836d3194b533a95d3b6dfe6c8e6b63",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair3/compile-java.txt": "5777b837e36b77c2fc7ecc71552dfc994677d055236f1fa8e342d2e704b4c35b",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair3/mutation-run.txt": "48a7d4948fb75ec6846c7c7f38ca25cb68605c89a78a6c3500b963676c96739e",
+    "evidence/motion_navigation/d122-client-timing-v1/d122-2-repair3/mutations.json": "a2f49df7eacfb9cfe35b7adf7cc5ba66b0b363354ddd524c4a3de5647fe38be7"
+  }
+}

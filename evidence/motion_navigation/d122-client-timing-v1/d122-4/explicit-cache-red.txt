@@ -1,0 +1,21 @@
+..EE..
+======================================================================
+ERROR: test_default_gradle_home_junction_is_rejected_by_selector (tests.test_deployment_classpath.DeploymentClasspathTests.test_default_gradle_home_junction_is_rejected_by_selector)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_deployment_classpath.py", line 33, in test_default_gradle_home_junction_is_rejected_by_selector
+    from scripts.build_fabric_deployment_probe import select_probe_gradle_home
+ImportError: cannot import name 'select_probe_gradle_home' from 'scripts.build_fabric_deployment_probe' (D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py)
+
+======================================================================
+ERROR: test_explicit_real_gradle_home_is_selected_and_accepted (tests.test_deployment_classpath.DeploymentClasspathTests.test_explicit_real_gradle_home_is_selected_and_accepted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d121-revision-worktree\tests\test_deployment_classpath.py", line 12, in test_explicit_real_gradle_home_is_selected_and_accepted
+    from scripts.build_fabric_deployment_probe import inspect_classpath, select_probe_gradle_home
+ImportError: cannot import name 'select_probe_gradle_home' from 'scripts.build_fabric_deployment_probe' (D:\My_project\mc_ai\.tmp\d121-revision-worktree\scripts\build_fabric_deployment_probe.py)
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.036s
+
+FAILED (errors=2)
