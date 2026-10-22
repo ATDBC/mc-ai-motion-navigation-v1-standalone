@@ -45,7 +45,7 @@
    - D126 改用测试已知地图，与上一轮建议的方向一致，也符合决定 0009。
    - 导出元数据恢复为 `source_worktree_dirty: false`。
    - 上一轮的三项仍未改：z=0 的评估规则、D124 后台求解变慢（1 s 工作窗口）、1577 个纯行尾改写。用户已说明尚未处理。
-7. **全量分片：** 见 §8。
+7. **全量分片：** 214 个模块中 208 个通过。6 个报错：5 个依赖 Windows 环境，1 个是上面第 5 条的公开仓库问题（§8）。
 
 ## 1. 建议的下一步：一份新决定（暂称 D130）
 
@@ -200,13 +200,16 @@ E139 运行同一条组件测试，收集正式提交的 `PreparedMotionJob`，�
 
 ## 8. 全量分片
 
-本次提交时，项目分片器（Linux 单核 CPU 3）仍在运行，已完成 144／214 个模块。完整结果会在后续提交中补到 `output/linux-forward-summary.txt` 和本节。
+项目分片器在 Linux 单核 CPU 3 上运行，见 `output/linux-forward-summary.txt`。
 
-已完成的模块里，未通过的有 6 个：
+- 214 个模块，2793 项；208 个模块通过，0 failure，6 个模块报错，0 超时。
+- 清理全部 passed，隔离方式都是 Linux subreaper／POSIX session。
+
+6 个报错模块：
 
 | 模块 | 原因 |
 |---|---|
-| `test_d101_measurement` | 要求项目的 Windows 环境，已知 |
+| `test_d101_measurement`（2 error） | 要求项目的 Windows 环境，已知 |
 | `test_d123_fabric_transport`（4 error） | 需要仓库 `.venv` 中的 Windows JDK |
 | `test_d125_three_fact_observation`（14 error） | 需要 Windows `surface_cache.dll` 和 `WindowsPath` |
 | `test_d127_transport_lifecycle`（1 error） | 硬编码 `D:/My_project/mc_ai/.venv/Library/bin/javac.exe` |
@@ -214,6 +217,8 @@ E139 运行同一条组件测试，收集正式提交的 `PreparedMotionJob`，�
 | `test_d129_invalid_harness`（setUpClass） | 公开仓库缺少 run-10 manifest 绑定的 `.log`（§6） |
 
 前 5 个都依赖 Windows 环境。最后一个在任何平台的公开仓库上都会失败。
+
+上一轮分片中的两条墙钟测试，这次都通过了：`test_continuous_descent` 和 `test_b10_motion_candidate`。这只说明本次机器负载下余量够用，D124 带来的求解变慢仍在（§7）。
 
 ## 9. 证据边界
 
