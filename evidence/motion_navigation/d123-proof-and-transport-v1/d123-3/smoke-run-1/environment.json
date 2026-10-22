@@ -1,0 +1,20 @@
+{
+  "schema": "mc2p.d123-3-environment-observation.v1",
+  "source": "root_terminal_observation_with_post_stop_read_only_file_check",
+  "observed_date_local": "2026-10-22",
+  "formal_process": {
+    "JAVA_HOME": "",
+    "path_contains_java_or_jdk": false,
+    "path_contains_repository_venv": false,
+    "discover_java_tools_result": "ExportViolation"
+  },
+  "post_stop_read_only_check": {
+    "path": "D:\\My_project\\mc_ai\\.venv\\Library\\bin\\java.exe",
+    "exists": true,
+    "size_bytes": 11776,
+    "sha256": "56a74b57041bc409d8650fdd773de7c67babacd3487309afd1ab1e1855de5563",
+    "authority": "diagnostic_only_not_formal_process_environment"
+  },
+  "environment_changed_after_failure": false,
+  "formal_command_retried": false
+}

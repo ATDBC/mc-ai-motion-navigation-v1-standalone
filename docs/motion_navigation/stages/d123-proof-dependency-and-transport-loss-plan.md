@@ -1,9 +1,17 @@
 # D123 实施计划：证明依赖与 transport loss 收敛
 
+2026-10-22，D123-3 已做最终停止收尾，状态为 **PARTIAL／STOPPED**。D129 已把首个 movement trial 前的环境、工具和夹具失败统一为 `INVALID_PRETRIAL_RUN`；`smoke-run-1`—`smoke-run-9` 全部保留，均未提交首个 movement trial。run-10 和 run-11 均按各自原始证据归为 `INVALID_HARNESS_RUN/fixture-scheduling`，不产生产品结论。run-11 的 anchor 为 tick 20，parent exact window 为 `[21,21]`，但 intent 在 380.016 ms 后才提交，客户端到 tick 27／28 才处理；request 8 application 为 0，身体和 health 到 tick 34 保持不变。Successor job 只在 parent receipt 后提交，尚未产生可证的 worker result、inbox、admission、proposal、activation 或 successor dispatch。Assembler fail closed，但 trial JSON 和 close report 未落盘；run-11 的 48 项原始 launcher／source 已封存，独立归因不声称 run-10 专用 validator 覆盖 run-11。有效 smoke 为 0／3，matrix 未运行。
+
+只读设计复核测得 `_replay_verified_commands` 约 49.8—52.2 ms，`bind_fixed_successor` 约 16.4—17.0 ms。当前正式 API 在 action boundary revalidation 时会完整重放，现有串行路径的保守下限超过一个 50 ms movement tick；API 没有已授权的轻量 retime，harness 手工平移 proof 也未获授权。因此 D123-3 不再等待本阶段内修补，`smoke-run-12` 禁止启动。继续必须另立决定，在正式 proof retime／relative-time certificate 与改变 trial 启动结构之间作出选择，并重新定义可证明的 exact-window 注册时点。最终停止证据位于 `evidence/motion_navigation/d123-proof-and-transport-v1/d128/final-stop/`；run10／run11 原始封存提交分别为 `60f58c2c`、`3f5c3804`。
+
+2026-10-22，D123-3 第一次正式 south smoke 按冻结命令启动，但在同进程 offline preflight 的 Java 工具发现阶段停止。正式进程的 `JAVA_HOME` 为空，`PATH` 没有 Java、JDK 或仓库 `.venv`，`discover_java_tools()` 因找不到 OpenJDK 21 抛出 `ExportViolation`，退出码为 1。Minecraft／Fabric 未启动，pre-trial 和首个 movement trial 均未开始，smoke 为 0／3，36 场矩阵未运行。按当时预登记规则，这次失败不消耗 Fabric attempt，但曾记为 **PARTIAL／STOPPED**；该分类和禁止重试规则已由第 10 节 D129 取代。手工封存证据位于 `evidence/motion_navigation/d123-proof-and-transport-v1/d123-3/smoke-run-1/`。
+
+2026-10-22，D123-2 已完成并签署。四类 transport 事实、最小 `not_applied` wire、driver 级不可逆 `UNRESOLVED`、owner-first backend seal、resource-only close 和仓内正式 preflight 3／3 已落地。Windows 源码树正逆各 212 模块／2788 项、独立 standalone 正逆各 211 模块／2764 项，失败、错误、超时、跳过和清理失败均为 0；Java／wire 38／38，standalone export／verify 3222 个文件。standalone 的旧正序曾因 source-only 快照缺少生成 DLL 出现 210／211 模块通过、D125 1 error；修复后新快照已从导出源码实际构建 DLL，D125 10／10。D123-2 本身没有运行 Minecraft／Fabric。
+
 2026-10-20，D123-1 已明确授权并执行到固定视点只读验证，现为 **PARTIAL／STOPPED，独立审查 PASS／已签署**。全部 67 个依赖（含 12 个下层格）保留。Windows 原生可见性核心完成四方向共 1248 个相机朝向样本，每方向 12 格均未出现可见空气；其中 9 格另有不依赖相机朝向的完整立方体遮挡论证。仅转头无法补齐所有依赖，继续需要改变观察位置或新增 sensing，触发预登记停止条件。未启动新的 Minecraft／Fabric，未提交 movement trial；actor-only 实机校准和两阶段启动命令未交付。D123-0 继续 PARTIAL／STOPPED，删除依赖未授权；本次签署仅批准 D123-1 PARTIAL／STOPPED 的停止收尾，不授权 D123-2；D123-2／D123-3 未开始。见 D123 验收第 10 节和 `evidence/motion_navigation/d123-proof-and-transport-v1/d123-1/fixed-eye-run-2/stop.json`。
 
 
-日期：2026-10-20。状态：**D123-0 PARTIAL／STOPPED，已签署；D123-1 PARTIAL／STOPPED，独立审查 PASS／已签署**。正式平台：Windows。
+日期：2026-10-22。状态：**D123-0 PARTIAL／STOPPED；D123-1 PARTIAL／STOPPED；D123-2 COMPLETED／SIGNED；D123-3 PARTIAL／STOPPED，有效 smoke 0／3，matrix 未运行**。正式平台：Windows。
 
 依据：[D123 决定](../decisions/0123-resolve-proof-dependencies-and-transport-loss.md)、[D122 验收](../acceptance/d122-client-timing-and-safe-default.md)、[D123 验收](../acceptance/d123-proof-dependency-and-transport-loss.md)。
 
@@ -80,54 +88,56 @@ D123-1 没有自动进入；现有证据支持后续保留全部 12 个依赖并
 
 ## 6. D123-2：先证明协议可行，再区分三种传输事实
 
-**交付：** 一份协议可行性 RED，以及三条互不混淆的正式 Runtime 生命周期。
+**交付：** 一份协议可行性 RED，以及互不混淆的正式 Runtime 生命周期。状态：**COMPLETED／SIGNED**。
 
 ### 协议可行性 RED
 
-- [ ] 冻结四个注入点：Runtime 决定 `local_not_dispatched`、客户端 `remote_rejected_before_sampling`、发送后交付未知、整个通道失联。
-- [ ] 优先验证现有同一会话能否返回绑定身份的 full-request `rejected`，并在安全默认结束后返回新正式观察。一次性 `operation_rejected` 仍可能保留 movement／look 租约，不能作为整条 request 未应用的证据。
-- [ ] 未应用结果必须绑定 episode、sequence、generation、首效窗口和因果 tick。缺任一身份都不能证明命令未应用。
-- [ ] 真正的 send／receive 异常或连接 seal 一律属于交付未知或通道失联，不能归为“命令未应用且通道仍活”。
-- [ ] 若现有协议无法表达上述结果，允许一次最小 typed `not_applied` Java／wire 变更；仍需第二控制通道、通用重连或新 Session 状态时停止。
-- [ ] 若修改 Java／wire，action 仍 ≤ 16 KiB、receipt 集合仍 ≤ 64 项；客户端 movement tick 不得做证明、摘要或阻塞 I/O；v1 原字节兼容、D122-3 正式 20／20 不退步；客户端解析、排程和采样性能不得超过既有门槛。
+- [x] 冻结四个注入点：Runtime 决定 `local_not_dispatched`、客户端 `remote_rejected_before_sampling`、发送后交付未知、整个通道失联。
+- [x] 已确认原 V4 receipt 不足；full-request `rejected` 只有结合最小 `not_applied` timing event 才能证明未应用。`operation_rejected` 不足。
+- [x] 未应用结果绑定 episode、sequence、generation、首效窗口和因果 tick；缺失或错误时进入 `UNRESOLVED`。
+- [x] send／receive 异常或连接 seal 只进入交付未知或通道失联。
+- [x] 已实施最小 typed `not_applied` Java／wire 变更；没有第二控制通道、通用重连或新 Session 状态。
+- [x] 若修改 Java／wire，action 仍 ≤ 16 KiB、receipt 集合仍 ≤ 64 项；客户端 movement tick 不得做证明、摘要或阻塞 I/O；v1 原字节兼容、D122-3 正式 20／20 不退步；客户端解析、排程和采样性能不得超过既有门槛。
 
 ### 命令已证明未应用，通道仍活
 
-- [ ] `local_not_dispatched` 由 Runtime dispatch decision 证明没有调用 backend；decision 绑定 episode、sequence、generation、窗口、注入原因和因果 tick，不为未发命令制造 receipt。
-- [ ] 本地未发出后，另用自己 sequence 的正式 observation-only／neutral exchange 取得新观察；该 exchange 的 receipt 不得绑定、引用或冒充未发命令的 receipt。
-- [ ] `remote_rejected_before_sampling` 使用原命令身份的 full-request `rejected` 或 typed `not_applied`，不能用超时或 `operation_rejected` 推断。
-- [ ] 远端拒绝对应 request 的 `input_applications=0`，timing event 为拒绝，且没有 lease／default owner 误归。
-- [ ] 客户端完整执行父安全默认；新观察必须晚于 `default_exhausted`，并带正式健康和身体状态。
-- [ ] driver 根据新观察有界结束或重规划，prepared frame 清空，source 由正式 owner 释放。
-- [ ] 冻结 `default_exhausted → 新正式观察或 typed 终态` 的最大 movement tick 和墙钟上限，超限即失败。
+- [x] `local_not_dispatched` 由 Runtime dispatch decision 证明没有调用 backend，不制造 receipt。
+- [x] 本地未发出后使用独立 sequence 的 timed neutral exchange 取得新观察。
+- [x] `remote_rejected_before_sampling` 要求原命令身份、full-request `rejected` 和 typed `not_applied`。
+- [x] 远端拒绝要求目标 `input_applications=0`；畸形 receipt 保留 `IN_FLIGHT` 并进入 `UNRESOLVED`。
+- [x] 客户端完整执行父安全默认；新观察必须晚于 `default_exhausted`，并带正式健康和身体状态。
+- [x] driver 根据新观察有界结束或重规划，prepared frame 清空，source 由正式 owner 释放。
+- [x] 冻结 `default_exhausted → 新正式观察或 typed 终态` 的最大 movement tick 和墙钟上限，超限即失败。
 
 ### 发送后交付未知
 
-- [ ] 没有远端明确应用或拒绝事实时，Runtime 进入 `failed`；driver 进入 driver 级 `UNRESOLVED` 终态并只返回一次 typed `BODY_RESPONSIBILITY_UNRESOLVED`。
-- [ ] 只清 driver `_prepared_deadline`／`_prepared_proposal` 并禁止重发；不得走普通 discard／cancel 把远端命令标成撤销或 expired。
-- [ ] 封存 ledger `IN_FLIGHT`、supervisor controller／route、proof inbox `EXECUTING`／`SAFE_TAIL` lease、source 和 owner 记录，输出不可回写的 `safety_responsibility_unresolved=true`。
-- [ ] 下一帧 driver 不再 propose、tick 或等待恢复。不得声称命令未应用或身体安全。
+- [x] 没有明确应用或拒绝事实时，Runtime 为 `failed`，driver 为 `UNRESOLVED`，报告 typed `BODY_RESPONSIBILITY_UNRESOLVED`。
+- [x] 只清 driver 本地 prepared frame，禁止重发、discard、cancel 和普通 release。
+- [x] 先封存 ledger `IN_FLIGHT`、route、registry `EXECUTING`／`SAFE_TAIL`、source 和 owner，再关闭 backend。
+- [x] 下一帧 driver 不再 propose、tick 或等待恢复。不得声称命令未应用或身体安全。
 
 ### 整个通道失联
 
-- [ ] RED：通道关闭后没有新观察，旧观察不能满足健康门禁。
-- [ ] 只用失联前的 `fallback_armed` receipt 证明默认已经安装，并按客户端合同应有界执行；没有新观察时不能声称默认实际执行、身体着地或健康未下降。
-- [ ] Runtime 进入 `failed`；driver 进入 `UNRESOLVED`，只清 `_prepared_deadline`／`_prepared_proposal` 并立即报告一次 typed `BODY_RESPONSIBILITY_UNRESOLVED`。
-- [ ] 不调用普通 discard／cancel；封存 ledger `IN_FLIGHT`、supervisor controller／route、proof inbox `EXECUTING`／`SAFE_TAIL` lease、source 和 owner 记录，输出不可回写的 `safety_responsibility_unresolved=true`。下一帧禁止继续导航／控制推进，不等待恢复。
+- [x] 通道 seal 后没有新观察，旧观察不能满足健康门禁。
+- [x] 只用失联前的 `fallback_armed` receipt 证明默认已经安装，并按客户端合同应有界执行；没有新观察时不能声称默认实际执行、身体着地或健康未下降。
+- [x] Runtime 进入 `failed`；driver 进入不可逆 `UNRESOLVED`。
+- [x] 不调用普通 discard／cancel；封存 ledger `IN_FLIGHT`、supervisor controller／route、proof inbox `EXECUTING`／`SAFE_TAIL` lease、source 和 owner 记录，输出不可回写的 `safety_responsibility_unresolved=true`。下一帧禁止继续导航／控制推进，不等待恢复。
 
 ### unresolved 后的资源关闭
 
-- [ ] 严格按顺序执行：封存 unresolved 结论和 owner 记录 → Runtime／backend close → driver／Session resource-only close。
-- [ ] resource-only close 有界停止 worker、线程、句柄和资源容器。优先组合既有 inbox／worker close；不足时只加薄 driver close 入口。
-- [ ] 关闭后单独输出 `local_resources_closed=true`。不得把 ledger、owner 或远端命令标成 `released`、`expired`、`cancelled`，不得改变 `BODY_RESPONSIBILITY_UNRESOLVED`。
-- [ ] 禁止用一个 `released` 布尔同时表达安全责任和本地资源关闭。
+- [x] 严格执行 owner 快照 → backend seal → resource-only close，并有事件顺序测试。
+- [x] resource-only close 聚合 backend、trace、worker、receiver、returner、feeder 和 handle 的实际报告。
+- [x] 本地资源结果与身体责任分开；保留 proof 责任不冒充 release。
+- [x] 禁止用一个 `released` 布尔同时表达安全责任和本地资源关闭。
 
 ### 共用门禁
 
-- [ ] 三类传输事实都不绕过 `PlayerRuntimeV1 → RuntimeNavigationDriver`；需要观察时经 backend。`local_not_dispatched` 停在 Runtime dispatch decision，未发命令没有 backend receipt，后续 neutral observation 使用独立 sequence。
-- [ ] mutation 把 `operation_rejected` 冒充 `not_applied`、把明确拒绝改成 Runtime failure、把交付未知伪装成拒绝、复用旧观察、调用普通 discard／cancel、提前释放任一 IN_FLIGHT／EXECUTING／SAFE_TAIL lease、用 released 混淆两种结果、资源 close 回写安全结论或伪造 source release，检查必须失败。
-- [ ] 交付未知和整个通道失联不进入产品完成率；`local_not_dispatched` 只留在正式组件层；`remote_rejected_before_sampling` 进入 D123-3 Fabric 三态。
-- [ ] 把最终正式三态接入 D123-1 的同一条 offline preflight；到此 `timely`／`late_window_rejected`／`remote_rejected_before_sampling` 必须 3／3，命令才允许退出 calibration-only 并启动产品 smoke。
+- [x] 三类传输事实都不绕过 `PlayerRuntimeV1 → RuntimeNavigationDriver`；需要观察时经 backend。`local_not_dispatched` 停在 Runtime dispatch decision，未发命令没有 backend receipt，后续 neutral observation 使用独立 sequence。
+- [x] mutation 把 `operation_rejected` 冒充 `not_applied`、把明确拒绝改成 Runtime failure、把交付未知伪装成拒绝、复用旧观察、调用普通 discard／cancel、提前释放任一 IN_FLIGHT／EXECUTING／SAFE_TAIL lease、用 released 混淆两种结果、资源 close 回写安全结论或伪造 source release，检查必须失败。
+- [x] 交付未知和整个通道失联不进入产品完成率；`local_not_dispatched` 只留在正式组件层；`remote_rejected_before_sampling` 进入 D123-3 Fabric 三态。
+- [x] 仓内 typed preflight 复用正式 runner，三态 3／3；调用方 PASS 字典不能解锁产品模式。
+
+实际结果：D127 定向 19／19；Fabric backend 组件相邻初跑 36／37，唯一失败是“已收到响应后的本地 snapshot 超时”关闭语义，限定修正后该项与 owner-before-seal 项 2／2；最终受影响组合 21／21，正式 preflight 3／3。Windows 源码树正逆各 212 模块／2788 项、独立 standalone 正逆各 211 模块／2764 项，失败、错误、超时、跳过和清理失败均为 0；Java／wire 38／38，standalone export／verify 3222 个文件。旧 standalone 正序在 211 模块中 210 通过、D125 1 error；修复后全新 source-only 快照实际构建 DLL，D125 10／10。没有运行 Minecraft 或 Fabric。紧凑证据位于 `evidence/motion_navigation/d123-proof-and-transport-v1/d123-2/run-1/`。
 
 **通过：** 三条生命周期的终态、观察新鲜度和 source 责任互不混淆；协议能返回绑定身份的未应用事实；无界等待为 0。
 
@@ -160,13 +170,56 @@ D123-1 没有自动进入；现有证据支持后续保留全部 12 个依赖并
 
 环境或夹具在首个运动 trial 前失败时，该运行不消耗 36 场矩阵 attempt，但 D123-3 仍立即停止。修正必须另立后续决定；本阶段不得现场修正后重跑。
 
+2026-10-22 正式结果：harness 在 `bf9dcfb3`、`1e031ff7`、`c47cadd5` 和 `1a835b13` 上完成，组件 smoke 3／3、组件矩阵 36／36。复核 round 1 的受影响与相邻检查为 130／130；round 2 的相邻检查为 39／39，D123 其余 12 项和修正后的目标项 1／1 通过。生产 raw hash 覆盖 32 个文件，完整 launcher raw hash 覆盖 59 个文件；两轮独立复核后的结论为 PASS。随后唯一一次正式 smoke 命令在上述 offline 环境门禁停止。该命令没有启动 Minecraft／Fabric，也没有提交 movement trial，因此没有时序、安全、健康、owner 或 source 释放结果。矩阵未运行。
+
 ## 8. 最终门禁与收尾
 
-- [ ] Windows 源码树正序、逆序完整分片全绿；失败、错误、超时、跳过、意外成功和清理失败均为 0。
-- [ ] 独立 standalone 正序、逆序全绿，导出文件与哈希通过。
-- [ ] Java／Python 相邻动态门禁和 Fabric overlay 编译通过。
-- [ ] 当前 D123 生产语义哈希逐项匹配；D122 历史语义和失败证据不改写。
-- [ ] 具体旧成功集合零退步：D120 972 个冻结入口、D122-3 正式 20 场、D122 v1 兼容 120 项，以及 D123 实际修改模块对应的冻结集合。
-- [ ] 独立 reviewer 检查四个批次边界、正式 Runtime 调用链和 Fabric 原始证据。
+D123-2 的实现、独立代码复审和最终发布门禁已完成：
+
+- [x] Windows 源码树正序完整分片：212 模块／2788 项；
+- [x] Windows 源码树逆序完整分片：212 模块／2788 项；
+- [x] Java／wire 定向与相邻门禁：38／38；
+- [x] standalone 清单定向检查，并在全新 source-only 快照实际构建 native DLL；
+- [x] 全新 standalone export 与 verify：3222 个文件；
+- [x] 独立 standalone 正序、逆序完整分片：各 211 模块／2764 项。
+
+- [x] Windows 源码树正序、逆序完整分片全绿；失败、错误、超时、跳过、意外成功和清理失败均为 0。
+- [x] 独立 standalone 正序、逆序全绿，导出文件与哈希通过。
+- [x] Java／Python 相邻动态门禁和 Fabric overlay 编译通过。
+- [x] 当前 D123 生产语义哈希逐项匹配；D122 历史语义和失败证据不改写。
+- [x] 具体旧成功集合零退步：D120 972 个冻结入口、D122-3 正式 20 场、D122 v1 兼容 120 项，以及 D123 实际修改模块对应的冻结集合。
+- [x] 独立 reviewer 检查四个批次边界和正式 Runtime 调用链；D123-2 没有 Fabric 原始运行证据。
 
 D123 通过后，才回到 1-1-4 连续跨隙产品能力。D123 自己不宣布连续跑酷已经交付。
+
+## D126 纠偏后的顺序
+
+D123-1 和 D125 是非阻塞视觉诊断。现行顺序为 D126 已知地图门禁 → D123-2 transport 生命周期 → D123-3 Fabric。D123-2 不再等待 actor-only 观察补齐地图；D123-3 仍要求 Runtime owner 中 58 个必要事实全部 known 且无 mismatch。
+
+## 9. D128：仓库固定 JDK 入口与新正式运行
+
+D128 只修复正式 Windows 入口的 Java 工具发现与传递。D123-3 第一次停止证据保持不变；运动、proof、transport、Session、Runtime 和 Java overlay 语义均不修改。
+
+新的 smoke 冻结命令为：
+
+```text
+python scripts\d123_fabric_transport.py --launch smoke --output evidence\motion_navigation\d123-proof-and-transport-v1\d128\smoke-run-1
+```
+
+只有该 smoke 3／3 且 summary 保存当前 JDK binding、生产 raw hash 和 launcher raw hash 后，才授权以下唯一矩阵：
+
+```text
+python scripts\d123_fabric_transport.py --launch matrix --smoke-manifest evidence\motion_navigation\d123-proof-and-transport-v1\d128\smoke-run-1\summary.json --output evidence\motion_navigation\d123-proof-and-transport-v1\d128\matrix-run-1
+```
+
+以下是 D128 当时冻结的旧规则：offline 或 pre-trial 在首个 movement trial 前失败时不消耗 Fabric attempt，但立即停止。D129 已在第 10 节取代该规则。进入 movement trial 后的任何失败都消耗本次 smoke 并停止。smoke 非 3／3、JDK identity／hash 变化、生产或 harness 字节变化、真实时序／安全门禁失败时，矩阵均不得运行。矩阵只允许一次。
+
+实际结果：offline PASS；probe return code 1，`source_run=null`。失败点为 build `:remapJar`，早于 Minecraft／Fabric 启动和首个 movement trial。smoke 0／3，矩阵未授权、未运行。attempt 未消耗，但 D128 已停止。
+
+## 10. D129 无效运行与系统夹具修复
+
+D129 取代第 9 节“pre-trial 失败永久停止”的旧规则。环境、工具或夹具在首个 movement trial 前失败时，上位类型记为 `INVALID_PRETRIAL_RUN`，再记录 environment、tool 或 fixture 子类；保存全部原始证据、attempt 不消耗，并允许修复后使用新目录重试。产品、逻辑或安全失败才停止阶段。
+
+前九个 D128 smoke 目录均为 `INVALID_PRETRIAL_RUN`。run-1 为 `environment/build_cache_native`；run-2 为 `tool/standalone_export_manifest`；run-3 为 `environment/runtime_classpath_jline`；run-4—run-7 为 `fixture/assembly`；run-8／9 为 `fixture-adapter`。所有 source result 均为 0 个 session／0 个已完成 trial。原始证据中的旧分类不改写。
+
+post-submit 运行默认仍按正式 movement trial 处理。`INVALID_HARNESS_RUN` 必须同时证明：fixture／tool 因果性破坏注册前提；raw identity 唯一；被测输入与 default application 均为 0；身体未进入行为；health 未下降；没有独立 transport／协议或产品安全失败。任一输入／default 应用、动作、伤害、独立正式拒绝或 identity 歧义都会转为产品失败并停止。run-10 满足这七项，子类为 `fixture-scheduling`；其 request 7 正式到达客户端，但 `[8,8]` 窗口在 tick 34／35 才被处理。正式 offline 每次先校验原 manifest 50／50，再从 raw 文件重算；缺 tick、重复 tick、相邻 state 断裂、中途 health 下降后恢复或中途 damage 都拒绝。连续性 mutation 4／4、必要相邻 3／3，offline 3／3 与 36／36、Java／overlay、standalone 3504 files 均 PASS。run-11 也独立归为同一子类，但不声称 run-10 validator 已覆盖它。D123-3 现为 PARTIAL／STOPPED；smoke 未达 3／3，matrix 禁止，run12 未授权。

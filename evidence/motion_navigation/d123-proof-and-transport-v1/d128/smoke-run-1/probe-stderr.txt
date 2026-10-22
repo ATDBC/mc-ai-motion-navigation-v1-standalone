@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\scripts\probe_fabric_deployment_observation.py", line 2865, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\My_project\mc_ai\scripts\probe_fabric_deployment_observation.py", line 2771, in main
+    launch_path = args.launch_json or export_launch(gradle_home=gradle_home)
+                                      ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\scripts\fabric_deployment_launch.py", line 138, in export_launch
+    build_probe(timeout_seconds=timeout_seconds, gradle_home=gradle_home)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\scripts\build_fabric_deployment_probe.py", line 209, in build_probe
+    raise RuntimeError(f"independent offline build failed; evidence: {log_dir}")
+RuntimeError: independent offline build failed; evidence: D:\My_project\mc_ai\artifacts\fabric-deployment-build\20261022T024718508750Z-0420fce8

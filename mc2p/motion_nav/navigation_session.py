@@ -98,6 +98,9 @@ from mc2p.motion_nav.motion_solver import (
 from mc2p.motion_nav.motion_worker import (
     MotionResultInbox, MotionSolverWorker, MotionWorkerPort,
 )
+from mc2p.motion_nav.prepared_motion import (
+    MotionCloseReport, ProofConsumerIdentity, ProofUse,
+)
 from mc2p.motion_nav.motion_risk import (
     RiskActionRecord, RiskActionState, RiskCommitEvidence, RiskCommitKind,
     RiskReleaseEvidence, RiskReservationStatus, RiskSubmissionStatus,
@@ -174,6 +177,27 @@ from mc2p.motion_nav.world_model import BlockPos, CellKnowledge, WorldQueryCache
 
 _INFORMATION_WAIT_LIMIT_FRAMES = 40
 _INFORMATION_WAIT_LIMIT_NS = 2_000_000_000
+
+
+@dataclass(frozen=True, slots=True)
+class NavigationResourceCloseReportV1:
+    live_workers: int
+    live_receivers: int
+    live_lease_returners: int
+    live_queue_feeders: int
+    open_handles: int
+    unexpected_feeder_errors: int
+    timed_out: bool
+    retained_proof_responsibilities: int
+
+    @property
+    def resources_closed(self) -> bool:
+        return not any((
+            self.live_workers, self.live_receivers,
+            self.live_lease_returners, self.live_queue_feeders,
+            self.open_handles, self.unexpected_feeder_errors,
+            self.timed_out,
+        ))
 
 
 class ExternalMotionReentryStatus(StrEnum):
@@ -479,6 +503,26 @@ class NavigationSessionPort(Protocol):
     def close(self) -> None: ...
 
 
+@runtime_checkable
+class NavigationSessionTransportOwnerPort(Protocol):
+    """Optional transport-loss snapshot surface for the formal navigation owner."""
+
+    @property
+    def active_proof_responsibilities(
+        self,
+    ) -> tuple[ProofConsumerIdentity, ...]: ...
+
+    @property
+    def body_route_snapshot(self) -> object | None: ...
+
+
+@runtime_checkable
+class NavigationSessionResourceClosePort(Protocol):
+    """Optional resource-only close surface used after owner snapshot."""
+
+    def close_resources_only(self) -> NavigationResourceCloseReportV1: ...
+
+
 class NavigationSession:
     """Own one goal/request/route lifecycle while reading one world owner."""
 
@@ -532,6 +576,7 @@ class NavigationSession:
         self._motion_worker = motion_worker
         self._motion_result_inbox = motion_result_inbox or MotionResultInbox(max_results=64)
         self._owns_motion_result_inbox = True
+        self._resources_only_closed = False
         self._motion_close_report = None
         from mc2p.motion_nav.async_work import AsyncOwnerScope
         self._execution_instances = AsyncOwnerScope()
@@ -646,6 +691,18 @@ class NavigationSession:
     @property
     def active_motion_mailboxes(self):
         return self._motion_result_inbox.active_identities
+
+    @property
+    def active_proof_responsibilities(
+        self,
+    ) -> tuple[ProofConsumerIdentity, ...]:
+        """Freeze every executing or safe-tail proof owner in the registry."""
+        result = []
+        for handle in self._motion_result_inbox.registered_handles:
+            for use in (ProofUse.EXECUTING, ProofUse.SAFE_TAIL):
+                if self._motion_result_inbox.usage_active(handle, use):
+                    result.append(ProofConsumerIdentity.from_handle(handle, use))
+        return tuple(result)
 
     @property
     def body_route_snapshot(self) -> ActiveRoute | None:
@@ -3419,6 +3476,8 @@ class NavigationSession:
                              reason.strip(), stopping_reason="cancellation_requested")
 
     def close(self) -> None:
+        if self._resources_only_closed:
+            return
         if self._closed:
             return
         self._admit_command_event(NavigationSessionEvent.CLOSE)
@@ -3436,6 +3495,49 @@ class NavigationSession:
             return
         self._request_ending(HandoffDestination.CLOSE, StopCause.CLOSED, "closed",
                              stopping_reason="closing_after_body_control")
+
+    def close_resources_only(self) -> NavigationResourceCloseReportV1:
+        """Stop compute resources without ending body/proof ownership."""
+        if self._resources_only_closed:
+            return self._resource_close_report()
+        if self._planning_coordinator is not None:
+            self._planning_coordinator.cancel_work("transport_unresolved")
+        if self._owns_motion_result_inbox:
+            if self._motion_worker is not None and self._owns_motion_worker:
+                self._motion_result_inbox.attach_worker(self._motion_worker)
+            self._motion_close_report = self._motion_result_inbox.close(
+                close_worker=self._owns_motion_worker,
+            )
+        if self._owns_planner_worker and hasattr(self._planner, "close"):
+            self._planner.close()
+        report = self._resource_close_report()
+        self._resources_only_closed = report.resources_closed
+        return report
+
+    def _resource_close_report(self) -> NavigationResourceCloseReportV1:
+        motion = self._motion_close_report or MotionCloseReport()
+        planner_alive = (
+            self._owns_planner_worker
+            and callable(getattr(self._planner, "is_alive", None))
+            and self._planner.is_alive()
+        )
+        open_handles = int(bool(planner_alive))
+        # Executing and safe-tail handles are frozen proof responsibility.
+        # Candidate/activation handles and queued returns are local resources.
+        open_handles += (
+            motion.candidate_references + motion.activation_references
+            + motion.queued_returns
+        )
+        return NavigationResourceCloseReportV1(
+            motion.live_workers,
+            motion.live_receivers,
+            motion.live_lease_returners,
+            motion.live_queue_feeders,
+            open_handles,
+            motion.unexpected_feeder_errors,
+            motion.timed_out,
+            len(motion.retained_responsibilities),
+        )
 
     def _validate_successor_task_id(self, task_id: str) -> None:
         if (self._declared_successor_task_id is not None

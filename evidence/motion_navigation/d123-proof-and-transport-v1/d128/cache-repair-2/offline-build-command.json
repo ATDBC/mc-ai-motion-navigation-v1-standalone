@@ -1,0 +1,12 @@
+{
+  "cwd": "D:\\My_project\\mc_ai",
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "scripts/build_fabric_deployment_probe.py"
+  ],
+  "build_gradle_sha256": "aec3a5c11d9b998169601dcbfe10bdbe7c6b4c78919093f0421c535130a02be6",
+  "gradle_user_home": "D:\\My_project\\mc_ai\\.gradle",
+  "java_home": "D:\\My_project\\mc_ai\\.venv\\Library",
+  "schema": "mc2p.d129-formal-offline-build.v1",
+  "tracked_product_diff": []
+}

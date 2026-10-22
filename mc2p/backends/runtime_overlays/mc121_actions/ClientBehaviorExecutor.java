@@ -341,6 +341,11 @@ public final class ClientBehaviorExecutor {
         status = "rejected";
         reason = code;
         if (lastRequest != null && input != null) {
+            if (lastRequest.firstEffectWindow() != null) {
+                input.reportNotApplied(
+                        input.sampleCount() + 1L,
+                        lastRequest.episode(), lastRequest.sequence());
+            }
             boolean timingInstalled = input.rejectTimingForRequest(
                     lastRequest.sequence(), requestTimingInstalledThisCall);
             if (!timingInstalled && disposition == ClientTimingAdmission.RejectionDisposition.HOLD_INCUMBENT)
@@ -496,6 +501,11 @@ public final class ClientBehaviorExecutor {
         pendingAttack = null;
         status = "rejected";
         reason = code;
+        if (lastRequest != null && lastRequest.firstEffectWindow() != null && input != null) {
+            input.reportNotApplied(
+                    input.sampleCount() + 1L,
+                    lastRequest.episode(), lastRequest.sequence());
+        }
         requestAdmitted = false;
     }
 

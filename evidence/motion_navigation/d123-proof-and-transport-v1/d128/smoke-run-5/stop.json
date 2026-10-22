@@ -1,0 +1,47 @@
+{
+  "schema": "mc2p.d129-invalid-fixture-run.v1",
+  "status": "INVALID_FIXTURE_RUN",
+  "classification": "ENVIRONMENT_TOOLING_FIXTURE",
+  "formal_command": "python scripts\\d123_fabric_transport.py --launch smoke --output evidence\\motion_navigation\\d123-proof-and-transport-v1\\d128\\smoke-run-5",
+  "offline_preflight": "PASS",
+  "probe_return_code": 1,
+  "source_run": "artifacts/fabric-deployment/20261022T031618423169Z-4988b602",
+  "execution_boundary": {
+    "minecraft_started": true,
+    "fabric_started": true,
+    "pre_trial_started": true,
+    "movement_trial_started": false,
+    "completed_trials": 0,
+    "sessions": 0,
+    "smoke": "0/3",
+    "matrix": "NOT_RUN"
+  },
+  "failure": {
+    "type": "RuntimeError",
+    "reported_reasons": [
+      "start_window_commands_failed",
+      "successor_entry"
+    ],
+    "reason": "successor reference was translated but frozen entry-window feet-y bounds remained centered at 64 for the live feet_y 0 fixture",
+    "frozen_y_center": 64.0,
+    "live_y_center": 0.0
+  },
+  "attempt": {
+    "consumed": false,
+    "stage_stopped": false,
+    "rerun_authorized": true,
+    "retry_output": "evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-6"
+  },
+  "product_conclusion": "NONE",
+  "policy": "D129",
+  "manifest": {
+    "path": "manifest.json",
+    "sha256": "5b1a8e3a50fc11c14d7f00ccf2b2c4b860fc6674b85960f4a1f14663e8182556",
+    "bound_file_count": 10
+  },
+  "constraints": {
+    "same_output_rerun": "FORBIDDEN",
+    "product_semantics_change": "FORBIDDEN",
+    "matrix_before_smoke_3_of_3": "FORBIDDEN"
+  }
+}

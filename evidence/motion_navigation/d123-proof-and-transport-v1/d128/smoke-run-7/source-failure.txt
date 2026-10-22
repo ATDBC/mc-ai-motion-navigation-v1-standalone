@@ -1,0 +1,35 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\scripts\probe_fabric_deployment_observation.py", line 1753, in run_worker
+    stages, rows, episode_checks = run_fabric_runtime(
+                                   ~~~~~~~~~~~~~~~~~~^
+        runtime, backend, episode, d123_directory, deadline,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        direction_index=direction, repetition=repetition,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\My_project\mc_ai\scripts\d123_fabric_transport.py", line 668, in run_fabric_runtime
+    return d122.run_fabric_runtime(
+           ~~~~~~~~~~~~~~~~~~~~~~~^
+        runtime, backend, episode, directory, deadline_ns,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<9 lines>...
+        expected_trial_count=3,
+        ^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\My_project\mc_ai\scripts\d122_fabric_timing.py", line 1139, in run_fabric_runtime
+    case = _FabricExecutionCase(
+        runtime, backend, episode, direction_index=direction_index,
+        origin=origin, feet_y=feet_y, deadline_ns=deadline_ns,
+    )
+  File "D:\My_project\mc_ai\scripts\d122_fabric_timing.py", line 1009, in __init__
+    submitted = self.coordinator.prepare_fixed_successor(
+        GapMotionSolveResult("fabric-current", 1, self.bound, 0, self.identity),
+    ...<2 lines>...
+        expected_work_identity=self.identity,
+    )
+  File "D:\My_project\mc_ai\mc2p\motion_nav\motion_coordination.py", line 615, in prepare_fixed_successor
+    raise ContractViolation("fixed successor selection differs from the current candidate context")
+mc2p.contracts.common.ContractViolation: fixed successor selection differs from the current candidate context

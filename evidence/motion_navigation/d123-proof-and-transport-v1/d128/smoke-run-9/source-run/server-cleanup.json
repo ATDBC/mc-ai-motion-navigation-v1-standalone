@@ -1,0 +1,1 @@
+{"cleanup": {"attempted": [{"create_time": 1792644593.0274663, "pid": 38636}], "errors": [], "stopped": [{"create_time": 1792644593.0274663, "pid": 38636}], "surviving": []}, "errors": [], "graceful": true, "passed": true, "return_code": 0}

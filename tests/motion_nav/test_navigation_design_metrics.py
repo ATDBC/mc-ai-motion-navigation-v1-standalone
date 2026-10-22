@@ -69,6 +69,7 @@ def validate(mode):
             'StreamApplicationReason',
             'StreamApplicationStatus',
             'StreamStartBranch',
+            'TransportLifecycleKind',
         }
         self.assertEqual(set(TYPED_LIFECYCLE_CLASSIFICATIONS), expected)
         self.assertTrue(expected.issubset(NON_IMPLEMENTATION_ENUMS))

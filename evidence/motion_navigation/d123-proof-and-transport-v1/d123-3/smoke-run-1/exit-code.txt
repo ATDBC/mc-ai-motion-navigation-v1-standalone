@@ -1,0 +1,2 @@
+SOURCE: root terminal observation, manually sealed after the stopped command.
+EXIT_CODE: 1

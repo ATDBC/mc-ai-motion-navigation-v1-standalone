@@ -72,7 +72,9 @@ class ClientTimingSampler:
     ) -> None:
         """Consume one explicitly rejected request without clearing fallback."""
         self._consume_admission(action, now, observation)
-        self._missed = True
+        if action.first_effect_window is not None:
+            self._missed = True
+            self.event("not_applied", tick, action)
 
     def _consume_admission(
         self, action: ActionSnapshotV1, now: int, observation: int,

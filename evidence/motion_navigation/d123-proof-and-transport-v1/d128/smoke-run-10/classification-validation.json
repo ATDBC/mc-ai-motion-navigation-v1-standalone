@@ -1,0 +1,45 @@
+{
+  "conjunction": {
+    "body_did_not_enter_tested_behavior": true,
+    "fixture_or_tool_causally_broke_registered_precondition": true,
+    "health_did_not_decrease": true,
+    "no_independent_transport_protocol_or_product_safety_failure": true,
+    "raw_request_receipt_ftick_physics_identity_is_unique": true,
+    "safe_default_application_count_is_zero": true,
+    "tested_non_neutral_input_application_count_is_zero": true
+  },
+  "counts": {
+    "default_applications": 0,
+    "physics_rows_checked": 118,
+    "target_input_applications": 0,
+    "target_non_neutral_applications": 0
+  },
+  "disqualifiers": {
+    "any_default_application": false,
+    "any_tested_input_application": false,
+    "body_entered_action": false,
+    "fixture_cause_not_proved": false,
+    "formal_driver_or_runtime_failure": false,
+    "health_damage": false,
+    "identity_not_unique": false,
+    "transport_fact": false
+  },
+  "eligible_for_invalid_harness": true,
+  "identity": {
+    "episode_id": "fabric-21001-0",
+    "first_effect_window": {
+      "earliest_tick": 8,
+      "latest_tick": 8
+    },
+    "observation_sequence_id": 7,
+    "receipt_generation_id": 8,
+    "request_sequence_id": 7
+  },
+  "manifest": {
+    "path": "manifest.json",
+    "sha256": "0c69ea7f59de5513e62b6c748d6aae0319e2620ac46ef30754273969f36f4f5d",
+    "verified_file_count": 50
+  },
+  "schema": "mc2p.d129-invalid-harness-validation.v1",
+  "status": "PASS"
+}

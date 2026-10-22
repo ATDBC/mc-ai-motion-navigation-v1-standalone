@@ -1,0 +1,56 @@
+{
+  "schema": "mc2p.d129-invalid-fixture-run-manifest.v1",
+  "source_run": "artifacts/fabric-deployment/20261022T031618423169Z-4988b602",
+  "files": [
+    {
+      "path": "offline-preflight.json",
+      "bytes": 19197,
+      "sha256": "c3500f1cd12ca148db9e1ea5a146db05bfcf7a9f04ff8f8c8748a82a71671e53"
+    },
+    {
+      "path": "probe-stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "probe-stdout.txt",
+      "bytes": 555,
+      "sha256": "5f5238698b045ca3169161311e480be6bcda9871b5c06cf383470d1b2dd007ce"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 19790,
+      "sha256": "7743e3fb471b12f42ad3d359752bee5cdbecc6bd8bafe9c443154fb8c246c8d9"
+    },
+    {
+      "path": "source-result.json",
+      "bytes": 16122,
+      "sha256": "cb0a1e0a179b0c2c12e16489d6f25eb324e818e7ccf9cfeb971419dc840cea1e"
+    },
+    {
+      "path": "source-failure.txt",
+      "bytes": 1577,
+      "sha256": "5581adfdb4619cd3a18eaad4b0993383dfa7b857b517c238902fb4b6c1fd73dd"
+    },
+    {
+      "path": "source-trace.jsonl",
+      "bytes": 361160,
+      "sha256": "a3e805f06730d3f6310381cf4c2b79cf85b30c9680ef664400b92a407815ae01"
+    },
+    {
+      "path": "source-physics-ticks.jsonl",
+      "bytes": 18591,
+      "sha256": "818194cf7e03d1bc8c10016858c704eae7e5d145798256672cbd8435dcbd1090"
+    },
+    {
+      "path": "source-fixture-commands.jsonl",
+      "bytes": 60692,
+      "sha256": "1e49e137ad61f767e34d8fd7dc5cc7d768f5026afa743888ea4e2512b24dabe3"
+    },
+    {
+      "path": "source-teleports.jsonl",
+      "bytes": 60,
+      "sha256": "ab479d2f511f2ecb6dce99264ab84e5eb2b69ade8470d82540ef1c84e7758944"
+    }
+  ]
+}

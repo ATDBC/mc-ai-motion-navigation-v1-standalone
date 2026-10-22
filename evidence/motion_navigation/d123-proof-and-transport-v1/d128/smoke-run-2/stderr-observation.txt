@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\scripts\d123_fabric_transport.py", line 1270, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\My_project\mc_ai\scripts\d123_fabric_transport.py", line 1175, in main
+    preflight = offline_preflight(
+        java_tools=java_tools, java_environment=java_environment,
+    )
+  File "D:\My_project\mc_ai\scripts\d123_fabric_transport.py", line 878, in offline_preflight
+    standalone = _standalone_preflight()
+  File "D:\My_project\mc_ai\scripts\d123_fabric_transport.py", line 806, in _standalone_preflight
+    files = collect_export_files(manifest)
+  File "D:\My_project\mc_ai\scripts\export_motion_navigation_standalone.py", line 240, in collect_export_files
+    raise ExportViolation(f"required export path is not selected: {required}")
+scripts.export_motion_navigation_standalone.ExportViolation: required export path is not selected: evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-1/build.log

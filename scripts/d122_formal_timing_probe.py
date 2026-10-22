@@ -31,7 +31,9 @@ class D122TimingBackend(CalculatorBackend):
     """Inject successor transport timing without bypassing the v2 sampler."""
 
     def __init__(self, *args, transport_policy: str,
-                 raise_never_timeout: bool = False, **kwargs):
+                 raise_never_timeout: bool = False,
+                 explicit_reject_reason: str = "successor_explicitly_rejected",
+                 **kwargs):
         if transport_policy not in POLICIES:
             raise ValueError("unknown D122 transport policy")
         if "perturbations" in kwargs:
@@ -41,6 +43,7 @@ class D122TimingBackend(CalculatorBackend):
                          **kwargs)
         self.transport_policy = transport_policy
         self.raise_never_timeout = raise_never_timeout
+        self.explicit_reject_reason = explicit_reject_reason
         self.successor_sequence = None
         self.transport_events: list[dict[str, object]] = []
 
@@ -76,7 +79,7 @@ class D122TimingBackend(CalculatorBackend):
                 "request_sequence_id": action.request_sequence_id,
                 "first_effect_window": asdict(action.first_effect_window),
                 "injection_reason": (
-                    "successor_explicitly_rejected" if reject
+                    self.explicit_reject_reason if reject
                     else "successor_transport_not_delivered"
                 ),
             },
@@ -104,16 +107,18 @@ class D122TimingBackend(CalculatorBackend):
         return self._step_response(
             action, observation_request, sample_state,
             status="rejected",
-            reason=("successor_explicitly_rejected" if reject
+            reason=(self.explicit_reject_reason if reject
                     else "successor_transport_not_delivered"),
         )
 
 
-def _factory(policy: str, *, raise_never_timeout: bool = False):
+def _factory(policy: str, *, raise_never_timeout: bool = False,
+             explicit_reject_reason: str = "successor_explicitly_rejected"):
     def build(*args, **kwargs):
         return D122TimingBackend(
             *args, transport_policy=policy,
-            raise_never_timeout=raise_never_timeout, **kwargs,
+            raise_never_timeout=raise_never_timeout,
+            explicit_reject_reason=explicit_reject_reason, **kwargs,
         )
     return build
 
@@ -146,10 +151,15 @@ def _profiled_tick(case):
 
 def run_case(policy: str, *, direction_index: int = 0,
              max_frames: int = 80,
-             raise_never_timeout: bool = False) -> dict[str, object]:
+             raise_never_timeout: bool = False,
+             explicit_reject_reason: str = "successor_explicitly_rejected",
+             ) -> dict[str, object]:
     with patch(
         "scripts.d121_handoff_execution_probe.CalculatorBackend",
-        _factory(policy, raise_never_timeout=raise_never_timeout),
+        _factory(
+            policy, raise_never_timeout=raise_never_timeout,
+            explicit_reject_reason=explicit_reject_reason,
+        ),
     ):
         case = ExecutionCase(
             direction_index=direction_index,
@@ -160,6 +170,7 @@ def run_case(policy: str, *, direction_index: int = 0,
     frames = []
     timings = []
     runtime_failure = None
+    transport_facts = []
     parent_action = successor_action = None
     cancel_requested_at_tick = None
     try:
@@ -175,6 +186,8 @@ def run_case(policy: str, *, direction_index: int = 0,
             try:
                 result, timing = _profiled_tick(case)
                 timings.append(timing)
+                if result.transport_fact is not None:
+                    transport_facts.append(asdict(result.transport_fact))
                 if result.report.failure is not None:
                     runtime_failure = {
                         "code": result.report.failure.code.value,
@@ -245,11 +258,17 @@ def run_case(policy: str, *, direction_index: int = 0,
                      and abs(case.backend.state.velocity_blocks_per_tick[0]) <= .01
                      and abs(case.backend.state.velocity_blocks_per_tick[2]) <= .01)
         lifecycle_closed = (
-            error is None and case.driver.source is None
-            and not case.driver.has_prepared_frame
-            and case.driver.state.value in {
-                "success", "failed", "stopped", "cancelled",
-            }
+            error is None and not case.driver.has_prepared_frame
+            and (
+                (policy == "never_delivered"
+                 and case.driver.source is not None
+                 and case.driver.state.value == "unresolved")
+                or (policy != "never_delivered"
+                    and case.driver.source is None
+                    and case.driver.state.value in {
+                        "success", "failed", "stopped", "cancelled",
+                    })
+            )
         )
         passed = (
             parent_action is not None
@@ -292,6 +311,10 @@ def run_case(policy: str, *, direction_index: int = 0,
                            "on_ground": case.backend.state.on_ground,
                            "damage": case.backend.damage_taken},
             "runtime_state": case.runtime.state.value,
+            "final_observation_sequence_id": case.runtime.observation.sequence_id,
+            "final_movement_tick_id": (
+                case.runtime.observation.self_state.value.movement_tick_id
+            ),
             "driver_state": case.driver.state.value,
             "goal_satisfied": case.driver.state.value == "success",
             "runtime_failure": runtime_failure,
@@ -307,6 +330,7 @@ def run_case(policy: str, *, direction_index: int = 0,
                 },
             } for record in case.runtime.input_ledger.snapshot()],
             "transport_events": list(case.backend.transport_events),
+            "transport_facts": transport_facts,
             "error": error,
             "frames": frames,
         }

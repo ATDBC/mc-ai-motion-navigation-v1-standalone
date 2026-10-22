@@ -1,0 +1,8 @@
+{
+  "schema": "mc2p.d123-2-transport-lifecycle-manifest.v1",
+  "status": "PASS",
+  "files": {
+    "README.md": "546cbc129934f94375aa2435d80bc09d17e26c619bb6c1c2f76656d2212eed4e",
+    "summary.json": "1398126b5af8bc14179a6c400179ca28ac77f2682d4eaa8473f6128af9e10ae1"
+  }
+}

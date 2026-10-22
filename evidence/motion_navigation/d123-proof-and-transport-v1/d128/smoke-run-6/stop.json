@@ -1,0 +1,43 @@
+{
+  "schema": "mc2p.d129-invalid-fixture-run.v1",
+  "status": "INVALID_FIXTURE_RUN",
+  "classification": "ENVIRONMENT_TOOLING_FIXTURE",
+  "formal_command": "python scripts\\d123_fabric_transport.py --launch smoke --output evidence\\motion_navigation\\d123-proof-and-transport-v1\\d128\\smoke-run-6",
+  "offline_preflight": "PASS",
+  "probe_return_code": 1,
+  "source_run": "artifacts/fabric-deployment/20261022T032330672807Z-32aed6b6",
+  "execution_boundary": {
+    "minecraft_started": true,
+    "fabric_started": true,
+    "proof_replay_passed": true,
+    "pre_trial_started": true,
+    "movement_trial_started": false,
+    "completed_trials": 0,
+    "sessions": 0,
+    "smoke": "0/3",
+    "matrix": "NOT_RUN"
+  },
+  "failure": {
+    "type": "ContractViolation",
+    "message": "verified motion anchor tick does not match entry",
+    "reason": "live proof replaced entry_state and trajectory but retained the frozen anchor observation/tick identity"
+  },
+  "attempt": {
+    "consumed": false,
+    "stage_stopped": false,
+    "rerun_authorized": true,
+    "retry_output": "evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-7"
+  },
+  "product_conclusion": "NONE",
+  "policy": "D129",
+  "manifest": {
+    "path": "manifest.json",
+    "sha256": "49dad4802c95dd190c09dc7b55a8654d7b2e8639305e9f822e8d4d525eee516b",
+    "bound_file_count": 10
+  },
+  "constraints": {
+    "same_output_rerun": "FORBIDDEN",
+    "product_semantics_change": "FORBIDDEN",
+    "matrix_before_smoke_3_of_3": "FORBIDDEN"
+  }
+}

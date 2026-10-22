@@ -23,8 +23,13 @@ from mc2p.backends.fabric_behavior import FabricBehaviorBackendV1
 from mc2p.contracts.action_v1 import ActionIntentV1, ActionSnapshotV1, MovementV1
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.action import ActionPriorityV0
+from mc2p.contracts.observation import Vec3V0
+from mc2p.contracts.observation_v2 import SelfStateV2
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
+from mc2p.contracts.motion_activation import ActivationStatus
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
+from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter, TEST_ORACLE
+from mc2p.motion_nav.world_model import BlockGeometry
 from scripts.control_probe_core import write_json_atomic
 
 _D1223_PRODUCTION_HASHES = (
@@ -58,10 +63,23 @@ NEVER_FABRIC_RUNTIME_FAILURE = {
     "source": "runtime",
 }
 NEVER_COMPONENT_RUNTIME_FAILURE = {
-    "code": "contract",
-    "message": "successor_transport_not_delivered",
+    "code": "deadline_exceeded",
+    "message": "remote rejection lacks complete not_applied proof",
     "retryable": True,
-    "source": "client_behavior",
+    "source": "runtime",
+}
+_D127_CURRENT_HASHES = {
+    "mc2p/backends/fabric_behavior.py": "a9e0fcf6f411f7553587182a94dc042b7b473b4e2491b1068080ed6c8d708309",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java": "b18c62ba48b1afb0cbeed635b5612b065d2155c7f23e28777e78534cfd18543e",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java": "27c4039fd4e2653eabac9b711dd6cce0d945033dbd6bc1119f31963b19821555",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingSchedule.java": "f3fb39988431940bf766ce447f7083952eb8d42c56194ac1d8efdb51cc928bef",
+    "mc2p/contracts/action_receipt.py": "380047ae466ec1d7424a4f41eba8fc2fd010d814f48a2b7ba53b99157065a1f7",
+    "mc2p/motion_nav/navigation_session.py": "216b952a8ab76c4045cbf9ab59f88fde63435d7b5864b979db3d86419eb47fdc",
+    "mc2p/motion_nav/online_motion.py": "eff56f0e8a5d36c154b169d7e937f3cffb7feb3b706f2f8a1816ec35f24fc526",
+    "mc2p/runtime/backend_v1.py": "d06c6750c880c86f1861e03a6b9231a9bef3ed97195ec5317940710a1edc8044",
+    "mc2p/runtime/player_runtime_v1.py": "e0d8c163f298cba81937c10a316650392fbc4269213311c1d837c65ea9d3cd72",
+    "mc2p/runtime/transport_lifecycle.py": "9edcec9544e3d47eea56c4cc8f52775c162e29fde4638fd7e1277cfdec2bb85f",
+    "mc2p/skills/navigation_session_driver.py": "69f0e375b2899a093a97997e2fd88740c49b70a4882a83597fc305bd5629c520",
 }
 
 
@@ -98,12 +116,9 @@ _FABRIC_RUNNER_DEPENDENCIES = {
     "seal_snapshot_version": ("mc2p.motion_nav.world_snapshot", "seal_snapshot_version"),
     "RuntimeNavigationDriver": ("mc2p.skills.navigation_session_driver", "RuntimeNavigationDriver"),
     "RuntimeNavigationDriverState": ("mc2p.skills.navigation_session_driver", "RuntimeNavigationDriverState"),
-    "PreparedMotionJob": ("mc2p.motion_nav.motion_worker", "PreparedMotionJob"),
+    "MotionSolverWorker": ("mc2p.motion_nav.motion_worker", "MotionSolverWorker"),
     "PreparedSubmitStatus": ("mc2p.motion_nav.prepared_motion", "PreparedSubmitStatus"),
-    "execute_job": ("mc2p.motion_nav.motion_worker", "_execute_job"),
-    "NavigationObservationAdapter": ("mc2p.motion_nav.runtime_adapter", "NavigationObservationAdapter"),
     "install_manual_route": ("scripts.d121_handoff_execution_probe", "_install_manual_route"),
-    "QueuedWorker": ("tests.motion_nav.test_d102_receiver", "QueuedWorker"),
     "fixed_case": ("tests.motion_nav.test_d121_successor_binding", "fixed_case"),
     "CONFIG": ("tests.sim.runner", "CONFIG"),
     "InlinePlannerWorker": ("tests.sim.runner", "InlinePlannerWorker"),
@@ -192,7 +207,7 @@ def fabric_dependency_manifest(direction_index: int, *, origin: tuple[int, int],
 
 def fabric_observation_positions(trial, *, direction_index: int,
                                  origin: tuple[int, int], feet_y: int) -> tuple[tuple[int, int, int], ...]:
-    """Preserve the D118 centerline checks and add every proof dependency."""
+    """Historical D122/D125 visual request, retained for read-only evidence."""
     from scripts import d118_momentum_calibration_runtime as frozen
     legacy = set(frozen._fixture_fact_positions(trial, origin, feet_y))
     required = set(fabric_dependency_manifest(
@@ -226,6 +241,124 @@ def inspect_fabric_dependency_knowledge(world, manifest: Mapping) -> dict:
         "mismatched": tuple(mismatched),
         "categories": {name: len(positions) for name, positions in manifest["categories"].items()},
     }
+
+
+def canonical_fixture_rows(rows: Iterable[Mapping]) -> tuple[dict, ...]:
+    """Freeze the exact ordered rows shared by the server and known-map input."""
+    canonical = []
+    for row in rows:
+        phase = row.get("phase")
+        material = row.get("material")
+        positions = row.get("positions")
+        if phase not in {"clear", "support"}:
+            raise ValueError("D126 fixture row phase is unsupported")
+        if type(material) is not str or not material:
+            raise ValueError("D126 fixture row material is invalid")
+        if phase == "clear" and material != "minecraft:air":
+            raise ValueError("D126 clear row must use air")
+        if phase == "support" and material != "minecraft:grass_block":
+            raise ValueError("D126 support row must use the frozen full cube")
+        if type(positions) not in (tuple, list):
+            raise ValueError("D126 fixture row positions are invalid")
+        frozen_positions = tuple(tuple(position) for position in positions)
+        if any(len(position) != 3 or any(type(value) is not int for value in position)
+               for position in frozen_positions):
+            raise ValueError("D126 fixture row position is invalid")
+        canonical.append({
+            "phase": phase,
+            "material": material,
+            "positions": frozen_positions,
+        })
+    if not canonical:
+        raise ValueError("D126 fixture rows are empty")
+    return tuple(canonical)
+
+
+def _canonical_digest(value) -> str:
+    return hashlib.sha256(json.dumps(
+        value, sort_keys=True, separators=(",", ":"),
+    ).encode("utf-8")).hexdigest()
+
+
+def known_fixture_map(trial, *, origin: tuple[int, int], feet_y: int) -> dict:
+    """Build one final map from the same ordered rows sent to the fixture server."""
+    from scripts import d118_momentum_calibration_runtime as frozen
+
+    rows = canonical_fixture_rows(frozen.trial_fixture_rows(
+        trial, origin=origin, feet_y=feet_y,
+    ))
+    final: dict[tuple[int, int, int], str | None] = {}
+    for row in rows:
+        value = None if row["phase"] == "clear" else row["material"]
+        for position in row["positions"]:
+            final[position] = value
+    blocks = {
+        position: BlockGeometry.full_cube(material)
+        for position, material in final.items()
+        if material is not None
+    }
+    air = tuple(sorted(position for position, material in final.items()
+                       if material is None))
+    row_payload = [{
+        "phase": row["phase"], "material": row["material"],
+        "positions": [list(position) for position in row["positions"]],
+    } for row in rows]
+    fact_payload = {
+        "blocks": [[*position, geometry.material_key]
+                   for position, geometry in sorted(blocks.items())],
+        "air": [list(position) for position in air],
+    }
+    return {
+        "server_rows": rows,
+        "blocks": blocks,
+        "air": air,
+        "rows_sha256": _canonical_digest(row_payload),
+        "facts_sha256": _canonical_digest(fact_payload),
+    }
+
+
+def without_known_fixture_position(known: Mapping, position) -> dict:
+    blocks = dict(known["blocks"])
+    blocks.pop(position, None)
+    air = tuple(item for item in known["air"] if item != position)
+    return {**known, "blocks": blocks, "air": air}
+
+
+def with_known_fixture_block(known: Mapping, position,
+                             geometry: BlockGeometry) -> dict:
+    if type(geometry) is not BlockGeometry:
+        raise ValueError("D126 replacement geometry is invalid")
+    blocks = dict(known["blocks"])
+    blocks[position] = geometry
+    air = tuple(item for item in known["air"] if item != position)
+    return {**known, "blocks": blocks, "air": air}
+
+
+def seed_runtime_known_fixture_map(runtime, known: Mapping):
+    """Install fixture truth in Runtime's existing test-only WorldKnowledge owner."""
+    adapter = runtime.navigation_observation_adapter
+    if type(adapter) is not NavigationObservationAdapter:
+        raise ValueError("D126 Runtime has no formal navigation world owner")
+    frame = adapter.seed_test_oracle_memory(
+        TEST_ORACLE, dict(known["blocks"]), tuple(known["air"]),
+    )
+    return frame, {
+        "source": "test_oracle_fixture_map",
+        "world_session": frame.session.value,
+        "geometry_revision": frame.world.geometry_revision,
+        "block_count": len(known["blocks"]),
+        "air_count": len(known["air"]),
+        "rows_sha256": known["rows_sha256"],
+        "facts_sha256": known["facts_sha256"],
+    }
+
+
+def _runtime_navigation_frame(runtime):
+    adapter = runtime.navigation_observation_adapter
+    frame = adapter.latest_frame
+    if frame is None:
+        frame = adapter.ingest(runtime.observation)
+    return frame
 
 
 @dataclass(frozen=True)
@@ -300,6 +433,79 @@ def _parent_terminal_body(physics_rows: Iterable[Mapping],
         "movement_tick_id": owned[-1].get("movement_tick_id"),
         "request_sequence_id": parent_sequence,
     }
+
+
+@dataclass(frozen=True)
+class RuntimeTerminalPayload:
+    final_body: dict
+    health_evidence: dict | None
+    observation_sequence_id: int | None
+    movement_tick_id: int | None
+
+    def row_fields(self) -> dict:
+        return {
+            "final_body": self.final_body,
+            "health_evidence": self.health_evidence,
+            "final_observation_sequence_id": self.observation_sequence_id,
+            "final_movement_tick_id": self.movement_tick_id,
+        }
+
+
+_RUNTIME_TERMINAL_ROW_FIELDS = (
+    "final_body",
+    "health_evidence",
+    "final_observation_sequence_id",
+    "final_movement_tick_id",
+)
+
+
+def _merge_runtime_terminal_payload(base: Mapping,
+                                    terminal: RuntimeTerminalPayload) -> dict:
+    if type(terminal) is not RuntimeTerminalPayload:
+        raise TypeError("Fabric terminal row requires RuntimeTerminalPayload")
+    fields = terminal.row_fields()
+    if tuple(fields) != _RUNTIME_TERMINAL_ROW_FIELDS:
+        raise RuntimeError("Fabric terminal row fields are incomplete or renamed")
+    if any(name in base for name in _RUNTIME_TERMINAL_ROW_FIELDS):
+        raise RuntimeError("Fabric terminal row fields must have one owner")
+    return {**dict(base), **fields}
+
+
+def _runtime_terminal_payload(observation, start_health) -> RuntimeTerminalPayload:
+    """Serialize the fresh formal Runtime observation used by Fabric evidence."""
+    terminal_state = observation.self_state.value if observation is not None else None
+    if terminal_state is not None and type(terminal_state) is not SelfStateV2:
+        raise TypeError("formal Runtime terminal body must be SelfStateV2")
+
+    def vec3_payload(value: Vec3V0) -> list[float]:
+        if type(value) is not Vec3V0:
+            raise TypeError("formal Runtime position and velocity must be Vec3V0")
+        return [value.x, value.y, value.z]
+
+    final_body = {
+        "position": (None if terminal_state is None
+                     else vec3_payload(terminal_state.position)),
+        "velocity": (None if terminal_state is None
+                     else vec3_payload(terminal_state.velocity)),
+        "on_ground": (None if terminal_state is None
+                      else terminal_state.is_on_ground),
+        "evidence": "runtime_observation",
+    }
+    health = None if terminal_state is None else terminal_state.health_points
+    health_evidence = ({
+        "source": "runtime_observation",
+        "decreased": health is None or start_health is None or health < start_health,
+    } if terminal_state is not None else None)
+    return RuntimeTerminalPayload(
+        final_body,
+        health_evidence,
+        (
+            None if terminal_state is None else observation.sequence_id
+        ),
+        (
+            None if terminal_state is None else terminal_state.movement_tick_id
+        ),
+    )
 
 
 def validate_trial_result(row: Mapping) -> tuple[str, ...]:
@@ -383,8 +589,8 @@ def validate_trial_result(row: Mapping) -> tuple[str, ...]:
                 failures.append("never_transport_reason_differs")
         if row.get("transport_outcome") != "successor_transport_loss":
             failures.append("never_transport_outcome_differs")
-        if row.get("driver_state") != "failed":
-            failures.append("never_driver_not_failed")
+        if row.get("driver_state") != "unresolved":
+            failures.append("never_driver_not_unresolved")
         if row.get("goal_satisfied") is not False:
             failures.append("never_goal_unexpectedly_satisfied")
     else:
@@ -400,7 +606,7 @@ def validate_trial_result(row: Mapping) -> tuple[str, ...]:
         expected_runtime_failure = (NEVER_FABRIC_RUNTIME_FAILURE
                                     if backend == "fabric"
                                     else NEVER_COMPONENT_RUNTIME_FAILURE)
-        expected_runtime_state = "failed" if backend == "fabric" else "ready"
+        expected_runtime_state = "failed"
     else:
         expected_runtime_state = "ready"
     if row.get("runtime_state") != expected_runtime_state:
@@ -412,11 +618,17 @@ def validate_trial_result(row: Mapping) -> tuple[str, ...]:
         failures.append("health_evidence_missing")
     elif health["decreased"]:
         failures.append("health_decreased")
-    if row.get("source_released") is not True:
+    if policy == "never_delivered":
+        if row.get("source_released") is not False:
+            failures.append("unresolved_source_released")
+    elif row.get("source_released") is not True:
         failures.append("source_not_released")
     if row.get("prepared_frame_clear") is not True:
         failures.append("prepared_frame_not_clear")
-    if row.get("driver_terminal") is not True:
+    if policy == "never_delivered":
+        if row.get("driver_terminal") is not False:
+            failures.append("unresolved_driver_marked_terminal")
+    elif row.get("driver_terminal") is not True:
         failures.append("driver_not_terminal")
     return tuple(failures)
 
@@ -548,7 +760,7 @@ def _live_physics_rows(directory: Path) -> tuple[dict, ...]:
     return tuple(rows)
 
 
-class D122FabricBehaviorBackend(FabricBehaviorBackendV1):
+class _D122FabricBehaviorBackendBase(FabricBehaviorBackendV1):
     """Formal Fabric backend with a bounded successor-only transport fault."""
 
     def __init__(self, *args, physics_directory: Path, **kwargs):
@@ -556,6 +768,7 @@ class D122FabricBehaviorBackend(FabricBehaviorBackendV1):
         self._d122_physics_directory = Path(physics_directory)
         self._d122_policy = "timely_l1"
         self._d122_parent_action: ActionSnapshotV1 | None = None
+        self._d122_expected_successor: dict | None = None
         self.d122_transport_events: list[dict] = []
         self.d122_steps: list[dict] = []
 
@@ -564,12 +777,107 @@ class D122FabricBehaviorBackend(FabricBehaviorBackendV1):
             raise ValueError("D122 transport policy is invalid")
         self._d122_policy = policy
         self._d122_parent_action = None
+        self._d122_expected_successor = None
         self.d122_transport_events.append({"kind": "policy_selected", "policy": policy})
 
+    def arm_d122_successor(self, proposal) -> None:
+        """Bind the next successor dispatch to one formal prepared proposal."""
+        if getattr(self, "_d122_expected_successor", None) is not None:
+            raise RuntimeError("D122 successor identity is already armed")
+        self._d122_expected_successor = _prepared_successor_identity(proposal)
+
+
+def _prepared_successor_identity(proposal) -> dict:
+    """Freeze the proposal identity before Runtime assigns an action request."""
+    return {
+            "proof_token": proposal.proof_token,
+            "prepared_generation_id": proposal.generation_id,
+            "owner_id": proposal.owner_id,
+            "ledger_id": proposal.ledger_id,
+            "world_session_id": proposal.world_session_id,
+            "movement_intent_id": proposal.movement_intent_id,
+            "movement": asdict(proposal.expected_movement),
+            "first_effect_window": asdict(proposal.requested_window),
+            "handoff_token": proposal.handoff_token,
+        }
+
+
+def _bind_expected_successor(prepared: Mapping, result) -> dict:
+    """Independently bind one prepared identity to Runtime's actual dispatch."""
+    activation = result.stream_activation
+    if (activation is None
+            or activation.status is not ActivationStatus.ACTIVATED):
+        raise RuntimeError("D122 prepared successor was not activated")
+    decision = result.decision
+    action = None if decision is None else decision.action
+    if type(action) is not ActionSnapshotV1:
+        raise RuntimeError("D122 prepared successor has no actual action")
+    if (prepared.get("movement") != asdict(action.movement)
+            or prepared.get("first_effect_window") != (
+                None if action.first_effect_window is None
+                else asdict(action.first_effect_window)
+            )):
+        raise RuntimeError("D122 prepared successor differs from actual action")
+    backend_result = result.backend_result
+    receipt = None if backend_result is None else backend_result.receipt
+    if (receipt is not None
+            and (receipt.episode_id != action.episode_id
+                 or receipt.request_sequence_id != action.request_sequence_id)):
+        raise RuntimeError("D122 prepared successor receipt identity differs")
+    return D122FabricBehaviorBackend._action_identity(
+        action, prepared=prepared,
+        receipt_generation_id=(
+            None if receipt is None else receipt.generation_id
+        ),
+    )
+
+
+class D122FabricBehaviorBackend(_D122FabricBehaviorBackendBase):
+
     @staticmethod
-    def _successor(action: ActionSnapshotV1) -> bool:
-        window = action.first_effect_window
-        return window is not None and action.movement.jump
+    def _action_identity(action: ActionSnapshotV1, *, prepared=None,
+                         receipt_generation_id=None) -> dict:
+        identity = {
+            "episode_id": action.episode_id,
+            "request_sequence_id": action.request_sequence_id,
+            "observation_sequence_id": action.observation_sequence_id,
+            "first_effect_window": (
+                None if action.first_effect_window is None
+                else asdict(action.first_effect_window)
+            ),
+            "prepared_generation_id": (
+                None if prepared is None else prepared["prepared_generation_id"]
+            ),
+            "receipt_generation_id": receipt_generation_id,
+            "movement": asdict(action.movement),
+            "look": asdict(action.look),
+            "valid_for_ticks": action.valid_for_ticks,
+            "safe_default": (
+                None if action.safe_default is None
+                else asdict(action.safe_default)
+            ),
+        }
+        if prepared is not None:
+            identity.update({
+                field: prepared[field] for field in (
+                    "proof_token", "owner_id", "ledger_id",
+                    "world_session_id", "movement_intent_id", "handoff_token",
+                )
+            })
+        return identity
+
+    def _action_role(self, action: ActionSnapshotV1) -> str:
+        if action.safe_default is not None:
+            return "parent_command"
+        expected = self._d122_expected_successor
+        if (expected is not None
+                and expected["movement"] == asdict(action.movement)
+                and expected["first_effect_window"] == (
+                    None if action.first_effect_window is None
+                    else asdict(action.first_effect_window)
+                )):
+            return "successor"
+        return "neutral"
 
     def _wait_for(self, predicate: Callable[[tuple[dict, ...]], bool], deadline_ns: int) -> tuple[dict, ...]:
         while time.perf_counter_ns() < deadline_ns:
@@ -580,9 +888,12 @@ class D122FabricBehaviorBackend(FabricBehaviorBackendV1):
         raise TimeoutError("D122 controlled transport wait exceeded its action deadline")
 
     def step(self, action, deadline_monotonic_ns, *, observation_request=None):
-        if action.safe_default is not None:
+        role = self._action_role(action)
+        expected = self._d122_expected_successor if role == "successor" else None
+        identity = self._action_identity(action, prepared=expected)
+        if role == "parent_command":
             self._d122_parent_action = action
-        successor = self._successor(action)
+        successor = role == "successor"
         if successor and self._d122_policy == "late_l2":
             target = action.first_effect_window.latest_tick
             self._wait_for(lambda rows: any(row.get("movement_tick_id") >= target for row in rows),
@@ -614,17 +925,25 @@ class D122FabricBehaviorBackend(FabricBehaviorBackendV1):
                 "sequence": action.request_sequence_id,
                 "default_ticks_observed": ticks[-duration:],
                 "attempted_request": {
-                    "request_sequence_id": action.request_sequence_id,
-                    "first_effect_window": asdict(action.first_effect_window),
+                    **identity,
                     "injection_reason": "successor_transport_not_delivered",
                 },
             })
+            self._d122_expected_successor = None
             raise TimeoutError("D122 injected successor transport loss")
         started = time.perf_counter_ns()
         result = super().step(action, deadline_monotonic_ns,
                               observation_request=observation_request)
+        identity = self._action_identity(
+            action, prepared=expected,
+            receipt_generation_id=result.receipt.generation_id,
+        )
         self.d122_steps.append({
+            "action_role": role,
+            "action_identity": identity,
+            "episode_id": action.episode_id,
             "request_sequence_id": action.request_sequence_id,
+            "observation_sequence_id": action.observation_sequence_id,
             "first_effect_window": (None if action.first_effect_window is None
                                     else asdict(action.first_effect_window)),
             "safe_default": (None if action.safe_default is None
@@ -632,6 +951,8 @@ class D122FabricBehaviorBackend(FabricBehaviorBackendV1):
             "elapsed_ns": time.perf_counter_ns() - started,
             "receipt": asdict(result.receipt),
         })
+        if successor:
+            self._d122_expected_successor = None
         return result
 
 
@@ -657,45 +978,203 @@ def _fixture_action_step(runtime, episode: str, source: str, deadline_ns: int,
     return result
 
 
-class _FabricExecutionCase:
-    """One explicit D121 route anchored to the observed Fabric start state."""
+@dataclass(frozen=True)
+class FrozenFixturePretrialAssembly:
+    """One complete frozen-coordinate proof transformed onto a live anchor."""
 
-    def __init__(self, runtime, backend, episode: str, *, direction_index: int,
-                 origin: tuple[int, int], feet_y: int, deadline_ns: int):
-        from dataclasses import replace
-        from mc2p.motion_nav.action_route import ActionRoute, JumpGapSegment
-        from mc2p.motion_nav.async_work import AsyncWorkIdentity, AsyncWorkKind
-        from mc2p.motion_nav.goal_planning_policy import GoalPlanningPolicy
-        from mc2p.motion_nav.jump_gap import JumpGapEdge
-        from mc2p.motion_nav.motion_candidate import (
-            MotionCandidateAdmitter, MotionCandidateContext, MotionCandidateStatus,
-            VerifiedMotionCandidate, VerifiedMotionExecutor,
+    fixture: object
+    request: object
+    successor_spec: object
+    proof: object
+    start_tick: int
+    candidate_revision: int
+    anchor_observation_sequence_id: int
+    anchor_movement_tick_id: int
+    anchor_position: tuple[float, float, float]
+    replay_dependencies: tuple[tuple[int, int, int], ...]
+
+    def __post_init__(self) -> None:
+        request = self.request
+        proof = self.proof
+        if self.candidate_revision != 1:
+            raise RuntimeError("D122 live candidate revision must start at one")
+        if (proof.anchor_observation_sequence_id
+                != self.anchor_observation_sequence_id
+                or proof.anchor_movement_tick_id != self.anchor_movement_tick_id
+                or proof.entry_state.movement_tick_id != self.anchor_movement_tick_id):
+            raise RuntimeError("D122 live proof anchor identity is detached")
+        if (proof.entry_state.position != self.anchor_position
+                or proof.trajectory[0] != proof.entry_state
+                or proof.trajectory[-1] != proof.exit_state):
+            raise RuntimeError("D122 live proof trajectory is detached")
+        if (request.execution_window != proof.execution_window
+                or request.continuation != proof.continuation
+                or request.landing != proof.landing
+                or request.fixed_successor_spec != self.successor_spec):
+            raise RuntimeError("D122 live proof request or window is detached")
+        if proof.world_dependencies != self.replay_dependencies:
+            raise RuntimeError("D122 live replay dependencies are detached")
+
+    def candidate_context(self, route, damage_budget):
+        from mc2p.motion_nav.motion_candidate import MotionCandidateContext
+
+        return MotionCandidateContext(
+            route.source_request_id,
+            route.planning_generation,
+            route.goal_id,
+            route.goal_revision,
+            route.route_id,
+            route.route_revision,
+            0,
+            self.candidate_revision,
+            damage_budget,
+            self.proof.resource_incomplete_reasons,
         )
-        from mc2p.motion_nav.motion_risk import TaskDamageBudget
-        from mc2p.motion_nav.motion_solver import (
-            LandingRegion, SolveStatus, VerifiedMotionResult,
-            _replay_verified_commands, bind_fixed_successor,
-        )
-        from mc2p.motion_nav.motion_worker import GapMotionSolveResult
-        from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionProfiles
-        from mc2p.motion_nav.online_motion import CandidateExecutionWindow
-        from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds, PhysicsWorldView
-        from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
-        from mc2p.motion_nav.route_admission import ActiveRoute, ExecutableCorridor
-        from mc2p.motion_nav.support_surfaces import SupportSurface, SurfaceNodeId, HorizontalRegion
-        from mc2p.motion_nav.world_snapshot import seal_snapshot_version
-        from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
-        from scripts.d121_handoff_execution_probe import _install_manual_route
-        from tests.motion_nav.test_d102_receiver import QueuedWorker
+
+
+def assemble_frozen_fixture_pretrial(anchor, world, direction_index: int, *,
+                                     frozen_case=None
+                                    ) -> FrozenFixturePretrialAssembly:
+    """Build the exact pre-trial proof at its frozen fixture coordinates.
+
+    The isolated server is moved to the frozen proof, rather than translating
+    individual proof fields.  Only live session/observation/tick identity is
+    rebound; replay owns trajectory, dependencies and fallback evidence.
+    """
+    from dataclasses import replace
+    from mc2p.motion_nav.motion_solver import _replay_verified_commands
+    from mc2p.motion_nav.online_motion import CandidateExecutionWindow
+    if frozen_case is None:
         from tests.motion_nav.test_d121_successor_binding import fixed_case
-        from tests.sim.runner import CONFIG, InlinePlannerWorker, _goal
-        from scripts import d120_momentum_entry_calibration as calibration
+        frozen_case = fixed_case(direction_index)
+    base_request, fixture, template, base_spec, _ = frozen_case
+    if anchor.physics_state.position != template.entry_state.position:
+        raise RuntimeError("D122 live anchor is outside the frozen fixture coordinates")
+    start_tick = anchor.movement_tick_id + 1
+    window = CandidateExecutionWindow(start_tick, start_tick)
+    request = replace(
+        base_request,
+        execution_window=window,
+        fixed_successor_spec=base_spec,
+    )
+    primary, failure = _replay_verified_commands(
+        anchor.physics_state, template.commands, world, request,
+        start_tick=start_tick,
+    )
+    if failure is not None:
+        raise RuntimeError(f"D122 Fabric first proof replay failed: {failure}")
+    proof = replace(
+        template,
+        anchor_observation_sequence_id=anchor.observation_sequence_id,
+        anchor_movement_tick_id=anchor.movement_tick_id,
+        entry_state=anchor.physics_state,
+        tick_inputs=primary.tick_inputs,
+        trajectory=primary.trajectory,
+        step_events=primary.step_events,
+        exit_state=primary.exit_state,
+        release_safe_command_indices=primary.release_safe_command_indices,
+        world_dependencies=primary.world_dependencies,
+        resource_incomplete_reasons=primary.resource_incomplete_reasons,
+        execution_window=window,
+        fallback_tails=primary.fallback_tails,
+        successor_binding=None,
+    )
+    if proof.continuation != base_request.continuation:
+        raise RuntimeError("D122 frozen successor window was transformed")
+    if proof.world_dependencies != primary.world_dependencies:
+        raise RuntimeError("D122 live replay dependencies were detached")
+    return FrozenFixturePretrialAssembly(
+        fixture, request, base_spec, proof, start_tick, 1,
+        anchor.observation_sequence_id, anchor.movement_tick_id,
+        anchor.physics_state.position, primary.world_dependencies,
+    )
+
+
+@dataclass
+class FabricExecutionPrewarm:
+    """Heavy harness resources created before the final live anchor is read."""
+
+    direction_index: int
+    dependencies: Mapping[str, object]
+    profile: object
+    frozen_case: tuple
+    worker: object
+    _transferred: bool = False
+
+    @classmethod
+    def create(cls, direction_index: int, *, worker_factory=None):
+        dependencies = resolve_fabric_runner_dependencies()
+        profile = dependencies["NavigationSessionProfiles"].load(
+            dependencies["CONFIG"],
+        )
+        frozen_case = dependencies["fixed_case"](direction_index)
+        factory = (
+            dependencies["MotionSolverWorker"]
+            if worker_factory is None else worker_factory
+        )
+        worker = factory(max_pending=2)
+        return cls(direction_index, dependencies, profile, frozen_case, worker)
+
+    def transfer_worker(self):
+        if self._transferred:
+            raise RuntimeError("D122 prewarmed worker was already transferred")
+        self._transferred = True
+        return self.worker
+
+    def close(self):
+        if self._transferred:
+            return None
+        self._transferred = True
+        return self.worker.close(timeout_seconds=5.)
+
+
+class _FabricExecutionCase:
+    """One explicit D121 route bound and started from one fresh live anchor."""
+
+    def __init__(self, runtime, backend, episode: str, *, prewarm,
+                 origin: tuple[int, int], feet_y: int, deadline_ns: int):
+        dependencies = prewarm.dependencies
+        ActionRoute = dependencies["ActionRoute"]
+        JumpGapSegment = dependencies["JumpGapSegment"]
+        AsyncWorkIdentity = dependencies["AsyncWorkIdentity"]
+        AsyncWorkKind = dependencies["AsyncWorkKind"]
+        GoalPlanningPolicy = dependencies["GoalPlanningPolicy"]
+        JumpGapEdge = dependencies["JumpGapEdge"]
+        MotionCandidateAdmitter = dependencies["MotionCandidateAdmitter"]
+        MotionCandidateStatus = dependencies["MotionCandidateStatus"]
+        VerifiedMotionCandidate = dependencies["VerifiedMotionCandidate"]
+        VerifiedMotionExecutor = dependencies["VerifiedMotionExecutor"]
+        TaskDamageBudget = dependencies["TaskDamageBudget"]
+        SolveStatus = dependencies["SolveStatus"]
+        bind_fixed_successor = dependencies["bind_fixed_successor"]
+        NavigationSession = dependencies["NavigationSession"]
+        PhysicsWorldBounds = dependencies["PhysicsWorldBounds"]
+        PhysicsWorldView = dependencies["PhysicsWorldView"]
+        JAVA_1_21_RULESET = dependencies["JAVA_1_21_RULESET"]
+        ActiveRoute = dependencies["ActiveRoute"]
+        ExecutableCorridor = dependencies["ExecutableCorridor"]
+        SupportSurface = dependencies["SupportSurface"]
+        SurfaceNodeId = dependencies["SurfaceNodeId"]
+        HorizontalRegion = dependencies["HorizontalRegion"]
+        seal_snapshot_version = dependencies["seal_snapshot_version"]
+        RuntimeNavigationDriver = dependencies["RuntimeNavigationDriver"]
+        install_manual_route = dependencies["install_manual_route"]
+        InlinePlannerWorker = dependencies["InlinePlannerWorker"]
+        goal = dependencies["goal"]
+        calibration = dependencies["d120_calibration"]
+        direction_index = prewarm.direction_index
 
         self.runtime, self.backend = runtime, backend
-        self.worker = QueuedWorker()
+        self.dependencies = dependencies
+        self.deadline_ns = deadline_ns
+        self.worker = prewarm.transfer_worker()
+        self.session = None
+        self.close_report = None
+        self.successor_expected_identities = []
+        self._closed = False
         task_id = f"d122-fabric-{direction_index}-{runtime.observation.sequence_id}"
         self.session = NavigationSession(
-            task_id, NavigationSessionProfiles.load(CONFIG),
+            task_id, prewarm.profile,
             planner_worker=InlinePlannerWorker(), motion_worker=self.worker,
             clock_ns=time.perf_counter_ns,
         )
@@ -708,7 +1187,7 @@ class _FabricExecutionCase:
             origin, direction_index, .5, 6.5,
         )
         self.driver.start(
-            "fixed-goal", 1, _goal((goal_x, feet_y, goal_z)),
+            "fixed-goal", 1, goal((goal_x, feet_y, goal_z)),
             time.perf_counter_ns(),
             planning_policy=GoalPlanningPolicy.PROVED_LOCAL_DIRECT_THEN_BACKGROUND,
         )
@@ -717,54 +1196,18 @@ class _FabricExecutionCase:
             runtime.observation, runtime.input_ledger,
         )
         self.world = PhysicsWorldView(frame.world, JAVA_1_21_RULESET)
-        base_request, _base_fixture, template, base_spec, _ = fixed_case(direction_index)
-        first = tuple(calibration.frozen._local_to_world(
-            origin, direction_index, x, z,
-        ) for x in (.3, .7) for z in (1., 2.))
-        target = tuple(calibration.frozen._local_to_world(
-            origin, direction_index, x, z,
-        ) for x in (.3, .7) for z in (6.3, 11.7))
-        first_region = LandingRegion(
-            min(x for x, _ in first), max(x for x, _ in first),
-            min(z for _, z in first), max(z for _, z in first), float(feet_y),
+        assembly = assemble_frozen_fixture_pretrial(
+            self.anchor, self.world, direction_index,
+            frozen_case=prewarm.frozen_case,
         )
-        target_region = LandingRegion(
-            min(x for x, _ in target), max(x for x, _ in target),
-            min(z for _, z in target), max(z for _, z in target), float(feet_y),
-        )
-        start_tick = self.anchor.movement_tick_id + 1
-        window = CandidateExecutionWindow(start_tick, start_tick)
-        # _local_to_world returns X/Z. Keep the support height explicit.
-        landing_x, landing_z = calibration.frozen._local_to_world(
-            origin, direction_index, .5, 2.05023666079027,
-        )
-        continuation = replace(base_request.continuation, entry_window=replace(
-            base_request.continuation.entry_window,
-            reference_point=(landing_x, float(feet_y), landing_z),
-        ))
-        spec = replace(base_spec, landing=target_region)
-        request = replace(
-            base_request, landing=first_region, execution_window=window,
-            continuation=continuation, fixed_successor_spec=spec,
-        )
-        primary, failure = _replay_verified_commands(
-            self.anchor.physics_state, template.commands, self.world, request,
-            start_tick=start_tick,
-        )
-        if failure is not None:
-            raise RuntimeError(f"D122 Fabric first proof replay failed: {failure}")
-        proof = replace(
-            template, entry_state=self.anchor.physics_state,
-            tick_inputs=primary.tick_inputs, trajectory=primary.trajectory,
-            step_events=primary.step_events, exit_state=primary.exit_state,
-            landing=first_region,
-            release_safe_command_indices=primary.release_safe_command_indices,
-            world_dependencies=primary.world_dependencies,
-            resource_incomplete_reasons=primary.resource_incomplete_reasons,
-            execution_window=window, continuation=continuation,
-            fallback_tails=primary.fallback_tails,
-            successor_binding=None,
-        )
+        self.assembly = assembly
+        if (origin != assembly.fixture.context.origin
+                or feet_y != assembly.fixture.context.feet_y):
+            raise RuntimeError("D122 server fixture differs from frozen proof coordinates")
+        request = assembly.request
+        spec = assembly.successor_spec
+        proof = assembly.proof
+        start_tick = assembly.start_tick
         self.source = frame.world._owner
         snapshot = seal_snapshot_version(
             self.source.borrow_snapshot_version(
@@ -802,16 +1245,12 @@ class _FabricExecutionCase:
             ActionRoute("fixed-route", actions),
             planning_generation=self.session._request.sequence,
         )
-        _install_manual_route(
+        install_manual_route(
             self.session, self.route, frame, self.anchor, runtime.input_ledger,
         )
         self.coordinator = self.session._coordinator
         self.controller = VerifiedMotionExecutor()
-        self.context = MotionCandidateContext(
-            self.route.source_request_id, self.route.planning_generation,
-            self.route.goal_id, 1, self.route.route_id, 1, 0, start_tick,
-            TaskDamageBudget(), self.proof.resource_incomplete_reasons,
-        )
+        self.context = assembly.candidate_context(self.route, TaskDamageBudget())
         arguments = asdict(self.context)
         arguments.pop("accepted_resource_incomplete_reasons")
         arguments["damage_budget"] = self.context.damage_budget
@@ -826,44 +1265,99 @@ class _FabricExecutionCase:
         self.identity = AsyncWorkIdentity(
             self.session.current_computation_scope,
             self.coordinator._owner_instance_id, AsyncWorkKind.MOTION_SOLVE,
-            "fabric-current", 1,
+            "fabric-current", assembly.candidate_revision,
         )
         self.request = request
+
+    @classmethod
+    def bind_and_start(cls, runtime, backend, episode: str, *, prewarm,
+                       origin: tuple[int, int], feet_y: int, deadline_ns: int):
+        """Bind one fresh anchor, dispatch its parent, then submit successor work."""
+        case = cls.__new__(cls)
+        try:
+            case.__init__(
+                runtime, backend, episode, prewarm=prewarm,
+                origin=origin, feet_y=feet_y, deadline_ns=deadline_ns,
+            )
+            first_result = case.tick()
+            case.submit_successor()
+            return case, first_result
+        except BaseException:
+            if hasattr(case, "worker"):
+                case.close()
+            else:
+                prewarm.close()
+            raise
+
+    def submit_successor(self) -> None:
+        GapMotionSolveResult = self.dependencies["GapMotionSolveResult"]
         submitted = self.coordinator.prepare_fixed_successor(
-            GapMotionSolveResult("fabric-current", 1, self.bound, 0, self.identity),
+            GapMotionSolveResult(
+                "fabric-current", self.assembly.candidate_revision,
+                self.bound, 0, self.identity,
+            ),
             self.request, self.context, self.anchor, self.world,
-            ledger_identity=runtime.input_ledger.ledger_identity,
+            ledger_identity=self.runtime.input_ledger.ledger_identity,
             expected_work_identity=self.identity,
         )
-        from mc2p.motion_nav.prepared_motion import PreparedSubmitStatus
-        from mc2p.motion_nav.motion_worker import PreparedMotionJob, _execute_job
+        PreparedSubmitStatus = self.dependencies["PreparedSubmitStatus"]
         if submitted.status is not PreparedSubmitStatus.ACCEPTED:
             raise RuntimeError(f"D122 Fabric prepared submit failed: {submitted}")
-        if not self.worker.submitted.wait(10):
-            raise RuntimeError("D122 Fabric prepared worker did not accept the job")
-        if not self.session._motion_result_inbox.wait_for_receiver(timeout=10):
-            raise RuntimeError("D122 Fabric prepared receiver did not seal the job")
-        job = next(job for job in self.worker.jobs if type(job) is PreparedMotionJob)
-        self.worker.put(_execute_job(job))
-        if not self.session._motion_result_inbox.wait_for_receiver(timeout=10):
-            raise RuntimeError("D122 Fabric prepared result was not received")
 
     def tick(self):
-        return self.driver.tick(
-            BehaviorProfileV0(), time.perf_counter_ns() + 1_000_000_000,
+        proposals = self.driver.prepare_proposals(
+            time.perf_counter_ns() + 1_000_000_000,
         )
+        streams = tuple(self.driver.prepared_streams)
+        if len(streams) > 1:
+            self.driver.discard_prepared()
+            raise RuntimeError("D122 frame exposed more than one prepared successor")
+        prepared = (
+            None if not streams
+            else _prepared_successor_identity(streams[0].proposal)
+        )
+        if streams:
+            self.backend.arm_d122_successor(streams[0].proposal)
+        result = self.driver.advance_prepared(
+            BehaviorProfileV0(), proposals=proposals,
+        )
+        if prepared is not None:
+            self.successor_expected_identities.append(
+                _bind_expected_successor(prepared, result),
+            )
+        return result
 
-    def close(self) -> None:
-        self.session.close()
+    def close(self):
+        if getattr(self, "_closed", False):
+            return getattr(self, "close_report", None)
+        self._closed = True
+        session_report = (
+            None if self.session is None
+            else self.session.close_resources_only()
+        )
+        worker_report = self.worker.close(timeout_seconds=5.)
+        self.close_report = {
+            "session": (
+                None if session_report is None else asdict(session_report)
+            ),
+            "worker": asdict(worker_report),
+        }
+        return self.close_report
 
 
 def run_fabric_runtime(runtime, backend: D122FabricBehaviorBackend, episode: str,
                        directory: Path, deadline_ns: int, fixture_writer,
                        player_teleporter, *, direction_index: int,
-                       repetition: int) -> tuple[dict, list[dict], list[dict]]:
+                       repetition: int, trials: Iterable | None = None,
+                       assembler: Callable = assemble_trial_result,
+                       stage_name: str = "D122",
+                       summary_schema: str = "mc2p.d122-fabric-runtime.v1",
+                       summary_filename: str = "d122-runtime.json",
+                       check_prefix: str = "d122_shared_trial_",
+                       expected_trial_count: int = 3,
+                       ) -> tuple[dict, list[dict], list[dict]]:
     """Run timely/late/never with shared assembly; never is last and ends Runtime."""
     dependencies = resolve_fabric_runner_dependencies()
-    NavigationObservationAdapter = dependencies["NavigationObservationAdapter"]
     RuntimeNavigationDriverState = dependencies["RuntimeNavigationDriverState"]
     frozen = dependencies["d118_runtime"]
     calibration = dependencies["d120_calibration"]
@@ -873,23 +1367,31 @@ def run_fabric_runtime(runtime, backend: D122FabricBehaviorBackend, episode: str
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     fixture = calibration.build_fixture(direction_index)
-    frame = NavigationObservationAdapter().ingest(runtime.observation)
+    frame = _runtime_navigation_frame(runtime)
     request = ObservationRequestV3("navigation_v1", ())
     setup = 0
     source = "d122-fixture-control"
     while type(frame.body.movement_tick_id) is not int or frame.body.movement_tick_id < 0:
         result = _fixture_action_step(runtime, episode, source, deadline_ns, request)
-        frame = NavigationObservationAdapter().ingest(result.observation)
+        frame = _runtime_navigation_frame(runtime)
         setup += 1
         if setup > 5:
             raise RuntimeError("D122 setup has no movement tick")
-    feet_y = frozen._bounded_fixture_feet_y(frame.body.position[1])
-    origin = (math.floor(frame.body.position[0]) + 24,
-              math.floor(frame.body.position[2]) + 24)
-    trials = []
-    for policy in POLICIES:
-        trial = D122FabricTrial(direction_index, repetition, policy)
-        for row in frozen.trial_fixture_rows(fixture.trial, origin=origin, feet_y=feet_y):
+    # The proof, successor window and dependency snapshot were frozen at this
+    # isolated fixture.  Move the server fixture and player to that coordinate
+    # system so no positional proof field needs an independent translation.
+    feet_y = fixture.context.feet_y
+    origin = fixture.context.origin
+    completed_trials = []
+    trial_plan = (tuple(D122FabricTrial(direction_index, repetition, policy)
+                        for policy in POLICIES)
+                  if trials is None else tuple(trials))
+    for trial in trial_plan:
+        policy = trial.policy
+        known_map = known_fixture_map(
+            fixture.trial, origin=origin, feet_y=feet_y,
+        )
+        for row in known_map["server_rows"]:
             fixture_writer(
                 tuple(tuple(position) for position in row["positions"]), row["material"],
                 trial_id=trial.trial_id, phase=row["phase"], origin=origin,
@@ -900,20 +1402,14 @@ def run_fabric_runtime(runtime, backend: D122FabricBehaviorBackend, episode: str
             origin, direction_index, local_x, local_z,
         )
         yaw = frozen._DIRECTIONS[direction_index][2]
-        request = ObservationRequestV3(
-            "navigation_v1",
-            fabric_observation_positions(
-                fixture.trial, direction_index=direction_index,
-                origin=origin, feet_y=feet_y,
-            ),
-        )
+        request = ObservationRequestV3("navigation_v1", ())
         starting = frame.body
         player_teleporter(start_x, float(feet_y), start_z, yaw, 0.)
 
         def advance_teleport():
             nonlocal frame
             result = _fixture_action_step(runtime, episode, source, deadline_ns, request)
-            frame = NavigationObservationAdapter().ingest(result.observation)
+            frame = _runtime_navigation_frame(runtime)
             return frame.body
 
         frozen._wait_for_b10_teleport_settlement(
@@ -930,6 +1426,16 @@ def run_fabric_runtime(runtime, backend: D122FabricBehaviorBackend, episode: str
         start_ok = frame.body.is_on_ground and speed <= .03
         if not start_ok:
             raise RuntimeError("D122 trial start is not grounded and still")
+        frame, known_map_report = seed_runtime_known_fixture_map(
+            runtime, known_map,
+        )
+        known_map_report = {
+            **known_map_report,
+            "same_runtime_owner": (
+                frame.world._owner
+                is runtime.navigation_observation_adapter.snapshot_world_port
+            ),
+        }
         frozen._assert_observed_fixture(frame, fixture.trial, origin, feet_y)
         dependency_manifest = fabric_dependency_manifest(
             direction_index, origin=origin, feet_y=feet_y,
@@ -943,20 +1449,44 @@ def run_fabric_runtime(runtime, backend: D122FabricBehaviorBackend, episode: str
             )
         runtime.cancel_source(source)
         backend.select_d122_policy(policy)
-        case = _FabricExecutionCase(
-            runtime, backend, episode, direction_index=direction_index,
-            origin=origin, feet_y=feet_y, deadline_ns=deadline_ns,
-        )
-        start_health = frame.body.health_points
         start_step_index = len(backend.d122_steps)
         start_transport_index = len(backend.d122_transport_events)
+        prewarm = FabricExecutionPrewarm.create(direction_index)
+        case = None
+        try:
+            # This is the final observation before the exact L+1 window is
+            # bound. All imports, profile loading, frozen template work and
+            # worker process startup have already completed above.
+            _fixture_action_step(runtime, episode, source, deadline_ns, request)
+            frame = _runtime_navigation_frame(runtime)
+            frozen._assert_observed_fixture(frame, fixture.trial, origin, feet_y)
+            fresh_dependency_precheck = inspect_fabric_dependency_knowledge(
+                frame.world, dependency_manifest,
+            )
+            if (fresh_dependency_precheck["unknown"]
+                    or fresh_dependency_precheck["mismatched"]):
+                raise RuntimeError(
+                    "D122 fresh-anchor dependency precheck failed: "
+                    f"{fresh_dependency_precheck}"
+                )
+            dependency_precheck = fresh_dependency_precheck
+            start_health = frame.body.health_points
+            case, first_result = _FabricExecutionCase.bind_and_start(
+                runtime, backend, episode, prewarm=prewarm,
+                origin=origin, feet_y=feet_y, deadline_ns=deadline_ns,
+            )
+        except BaseException:
+            prewarm.close()
+            raise
         error = None
         runtime_failure = None
         frame_rows = []
+        forced_frame_limit_release = False
         try:
-            for _ in range(90):
+            pending_result = first_result
+            for frame_index in range(90):
                 try:
-                    result = case.tick()
+                    result = (pending_result if frame_index == 0 else case.tick())
                 except Exception as exception:
                     error = {"type": type(exception).__name__, "message": str(exception)}
                     case.driver.release("d122-fabric-transport-ended")
@@ -970,6 +1500,8 @@ def run_fabric_runtime(runtime, backend: D122FabricBehaviorBackend, episode: str
                     "driver_state": case.driver.state.value,
                     "owner": (None if case.session._supervisor.route is None
                               else case.session._supervisor.route.owner_id),
+                    "transport_fact": (None if result.transport_fact is None
+                                       else asdict(result.transport_fact)),
                 })
                 if result.report.failure is not None and runtime.state.value != "ready":
                     case.driver.release("d122-fabric-runtime-failure")
@@ -982,10 +1514,15 @@ def run_fabric_runtime(runtime, backend: D122FabricBehaviorBackend, episode: str
                 if case.driver.source is None:
                     break
             if case.driver.source is not None:
+                forced_frame_limit_release = True
                 case.driver.release("d122-fabric-frame-limit")
             steps = backend.d122_steps[start_step_index:]
-            parent = next((row for row in steps if row["safe_default"] is not None), None)
-            successor = next((row for row in steps if row["first_effect_window"] is not None), None)
+            parents = [row for row in steps
+                       if row.get("action_role") == "parent_command"]
+            successors = [row for row in steps
+                          if row.get("action_role") == "successor"]
+            parent = parents[0] if len(parents) == 1 else None
+            successor = successors[0] if len(successors) == 1 else None
             timing = [event for row in steps for event in row["receipt"].get("timing_events", ())]
             parent_seq = None if parent is None else parent["request_sequence_id"]
             transport_events = backend.d122_transport_events[start_transport_index:]
@@ -997,6 +1534,11 @@ def run_fabric_runtime(runtime, backend: D122FabricBehaviorBackend, episode: str
             successor_window = (successor["first_effect_window"] if successor is not None
                                 else None if attempted is None
                                 else attempted.get("first_effect_window"))
+            expected_successors = tuple(case.successor_expected_identities)
+            successor_identity = (
+                expected_successors[0]
+                if len(expected_successors) == 1 else None
+            )
             armed_events = [event for event in timing
                             if event.get("status") == "fallback_armed"
                             and event.get("request_sequence_id") == parent_seq]
@@ -1011,29 +1553,21 @@ def run_fabric_runtime(runtime, backend: D122FabricBehaviorBackend, episode: str
                      if row.get("request_sequence_id") == successor_seq
                      and row.get("actual_input", {}).get("jump") is True]
             landing = None if parent is None else parent["safe_default"]["activation_tick"] - 1
-            current = (runtime.observation.self_state.value
-                       if runtime.observation is not None else None)
             if policy == "never_delivered":
                 # Runtime intentionally fails on transport loss and no longer
                 # admits observations. The old Runtime observation predates
                 # the fallback, so only the exact parent sidecar proves body
                 # state. Health remains unproved until a later formal read.
-                final_body = _parent_terminal_body(physics, parent_seq)
-                health_evidence = None
+                terminal_payload = RuntimeTerminalPayload(
+                    _parent_terminal_body(physics, parent_seq),
+                    None, None, None,
+                )
             else:
-                velocity = None if current is None else list(current.velocity_blocks_per_second)
-                final_body = {
-                    "position": None if current is None else list(current.position),
-                    "velocity": velocity,
-                    "on_ground": None if current is None else current.is_on_ground,
-                    "evidence": "runtime_observation",
-                }
-                health = None if current is None else current.health_points
-                health_evidence = ({
-                    "source": "runtime_observation",
-                    "decreased": health is None or start_health is None or health < start_health,
-                } if current is not None else None)
-            payload = {
+                terminal_payload = _runtime_terminal_payload(
+                    runtime.observation, start_health,
+                )
+            resource_close = case.close()
+            payload = _merge_runtime_terminal_payload({
                 "action_schema": backend.negotiated_action_schema,
                 "landing_tick": landing,
                 "parent_default_installed_before_l": bool(
@@ -1042,6 +1576,7 @@ def run_fabric_runtime(runtime, backend: D122FabricBehaviorBackend, episode: str
                 ),
                 "parent_request_sequence_id": parent_seq,
                 "successor_request_sequence_id": successor_seq,
+                "successor_expected_identity": successor_identity,
                 "fallback_armed_event": (armed_events[0]
                                          if len(armed_events) == 1 else None),
                 "fallback_armed_tick": (armed_events[0].get("movement_tick_id")
@@ -1056,8 +1591,6 @@ def run_fabric_runtime(runtime, backend: D122FabricBehaviorBackend, episode: str
                 "window_missed_tick": (missed_events[0].get("movement_tick_id")
                                        if len(missed_events) == 1 else None),
                 "default_sample_ticks": defaults,
-                "health_evidence": health_evidence,
-                "final_body": final_body,
                 "source_released": case.driver.source is None,
                 "prepared_frame_clear": not case.driver.has_prepared_frame,
                 "driver_terminal": case.driver.state in {
@@ -1078,36 +1611,43 @@ def run_fabric_runtime(runtime, backend: D122FabricBehaviorBackend, episode: str
                     else "successor_transport_loss"
                 ),
                 "dependency_precheck": dependency_precheck,
+                "known_map": known_map_report,
                 "frames": frame_rows,
                 "backend_steps": steps,
                 "transport_events": transport_events,
-            }
-            row = assemble_trial_result(
+                "forced_frame_limit_release": forced_frame_limit_release,
+                "resource_close": resource_close,
+            }, terminal_payload)
+            row = assembler(
                 trial, backend="fabric", reset_succeeded=True,
                 start_grounded_still=start_ok, payload=payload,
             )
             failures = tuple(row["failures"])
-            trials.append(row)
+            completed_trials.append(row)
             write_json_atomic(directory / f"{trial.trial_id}.json", row)
             if failures:
-                raise RuntimeError(f"D122 trial failed: {trial.trial_id}: {failures}")
+                raise RuntimeError(
+                    f"{stage_name} trial failed: {trial.trial_id}: {failures}"
+                )
         finally:
-            case.close()
+            if case is not None:
+                case.close()
         if policy != "never_delivered":
-            frame = NavigationObservationAdapter().ingest(runtime.observation)
+            frame = _runtime_navigation_frame(runtime)
     runtime.cancel_source(source)
     summary = {
-        "schema_version": "mc2p.d122-fabric-runtime.v1",
-        "status": "passed" if len(trials) == 3 and all(row["passed"] for row in trials) else "failed",
+        "schema_version": summary_schema,
+        "status": ("passed" if len(completed_trials) == expected_trial_count
+                   and all(row["passed"] for row in completed_trials) else "failed"),
         "direction_index": direction_index,
         "repetition": repetition,
-        "trial_count": len(trials),
-        "trials": trials,
+        "trial_count": len(completed_trials),
+        "trials": completed_trials,
     }
-    write_json_atomic(directory / "d122-runtime.json", summary)
-    checks = [{"name": "d122_shared_trial_" + row["policy"], "passed": row["passed"]}
-              for row in trials]
-    return summary, trials, checks
+    write_json_atomic(directory / summary_filename, summary)
+    checks = [{"name": check_prefix + row["policy"], "passed": row["passed"]}
+              for row in completed_trials]
+    return summary, completed_trials, checks
 
 
 def fabric_probe_command(*, server_port: int, ipc_port: int,
@@ -1157,7 +1697,7 @@ def _production_semantic_binding() -> dict:
     record = json.loads(_D124_PRODUCTION_HASHES.read_text("utf-8"))
     historical_files = historical.get("files")
     current_files = record.get("files")
-    files = ({**historical_files, **current_files}
+    files = ({**historical_files, **current_files, **_D127_CURRENT_HASHES}
              if isinstance(historical_files, dict) and isinstance(current_files, dict)
              else None)
     if (historical.get("schema") != "mc2p.public-production-semantic-hashes.v1"

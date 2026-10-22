@@ -297,3 +297,7 @@ v8 进入真实 server／client 和 fixture 后，trial 前观察门禁得到 67
 原 `component-preflight.json` 生成于共用 validator 加固之前，只保留为审查前历史证据。追加的 `component-preflight-review-fixes.json` 由当前代码重新执行及时、`L+2` 和 never，3／3 通过；final self-check 会把三行重新交给当前 validator，而不是只核文件哈希。
 
 后续有两条明确路线。第一条只改夹具／观察准备，通过新观察点或分阶段观察，让这 12 个格子在 trial 前真实可见并稳定。第二条另立 proof 语义决定，证明外围支撑已知时这些下层格不影响动作，再缩小查询范围。第二条不属于本阶段，也不能作为夹具修正混入。无论选择哪条，`UNKNOWN` 都不能当作 `AIR`。
+
+## D126 纠偏记录
+
+上述两条路线不再属于当前运动验收。D126 使用已有 `TEST_ORACLE` 将有限 fixture 地图写入 Runtime owner；它既不把 `UNKNOWN` 当空气，也不声称获得生产感知能力。D122-4 的原始结果与证据保持不变。

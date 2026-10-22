@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\scripts\build_fabric_deployment_probe.py", line 219, in <module>
+    print(build_probe())
+          ^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\scripts\build_fabric_deployment_probe.py", line 209, in build_probe
+    raise RuntimeError(f"independent offline build failed; evidence: {log_dir}")
+RuntimeError: independent offline build failed; evidence: D:\My_project\mc_ai\artifacts\fabric-deployment-build\20261022T025240716799Z-8ae31289

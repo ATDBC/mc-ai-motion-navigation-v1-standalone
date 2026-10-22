@@ -236,6 +236,12 @@ public final class ClientTimingSchedule {
     public boolean hasFallback() { return fallback != null; }
     public List<Event> drainEvents() { var result = List.copyOf(events); events.clear(); return result; }
 
+    public void notApplied(long movementTick, String episode, long sequence) {
+        requireIdentity(episode, sequence);
+        if (movementTick < 0) throw new IllegalArgumentException("invalid not-applied tick");
+        event("not_applied", movementTick, episode, sequence);
+    }
+
     private Selection neutral() { return new Selection(Kind.NEUTRAL, new Movement(0,0,false,false,false), null,-1,0,0,null); }
     private void event(String status, long tick, String episode, long sequence) {
         if (events.size() >= 64) throw new IllegalStateException("timing event overflow");

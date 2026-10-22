@@ -1,0 +1,123 @@
+{
+  "schema": "mc2p.d123-2-transport-lifecycle.v1",
+  "status": "PASS",
+  "fabric_run": false,
+  "contracts": [
+    "local_not_dispatched",
+    "remote_rejected_before_sampling",
+    "delivery_unknown",
+    "channel_lost"
+  ],
+  "wire_change": "windowed_full_request_not_applied",
+  "unresolved": {
+    "driver_state": "UNRESOLVED",
+    "result": "BODY_RESPONSIBILITY_UNRESOLVED",
+    "source_released": false,
+    "owner_snapshot_before_backend_close": true,
+    "resource_close_separate_from_body_responsibility": true
+  },
+  "preflight": {
+    "status": "PASS",
+    "formal_states": [
+      "timely",
+      "late_window_rejected",
+      "remote_rejected_before_sampling"
+    ],
+    "passed": 3,
+    "total": 3
+  },
+  "verification": {
+    "d127_directed": "19/19",
+    "fabric_backend_component_initial": "36/37",
+    "fabric_backend_component_repaired_cases": "2/2",
+    "source_tree_previous_final_bytes": "forward_and_reverse_212_modules_2787_tests_passed",
+    "java_wire": "38/38",
+    "export_verify_files": 3222
+  },
+  "source_sha256": {
+    "mc2p/runtime/transport_lifecycle.py": "9edcec9544e3d47eea56c4cc8f52775c162e29fde4638fd7e1277cfdec2bb85f",
+    "mc2p/runtime/player_runtime_v1.py": "e0d8c163f298cba81937c10a316650392fbc4269213311c1d837c65ea9d3cd72",
+    "mc2p/skills/navigation_session_driver.py": "69f0e375b2899a093a97997e2fd88740c49b70a4882a83597fc305bd5629c520",
+    "mc2p/backends/fabric_behavior.py": "a9e0fcf6f411f7553587182a94dc042b7b473b4e2491b1068080ed6c8d708309",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java": "b18c62ba48b1afb0cbeed635b5612b065d2155c7f23e28777e78534cfd18543e",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java": "27c4039fd4e2653eabac9b711dd6cce0d945033dbd6bc1119f31963b19821555",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientTimingSchedule.java": "f3fb39988431940bf766ce447f7083952eb8d42c56194ac1d8efdb51cc928bef",
+    "scripts/d123_transport_preflight.py": "f298ffabf226c87b26c0c93196c976840327e05f035d145d1657cde52866b335",
+    "tests/motion_nav/test_d127_transport_lifecycle.py": "88d3df96a8893b8d5e09538ccb282dca8f66cbabde0f2d286e689bd00b9e5273",
+    "tests/java/ClientNotAppliedTimingTest.java": "cf400ce402e31e1eafee12689bb5595060ea7c6ebec937a42e6e1e4e63ac2f09"
+  },
+  "final_gates": {
+    "status": "PASS",
+    "source_tree": {
+      "confirmed_previous_final_bytes": {
+        "forward": {
+          "modules": 212,
+          "tests": 2787
+        },
+        "reverse": {
+          "modules": 212,
+          "tests": 2787
+        }
+      },
+      "final": {
+        "forward": {
+          "modules": 212,
+          "tests": 2788
+        },
+        "reverse": {
+          "modules": 212,
+          "tests": 2788
+        }
+      },
+      "final_delta": "one D125 test-only source-only native build check",
+      "outcome_counts": {
+        "failures": 0,
+        "errors": 0,
+        "timeouts": 0,
+        "skips": 0,
+        "cleanup_failures": 0
+      }
+    },
+    "standalone": {
+      "previous_forward_failure": {
+        "modules": 211,
+        "passed_modules": 210,
+        "error_modules": 1,
+        "error": "D125 source-only snapshot lacked generated surface_cache.dll",
+        "historical_failure_preserved_locally": true
+      },
+      "repair_validation": {
+        "fresh_source_only_snapshot_built_native_library": true,
+        "d125": "10/10"
+      },
+      "final": {
+        "forward": {
+          "modules": 211,
+          "tests": 2764
+        },
+        "reverse": {
+          "modules": 211,
+          "tests": 2764
+        }
+      },
+      "outcome_counts": {
+        "failures": 0,
+        "errors": 0,
+        "timeouts": 0,
+        "skips": 0,
+        "cleanup_failures": 0
+      }
+    },
+    "java_wire": {
+      "status": "PASS",
+      "passed": 38,
+      "total": 38
+    },
+    "export_verify": {
+      "status": "PASS",
+      "files": 3222
+    },
+    "minecraft_or_fabric_run": false,
+    "signed": true
+  }
+}

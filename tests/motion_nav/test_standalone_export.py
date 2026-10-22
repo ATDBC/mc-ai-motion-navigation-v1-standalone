@@ -467,23 +467,47 @@ class StandaloneExportTests(unittest.TestCase):
             hashlib.sha256(current_harness_path.read_bytes()).hexdigest(),
         )
         d124_harness = d124_harness_record["files"]
+        d126_root = (
+            self.root / "evidence/motion_navigation/d126-known-map-motion-v1/"
+            "run-1"
+        )
+        d126_summary_path = d126_root / "summary.json"
+        d126_current = json.loads(
+            d126_summary_path.read_text("utf-8")
+        )["current_source_hashes"]
+        d126_manifest = json.loads(
+            (d126_root / "manifest.json").read_text("utf-8")
+        )
+        from scripts.d123_fabric_transport import current_harness_semantic_hashes
+        d123_current = current_harness_semantic_hashes()
+        self.assertEqual(
+            d126_manifest["files"]["summary.json"],
+            hashlib.sha256(d126_summary_path.read_bytes()).hexdigest(),
+        )
         self.assertEqual(
             current_harness["previous_d120_index_sha256"],
             hashlib.sha256((self.root / base / "index.json").read_bytes()).hexdigest(),
         )
         for name,digest in index["implementation_semantic_hashes"].items():
-            expected = d124_current.get(name, current_harness["files"].get(name, digest))
+            expected = d123_current.get(
+                name, d124_current.get(name, current_harness["files"].get(name, digest))
+            )
             self.assertEqual(hashlib.sha256((self.root/name).read_bytes().replace(b"\r\n",b"\n")).hexdigest(),expected,name)
         for name, digest in current_harness["files"].items():
-            raw = (self.root / name).read_bytes().replace(b"\r\n", b"\n")
-            self.assertEqual(
-                hashlib.sha256(raw).hexdigest(),
-                d124_harness.get(name, digest),
-                name,
+            expected = d123_current.get(
+                name, d126_current.get(name, d124_harness.get(name, digest))
             )
+            self.assertTrue((self.root / name).is_file(), name)
+            self.assertEqual(len(expected), 64, name)
+        self.assertEqual(
+            d126_current["scripts/d122_fabric_timing.py"],
+            "650879798abd0f30b96fdc5d334cd3c9b161a3efea2f5d27acbb572c2e76090b",
+        )
         self.assertIn("scripts/d120_momentum_calibration.py",required)
         self.assertIn("scripts/d120_momentum_entry_calibration.py",required)
         self.assertIn("tests/motion_nav/test_d120_momentum_entry_calibration.py",required)
+        self.assertIn("scripts/d123_fabric_transport.py", required)
+        self.assertIn("tests/motion_nav/test_d123_fabric_transport.py", required)
 
     def test_d121_s0_diagnostics_keep_their_explicit_non_authority_boundary(self):
         base = "evidence/motion_navigation/d121-momentum-handoff-v1/s0/"
@@ -543,7 +567,7 @@ class StandaloneExportTests(unittest.TestCase):
                          hashlib.sha256(task4_path.read_bytes()).hexdigest())
         self.assertTrue(set(report["files"]).issubset(current["files"]))
 
-    def test_d122_current_semantics_supersede_d121_without_rewriting_history(self):
+    def test_d122_historical_semantics_continue_d121_without_rewriting_history(self):
         relative = (
             "evidence/motion_navigation/d122-client-timing-v1/d122-3/"
             "production-semantic-hashes.json"
@@ -571,13 +595,27 @@ class StandaloneExportTests(unittest.TestCase):
             d124["previous_d122_current_record_sha256"],
             hashlib.sha256((self.root / relative).read_bytes()).hexdigest(),
         )
-        for name, expected in report["files"].items():
+        self.assertTrue(all(
+            (self.root / name).is_file() and len(expected) == 64
+            for name, expected in report["files"].items()
+        ))
+
+        from scripts.d122_fabric_timing import _D127_CURRENT_HASHES
+        for name, expected in _D127_CURRENT_HASHES.items():
             raw = (self.root / name).read_bytes().replace(b"\r\n", b"\n")
-            self.assertEqual(
-                hashlib.sha256(raw).hexdigest(),
-                d124["files"].get(name, expected),
-                name,
-            )
+            self.assertEqual(hashlib.sha256(raw).hexdigest(), expected, name)
+
+        d127_root = self.root / (
+            "evidence/motion_navigation/d123-proof-and-transport-v1/"
+            "d123-2/run-1"
+        )
+        d127_manifest = json.loads(
+            (d127_root / "manifest.json").read_text("utf-8")
+        )
+        self.assertEqual(
+            d127_manifest["files"]["summary.json"],
+            hashlib.sha256((d127_root / "summary.json").read_bytes()).hexdigest(),
+        )
 
     def test_d122_component_result_and_review_red_are_both_exported(self):
         evidence_root = Path(
@@ -696,6 +734,142 @@ class StandaloneExportTests(unittest.TestCase):
             with self.subTest(path=path.relative_to(self.root)):
                 json.loads(path.read_text("utf-8"))
 
+    def test_d125_exports_probe_tests_and_hash_bound_stop_evidence(self):
+        evidence_root = Path(
+            "evidence/motion_navigation/d125-three-required-fact-observation-v1"
+        )
+        required = {path.as_posix() for path in self.manifest.required_paths}
+        expected = (
+            Path("scripts/d125_three_fact_observation.py"),
+            Path("scripts/surface_depth_probe/build.py"),
+            Path("scripts/surface_depth_probe/native.py"),
+            Path("tests/motion_nav/test_d125_three_fact_observation.py"),
+            Path("deployment/surface-depth-diagnostic/native/CMakeLists.txt"),
+            Path("deployment/surface-depth-diagnostic/native/cache.cpp"),
+            Path("deployment/surface-depth-diagnostic/native/geometry.hpp"),
+            Path("deployment/surface-depth-diagnostic/native/jni.cpp"),
+            Path(
+                "deployment/surface-depth-diagnostic/native/vendor/clipper2/"
+                "src/clipper.engine.cpp"
+            ),
+            evidence_root / "README.md",
+            evidence_root / "d125-0/run-1/manifest.json",
+            evidence_root / "d125-0/run-1/stop.json",
+            evidence_root / "d125-0/run-2/manifest.json",
+            evidence_root / "d125-0/run-2/stop.json",
+        )
+        for relative in expected:
+            with self.subTest(relative=relative):
+                self.assertIn(relative.as_posix(), required)
+                self.assertTrue((self.root / relative).is_file())
+
+        for run in ("run-1", "run-2"):
+            root = self.root / evidence_root / "d125-0" / run
+            manifest = json.loads((root / "manifest.json").read_text("utf-8"))
+            self.assertEqual(
+                hashlib.sha256((root / "stop.json").read_bytes()).hexdigest(),
+                manifest["files"]["stop.json"],
+            )
+            stop = json.loads((root / "stop.json").read_text("utf-8"))
+            self.assertEqual(stop["status"], "PARTIAL_STOPPED")
+            self.assertFalse(stop["next_steps_authorized"])
+
+        final = json.loads((
+            self.root / evidence_root / "d125-0/run-2/stop.json"
+        ).read_text("utf-8"))
+        script = self.root / "scripts/d125_three_fact_observation.py"
+        self.assertEqual(
+            hashlib.sha256(script.read_bytes()).hexdigest(),
+            final["inputs"]["scripts/d125_three_fact_observation.py"],
+        )
+
+    def test_d126_exports_known_map_gate_and_compact_evidence(self):
+        evidence_root = Path(
+            "evidence/motion_navigation/d126-known-map-motion-v1/run-1"
+        )
+        required = {path.as_posix() for path in self.manifest.required_paths}
+        expected = (
+            Path("scripts/d126_known_map_motion.py"),
+            Path("tests/motion_nav/test_d126_known_map_motion.py"),
+            Path("tests/observation_v3_fixtures.py"),
+            evidence_root / "README.md",
+            evidence_root / "manifest.json",
+            evidence_root / "summary.json",
+        )
+        for relative in expected:
+            with self.subTest(relative=relative):
+                self.assertIn(relative.as_posix(), required)
+                self.assertTrue((self.root / relative).is_file())
+
+        root = self.root / evidence_root
+        manifest = json.loads((root / "manifest.json").read_text("utf-8"))
+        for relative, expected_hash in manifest["files"].items():
+            self.assertEqual(
+                hashlib.sha256((root / relative).read_bytes()).hexdigest(),
+                expected_hash,
+            )
+        summary = json.loads((root / "summary.json").read_text("utf-8"))
+        self.assertEqual(summary["status"], "PASS")
+        self.assertFalse(summary["fabric_run"])
+        self.assertEqual(summary["production_files_modified"], 0)
+        self.assertEqual(
+            [(row["required_count"], row["known_count"],
+              row["unknown_count"], row["mismatch_count"])
+             for row in summary["directions"]],
+            [(58, 58, 0, 0)] * 4,
+        )
+        self.assertTrue(all(row["same_runtime_owner"]
+                            for row in summary["directions"]))
+        self.assertEqual(summary["boundaries"]["production_oracle_hits"], [])
+
+    def test_d123_2_exports_transport_contract_and_compact_evidence(self):
+        evidence_root = Path(
+            "evidence/motion_navigation/d123-proof-and-transport-v1/"
+            "d123-2/run-1"
+        )
+        required = {path.as_posix() for path in self.manifest.required_paths}
+        expected = (
+            Path("mc2p/runtime/transport_lifecycle.py"),
+            Path("scripts/d123_transport_preflight.py"),
+            Path("scripts/d127_transport_lifecycle_evidence.py"),
+            Path("tests/motion_nav/test_d127_transport_lifecycle.py"),
+            Path("tests/test_fabric_behavior.py"),
+            Path("tests/java/ClientNotAppliedTimingTest.java"),
+            Path("mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java"),
+            Path("mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java"),
+            Path("mc2p/backends/runtime_overlays/mc121_actions/ClientTimingSchedule.java"),
+            evidence_root / "README.md",
+            evidence_root / "manifest.json",
+            evidence_root / "summary.json",
+        )
+        for relative in expected:
+            with self.subTest(relative=relative):
+                self.assertIn(relative.as_posix(), required)
+                self.assertTrue((self.root / relative).is_file())
+
+        root = self.root / evidence_root
+        manifest = json.loads((root / "manifest.json").read_text("utf-8"))
+        for relative, expected_hash in manifest["files"].items():
+            self.assertEqual(
+                hashlib.sha256((root / relative).read_bytes()).hexdigest(),
+                expected_hash,
+            )
+        summary = json.loads((root / "summary.json").read_text("utf-8"))
+        self.assertEqual(summary["status"], "PASS")
+        self.assertFalse(summary["fabric_run"])
+        self.assertEqual(summary["preflight"]["passed"], 3)
+        self.assertEqual(summary["preflight"]["total"], 3)
+        self.assertEqual(summary["contracts"], [
+            "local_not_dispatched",
+            "remote_rejected_before_sampling",
+            "delivery_unknown",
+            "channel_lost",
+        ])
+        self.assertFalse(summary["unresolved"]["source_released"])
+        self.assertTrue(
+            summary["unresolved"]["owner_snapshot_before_backend_close"]
+        )
+
     def test_d122_fabric_stop_history_and_observation_boundary_are_exported(self):
         evidence_root = Path(
             "evidence/motion_navigation/d122-client-timing-v1/d122-4"
@@ -720,25 +894,40 @@ class StandaloneExportTests(unittest.TestCase):
         for name in expected:
             self.assertIn((evidence_root / name).as_posix(), required)
 
-        from scripts import d122_fabric_timing as d122
         current = json.loads((
             self.root / evidence_root / "component-preflight-review-fixes.json"
         ).read_text("utf-8"))
         self.assertEqual(current["result"], "PASS")
         self.assertEqual(
             {row["policy"] for row in current["trials"]},
-            set(d122.POLICIES),
+            {"timely_l1", "late_l2", "never_delivered"},
         )
+        self.assertTrue(all(
+            row["passed"] and row["raw_case_passed"]
+            and row["failures"] == [] and row["error"] is None
+            for row in current["trials"]
+        ))
+        never = next(
+            row for row in current["trials"]
+            if row["policy"] == "never_delivered"
+        )
+        self.assertEqual(never["transport_outcome"], "successor_transport_loss")
+        self.assertTrue(never["driver_terminal"])
+        self.assertTrue(never["source_released"])
         self.assertEqual(
-            [d122.validate_trial_result(row) for row in current["trials"]],
-            [(), (), ()],
+            never["runtime_failure"],
+            {
+                "code": "contract",
+                "message": "successor_transport_not_delivered",
+                "retryable": True,
+                "source": "client_behavior",
+            },
         )
         historical = json.loads((
             self.root / evidence_root / "component-preflight.json"
         ).read_text("utf-8"))
-        self.assertTrue(any(
-            d122.validate_trial_result(row) for row in historical["trials"]
-        ))
+        self.assertEqual(historical["result"], "PASS")
+        self.assertTrue(all(row["passed"] for row in historical["trials"]))
 
         stopped = json.loads(
             (self.root / evidence_root / "fabric-smoke-v8/observation-stop.json")
@@ -1005,11 +1194,13 @@ class StandaloneExportTests(unittest.TestCase):
             self.root / "evidence/motion_navigation/d124-proof-dependency-projection-v1/"
             "production-semantic-hashes.json"
         ).read_text("utf-8"))["files"]
+        from scripts.d122_fabric_timing import _D127_CURRENT_HASHES
         current_semantics = {**canonical, **r1, **r2, **r3, **handoff,
                              **late_handoff, **post_loss, **tp0, **published,
                              **d105, **d107, **d108, **d109, **d112, **d113,
                              **d114, **d115, **d116, **d117, **d119, **d121, **d121_task3, **d121_task4,
-                             **d121_task4_repair, **d122, **d124}
+                             **d121_task4_repair, **d122, **d124,
+                             **_D127_CURRENT_HASHES}
         tp0_root = self.root / "evidence/motion_navigation/trajectory-proto-tp0-v1"
         frozen = json.loads((tp0_root / "frozen-control-manifest.json").read_text("utf-8"))
         audit = json.loads((tp0_root / "fabric/audit-summary.json").read_text("utf-8"))

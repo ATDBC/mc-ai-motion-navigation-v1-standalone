@@ -1,0 +1,12 @@
+{
+  "schema": "mc2p.d129-pinned-asset-metadata-repair.v1",
+  "reason": "online Loom refresh changed metadata pointer while the formally pinned asset index remained present",
+  "before_sha256": "cb9e6050b67df5f1f704bb01ad70cfa6b2b0f80c8b78a023d9febccd85be6587",
+  "after_sha256": "77cc5d146860802aef8ba63ed4c86be65e5c436313432f201bf52379c6c3c1fa",
+  "asset_index_path": ".gradle/caches/fabric-loom/assets/indexes/1.21-17.json",
+  "asset_index_sha1": "6ae5eb70fe411facbb5c6c66003475c07a251a76",
+  "asset_index_size": 449557,
+  "asset_object_count": 3911,
+  "asset_total_size": 824888962,
+  "tracked_product_diff": []
+}

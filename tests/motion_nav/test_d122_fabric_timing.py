@@ -3,6 +3,7 @@ from copy import deepcopy
 import json
 from pathlib import Path
 import tempfile
+import time
 import unittest
 
 from scripts import d122_fabric_timing as probe
@@ -33,8 +34,14 @@ class D122FabricTimingTests(unittest.TestCase):
         self.assertEqual(len(self.preflight["trials"]), 3)
         for row in self.preflight["trials"]:
             self.assertEqual(probe.validate_trial_result(row), ())
-            self.assertTrue(row["source_released"])
             self.assertTrue(row["prepared_frame_clear"])
+            if row["policy"] == "never_delivered":
+                self.assertFalse(row["source_released"])
+                self.assertFalse(row["driver_terminal"])
+                self.assertEqual(row["driver_state"], "unresolved")
+            else:
+                self.assertTrue(row["source_released"])
+                self.assertTrue(row["driver_terminal"])
 
     def test_shared_validator_rejects_raw_failure_errors_and_wrong_terminal_state(self):
         rows = {row["policy"]: row for row in self.preflight["trials"]}
@@ -69,6 +76,10 @@ class D122FabricTimingTests(unittest.TestCase):
                             if row["policy"] == "never_delivered"))
         self.assertEqual(row["runtime_failure"],
                          probe.NEVER_COMPONENT_RUNTIME_FAILURE)
+        self.assertEqual(row["runtime_state"], "failed")
+        self.assertEqual(row["driver_state"], "unresolved")
+        self.assertFalse(row["source_released"])
+        self.assertFalse(row["driver_terminal"])
         self.assertEqual(probe.validate_trial_result(row), ())
 
         # Fabric's TimeoutError is converted by PlayerRuntimeV1.step into a
@@ -108,6 +119,122 @@ class D122FabricTimingTests(unittest.TestCase):
                          probe.NEVER_FABRIC_RUNTIME_FAILURE)
         self.assertEqual(raw["transport_events"][0]["attempted_request"][
             "first_effect_window"], {"earliest_tick": 27, "latest_tick": 27})
+
+    def test_runtime_terminal_body_reads_typed_self_state_vec3(self):
+        import inspect
+        from unittest.mock import patch
+        from mc2p.contracts.observation_v2 import SelfStateV2
+        from mc2p.contracts.reset import ResetRequestV0
+        from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
+        from tests.sim.backend import CalculatorBackend, Scene
+        from tests.test_player_runtime import _RecordingTrace
+
+        clock = [time.perf_counter_ns()]
+        backend = CalculatorBackend(
+            clock,
+            Scene({(0, 63, 0): "minecraft:stone"},
+                  ((-1, 1), (62, 66), (-1, 1))),
+            (.5, 64., .5),
+            action_timing_v2=True,
+        )
+        runtime = PlayerRuntimeV1(
+            backend, _RecordingTrace(), clock_ns=time.perf_counter_ns,
+        )
+        try:
+            self.assertTrue(runtime.reset(ResetRequestV0(
+                "reset", backend.episode, "d122-terminal-body", 1,
+                time.perf_counter_ns() + 30_000_000_000,
+            )).succeeded)
+            current = runtime.observation.self_state.value
+            self.assertIs(type(current), SelfStateV2)
+            with self.assertRaises(AttributeError):
+                current.velocity_blocks_per_second
+
+            terminal = probe._runtime_terminal_payload(
+                runtime.observation, 20.,
+            )
+            row = probe._merge_runtime_terminal_payload(
+                {"marker": "same-final-row-path"}, terminal,
+            )
+            self.assertIs(type(terminal), probe.RuntimeTerminalPayload)
+            self.assertEqual(row["final_body"], {
+                "position": [.5, 64., .5],
+                "velocity": [0., -0.0784, 0.],
+                "on_ground": True,
+                "evidence": "runtime_observation",
+            })
+            self.assertEqual(row["health_evidence"], {
+                "source": "runtime_observation",
+                "decreased": False,
+            })
+            self.assertEqual(
+                row["final_observation_sequence_id"],
+                runtime.observation.sequence_id,
+            )
+            self.assertEqual(
+                row["final_movement_tick_id"],
+                current.movement_tick_id,
+            )
+            with self.assertRaises(TypeError):
+                probe.RuntimeTerminalPayload(
+                    final_body=terminal.final_body,
+                    health_evidence=terminal.health_evidence,
+                    movement_tick_id=terminal.movement_tick_id,
+                )
+            with self.assertRaises(TypeError):
+                probe.RuntimeTerminalPayload(
+                    final_body=terminal.final_body,
+                    health_evidence=terminal.health_evidence,
+                    final_observation_sequence_id=(
+                        terminal.observation_sequence_id
+                    ),
+                    movement_tick_id=terminal.movement_tick_id,
+                )
+            with patch.object(
+                probe.RuntimeTerminalPayload, "row_fields",
+                return_value={
+                    "final_body": terminal.final_body,
+                    "health_evidence": terminal.health_evidence,
+                    "final_movement_tick_id": terminal.movement_tick_id,
+                },
+            ):
+                with self.assertRaises(RuntimeError):
+                    probe._merge_runtime_terminal_payload({}, terminal)
+            with patch.object(
+                probe.RuntimeTerminalPayload, "row_fields",
+                return_value={
+                    "final_body": terminal.final_body,
+                    "health_evidence": terminal.health_evidence,
+                    "final_observation_id": terminal.observation_sequence_id,
+                    "final_movement_tick_id": terminal.movement_tick_id,
+                },
+            ):
+                with self.assertRaises(RuntimeError):
+                    probe._merge_runtime_terminal_payload({}, terminal)
+            with self.assertRaises(RuntimeError):
+                probe._merge_runtime_terminal_payload({
+                    "final_observation_sequence_id": (
+                        terminal.observation_sequence_id
+                    ),
+                }, terminal)
+
+            runner_source = inspect.getsource(probe.run_fabric_runtime)
+            self.assertEqual(
+                runner_source.count("_merge_runtime_terminal_payload("), 1,
+            )
+            self.assertNotIn("current", runner_source)
+            self.assertNotIn(
+                "velocity_blocks_per_second",
+                inspect.getsource(probe._runtime_terminal_payload),
+            )
+            self.assertNotIn(
+                "velocity_blocks_per_second",
+                inspect.getsource(probe.RuntimeTerminalPayload.row_fields),
+            )
+            for field in probe._RUNTIME_TERMINAL_ROW_FIELDS:
+                self.assertNotIn(f'"{field}"', runner_source)
+        finally:
+            runtime.close()
 
     def test_never_requires_parent_physics_terminal_and_fresh_health_evidence(self):
         row = deepcopy(next(row for row in self.preflight["trials"]
@@ -196,15 +323,292 @@ class D122FabricTimingTests(unittest.TestCase):
 
     def test_fabric_runner_resolves_every_lazy_dependency_without_starting_minecraft(self):
         dependencies = probe.resolve_fabric_runner_dependencies()
-        self.assertEqual(
-            dependencies["NavigationObservationAdapter"].__module__,
-            "mc2p.motion_nav.runtime_adapter",
-        )
+        self.assertNotIn("NavigationObservationAdapter", dependencies)
         self.assertIn("RuntimeNavigationDriverState", dependencies)
-        self.assertIn("PreparedMotionJob", dependencies)
+        self.assertIn("MotionSolverWorker", dependencies)
 
-    def test_all_proof_dependencies_are_declared_observed_facts_in_every_direction(self):
-        from scripts import d118_momentum_calibration_runtime as frozen
+    def test_prepared_expected_identity_is_bound_outside_backend_step(self):
+        from types import SimpleNamespace
+        from mc2p.contracts.action_v1 import (
+            ActionSnapshotV1, MovementTickWindowV1, MovementV1,
+        )
+        from mc2p.contracts.motion_activation import ActivationStatus
+
+        movement = MovementV1(forward=1, jump=True, sprint=True)
+        window = MovementTickWindowV1(27, 27)
+        proposal = SimpleNamespace(
+            proof_token="proof", generation_id="generation",
+            owner_id="owner", ledger_id="ledger", world_session_id="world",
+            movement_intent_id="intent", expected_movement=movement,
+            requested_window=window, handoff_token="handoff",
+        )
+        action = ActionSnapshotV1(
+            "episode", 19, 18, time.perf_counter_ns() + 1_000_000_000,
+            movement=movement, first_effect_window=window,
+        )
+        receipt = SimpleNamespace(
+            episode_id="episode", request_sequence_id=19, generation_id=20,
+        )
+        result = SimpleNamespace(
+            decision=SimpleNamespace(action=action),
+            backend_result=SimpleNamespace(receipt=receipt),
+            stream_activation=SimpleNamespace(
+                status=ActivationStatus.ACTIVATED,
+            ),
+        )
+        prepared = probe._prepared_successor_identity(proposal)
+        expected = probe._bind_expected_successor(prepared, result)
+        self.assertEqual(expected, {
+            "episode_id": "episode", "request_sequence_id": 19,
+            "observation_sequence_id": 18,
+            "first_effect_window": {"earliest_tick": 27, "latest_tick": 27},
+            "prepared_generation_id": "generation",
+            "receipt_generation_id": 20,
+            "movement": {"forward": 1, "strafe": 0, "jump": True,
+                         "sneak": False, "sprint": True},
+            "look": {"yaw_delta_degrees": 0.0, "pitch_delta_degrees": 0.0},
+            "valid_for_ticks": 1, "safe_default": None,
+            "proof_token": "proof", "owner_id": "owner",
+            "ledger_id": "ledger", "world_session_id": "world",
+            "movement_intent_id": "intent", "handoff_token": "handoff",
+        })
+        wrong_receipt = SimpleNamespace(
+            decision=result.decision,
+            backend_result=SimpleNamespace(receipt=SimpleNamespace(
+                episode_id="episode", request_sequence_id=99,
+                generation_id=20,
+            )),
+            stream_activation=result.stream_activation,
+        )
+        with self.assertRaisesRegex(RuntimeError, "receipt identity"):
+            probe._bind_expected_successor(prepared, wrong_receipt)
+        not_selected = SimpleNamespace(
+            decision=result.decision,
+            backend_result=result.backend_result,
+            stream_activation=SimpleNamespace(
+                status=ActivationStatus.NOT_SELECTED,
+            ),
+        )
+        with self.assertRaisesRegex(RuntimeError, "was not activated"):
+            probe._bind_expected_successor(prepared, not_selected)
+        source = __import__("inspect").getsource(probe._FabricExecutionCase.tick)
+        self.assertLess(
+            source.index("_prepared_successor_identity"),
+            source.index("advance_prepared"),
+        )
+
+    def test_component_runs_the_exact_fabric_pretrial_assembly_after_fixture_steps(self):
+        from dataclasses import replace
+        from mc2p.contracts.common import ContractViolation
+        from mc2p.contracts.observation_request_v3 import ObservationRequestV3
+        from mc2p.contracts.reset import ResetRequestV0
+        from mc2p.motion_nav.motion_worker import PreparedMotionJob
+        from mc2p.motion_nav.online_motion import CandidateExecutionWindow
+        from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
+        from scripts import d120_momentum_entry_calibration as calibration
+        from tests.motion_nav.test_d121_successor_binding import (
+            RecordingProcessWorker, fixed_case,
+        )
+        from tests.sim.backend import CalculatorBackend, Scene
+        from tests.sim.runner import seed_memory
+        from tests.test_player_runtime import _RecordingTrace
+
+        for direction_index in range(4):
+            with self.subTest(direction=direction_index):
+                _request, fixture, template, _spec, _snapshot = fixed_case(
+                    direction_index,
+                )
+                known = probe.known_fixture_map(
+                    fixture.trial,
+                    origin=fixture.context.origin,
+                    feet_y=fixture.context.feet_y,
+                )
+                solids = {
+                    position: geometry.material_key
+                    for position, geometry in known["blocks"].items()
+                }
+                start_x, start_z = calibration.frozen._local_to_world(
+                    fixture.context.origin, direction_index,
+                    fixture.trial.start_local[0], fixture.trial.start_local[2],
+                )
+                clock = [time.perf_counter_ns()]
+                backend = CalculatorBackend(
+                    clock,
+                    Scene(solids, ((-14, 14), (60, 70), (-14, 14))),
+                    (start_x, float(fixture.context.feet_y), start_z),
+                    action_timing_v2=True,
+                )
+                backend.state = replace(
+                    template.entry_state,
+                    session=backend._truth_session,
+                    position=(start_x, float(fixture.context.feet_y), start_z),
+                )
+                backend.movement_tick = 0
+                runtime = PlayerRuntimeV1(
+                    backend, _RecordingTrace(), clock_ns=time.perf_counter_ns,
+                )
+                class NeverPublishingWorker(RecordingProcessWorker):
+                    def __init__(self):
+                        self.submit_movement_ticks = []
+                        super().__init__()
+
+                    def submit(self, job):
+                        accepted = super().submit(job)
+                        if accepted:
+                            self.submit_movement_ticks.append(
+                                backend.movement_tick,
+                            )
+                        return accepted
+
+                    def poll_available(self):
+                        return ()
+
+                self.assertTrue(runtime.reset(ResetRequestV0(
+                    "reset", backend.episode,
+                    f"d122-pretrial-{direction_index}", 1,
+                    time.perf_counter_ns() + 30_000_000_000,
+                )).succeeded)
+                seed_memory(runtime, backend.scene)
+                deadline = time.perf_counter_ns() + 30_000_000_000
+                request = ObservationRequestV3("navigation_v1", ())
+                prewarm = probe.FabricExecutionPrewarm.create(
+                    direction_index,
+                    worker_factory=lambda **_kwargs: NeverPublishingWorker(),
+                )
+                for _ in range(6):
+                    probe._fixture_action_step(
+                        runtime, backend.episode,
+                        f"d122-pretrial-fixture-{direction_index}",
+                        deadline, request,
+                    )
+
+                case = None
+                try:
+                    case, first_result = probe._FabricExecutionCase.bind_and_start(
+                        runtime, backend, backend.episode,
+                        prewarm=prewarm,
+                        origin=fixture.context.origin,
+                        feet_y=fixture.context.feet_y,
+                        deadline_ns=deadline,
+                    )
+                    self.assertIsNotNone(first_result.decision)
+                    self.assertGreater(case.assembly.start_tick, 1)
+                    self.assertEqual(
+                        case.assembly.start_tick,
+                        case.anchor.movement_tick_id + 1,
+                    )
+                    parent_action = first_result.decision.action
+                    self.assertEqual(parent_action.movement.forward, 1)
+                    self.assertTrue(parent_action.movement.sprint)
+                    self.assertEqual(
+                        parent_action.first_effect_window.earliest_tick,
+                        case.assembly.start_tick,
+                    )
+                    self.assertEqual(
+                        parent_action.first_effect_window.latest_tick,
+                        case.assembly.start_tick,
+                    )
+                    self.assertTrue(
+                        case.session._motion_result_inbox.wait_for_receiver(
+                            timeout=10,
+                        ),
+                    )
+                    job_deadline = time.monotonic() + 10.
+                    while not case.worker.jobs and time.monotonic() < job_deadline:
+                        time.sleep(.001)
+                    prepared_jobs = tuple(
+                        job for job in case.worker.jobs
+                        if type(job) is PreparedMotionJob
+                    )
+                    self.assertEqual(len(prepared_jobs), 1)
+                    self.assertGreaterEqual(
+                        case.worker.submit_movement_ticks[0],
+                        case.assembly.start_tick,
+                    )
+                    prepared_job = prepared_jobs[0]
+                    self.assertEqual(
+                        prepared_job.request.async_identity,
+                        case.coordinator._prepared_fields.async_identity,
+                    )
+                    self.assertEqual(
+                        prepared_job.request.action_revision,
+                        prepared_job.request.async_identity.revision,
+                    )
+                    self.assertEqual(
+                        case.context.candidate_revision,
+                        case.assembly.candidate_revision,
+                    )
+                    self.assertEqual(
+                        case.identity.revision,
+                        case.assembly.candidate_revision,
+                    )
+                    self.assertEqual(
+                        case.proof.world_dependencies,
+                        case.assembly.replay_dependencies,
+                    )
+                    self.assertIs(case.source, runtime.snapshot_world_port)
+                    assembly = case.assembly
+                    self.assertEqual(assembly.request.direction, _request.direction)
+                    self.assertEqual(
+                        assembly.fixture.context.origin,
+                        fixture.context.origin,
+                    )
+                    self.assertEqual(
+                        assembly.fixture.context.feet_y,
+                        fixture.context.feet_y,
+                    )
+
+                    if direction_index == 0:
+                        mutations = (
+                            lambda: replace(
+                                assembly,
+                                anchor_position=(
+                                    assembly.anchor_position[0] + 1.0,
+                                    *assembly.anchor_position[1:],
+                                ),
+                            ),
+                            lambda: replace(
+                                assembly,
+                                request=replace(
+                                    assembly.request,
+                                    execution_window=CandidateExecutionWindow(
+                                        assembly.start_tick + 1,
+                                        assembly.start_tick + 1,
+                                    ),
+                                ),
+                            ),
+                            lambda: replace(
+                                assembly.proof,
+                                trajectory=assembly.proof.trajectory[1:],
+                            ),
+                            lambda: replace(
+                                assembly,
+                                anchor_movement_tick_id=(
+                                    assembly.anchor_movement_tick_id + 1
+                                ),
+                            ),
+                            lambda: replace(assembly, replay_dependencies=()),
+                            lambda: replace(assembly, candidate_revision=2),
+                        )
+                        for index, mutation in enumerate(mutations):
+                            with self.subTest(mutation=index):
+                                with self.assertRaises(
+                                    (RuntimeError, ContractViolation),
+                                ):
+                                    mutation()
+                    close_report = case.close()
+                    self.assertEqual(close_report["worker"]["live_workers"], 0)
+                    self.assertEqual(close_report["worker"]["live_queue_feeders"], 0)
+                    self.assertFalse(close_report["worker"]["timed_out"])
+                    self.assertEqual(close_report["session"]["live_receivers"], 0)
+                finally:
+                    if case is not None:
+                        case.close()
+                    else:
+                        prewarm.close()
+                    runtime.close()
+
+    def test_all_proof_dependencies_are_in_the_known_fixture_map_in_every_direction(self):
         from scripts import d120_momentum_entry_calibration as calibration
         for direction in range(4):
             fixture = calibration.build_fixture(direction)
@@ -214,21 +618,13 @@ class D122FabricTimingTests(unittest.TestCase):
                 direction, origin=origin, feet_y=feet_y,
             )
             required = set(manifest["facts"])
-            requested = set(probe.fabric_observation_positions(
-                fixture.trial, direction_index=direction,
-                origin=origin, feet_y=feet_y,
-            ))
-            placed = {
-                tuple(position)
-                for row in frozen.trial_fixture_rows(
-                    fixture.trial, origin=origin, feet_y=feet_y,
-                )
-                for position in row["positions"]
-            }
+            known = probe.known_fixture_map(
+                fixture.trial, origin=origin, feet_y=feet_y,
+            )
+            provided = set(known["blocks"]) | set(known["air"])
             self.assertEqual(manifest["unknown_canonical_facts"], ())
             self.assertGreater(manifest["legacy_request_missing_count"], 0)
-            self.assertEqual(required - requested, set())
-            self.assertEqual(required - placed, set())
+            self.assertEqual(required - provided, set())
             self.assertTrue({"parent", "successor", "fallback"}
                             <= set(manifest["categories"]))
 
@@ -263,7 +659,7 @@ class D122FabricTimingTests(unittest.TestCase):
             reference = probe.preflight_reference(path)
             self.assertEqual(reference["status"], "PASS")
             self.assertEqual(len(reference["sha256"]), 64)
-            self.assertEqual(reference["production_semantics"]["file_count"], 31)
+            self.assertEqual(reference["production_semantics"]["file_count"], 32)
             self.assertTrue(reference["production_semantics"]["record"].endswith(
                 "d124-proof-dependency-projection-v1/production-semantic-hashes.json"))
             self.assertTrue(reference["production_semantics"]["previous_record"].endswith(

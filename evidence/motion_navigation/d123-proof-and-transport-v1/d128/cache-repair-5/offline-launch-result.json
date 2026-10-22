@@ -1,0 +1,7 @@
+{
+  "schema": "mc2p.d129-formal-offline-launch-result.v1",
+  "return_code": 0,
+  "tracked_product_diff": [],
+  "stdout_sha256": "01c989ef13b98073abd83869322656bad41c913fa5ae5dffe019245a49276ed0",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -32,13 +32,21 @@ from mc2p.contracts.report import ExecutionReportV0, ExecutionStatusV0, FailureC
 from mc2p.contracts.reset import ResetRequestV0, ResetResultV0
 from mc2p.contracts.task import TaskIntentV0
 from mc2p.runtime.arbiter_v1 import ActionArbiterV1, ArbitrationDecisionV1
-from mc2p.runtime.backend_v1 import BackendStepResultV1, PlayerBackendV1
+from mc2p.runtime.backend_v1 import (
+    BackendStepResultV1, PlayerBackendV1, BackendDeliveryUnknown,
+    BackendChannelLost,
+)
+from mc2p.runtime.transport_lifecycle import (
+    TransportLifecycleFactV1, TransportLifecycleKind,
+    local_not_dispatched_fact, prove_remote_rejected_before_sampling,
+)
 from mc2p.runtime.failure_disposition import (
     FailureDisposition, FailureDispositionDecision, FailureDispositionPolicy,
 )
 from mc2p.runtime.trace import TraceSinkV0
 from mc2p.motion_nav.online_motion import (
     CandidateExecutionWindow, InputApplicationLedger, InputApplicationStatus,
+    input_application_has_finished,
 )
 from mc2p.motion_nav.runtime_adapter import (
     NavigationObservationAdapter, world_session_from_observation,
@@ -65,6 +73,15 @@ class RuntimeStepResultV1:
     backend_result: BackendStepResultV1 | None = None
     dispatched_monotonic_ns: int | None = None
     stream_activation: ActivationResult | None = None
+    transport_fact: TransportLifecycleFactV1 | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeResourceCloseReportV1:
+    backend_closed: bool
+    trace_closed: bool
+    open_handles: int
+    cleanup_failures: int
 
 
 class PlayerRuntimeV1:
@@ -102,6 +119,8 @@ class PlayerRuntimeV1:
             self._last_failure_disposition: FailureDispositionDecision | None = None
             self._force_neutral_reason: str | None = None
             self._last_navigation_ingest_ns: int | None = None
+            self._body_responsibility_unresolved = False
+            self._local_resources_closed = False
         except BaseException as error:
             try:
                 close_result = trace_writer.close()
@@ -482,6 +501,31 @@ class PlayerRuntimeV1:
                 phase_code = FailureCodeV0.TRACE_IO
                 self._trace.write("dispatch", {"decision": decision, "task": task, "profile": profile,
                                                 "observation_request": request})
+                if self._clock() >= action.deadline_monotonic_ns:
+                    fact = local_not_dispatched_fact(
+                        action, obs.sequence_id + 1,
+                        self._transport_causal_tick(action, obs),
+                        "runtime_deadline_expired_before_backend_dispatch",
+                    )
+                    failure = FailureV0(
+                        FailureCodeV0.DEADLINE_EXCEEDED,
+                        fact.reason, True, "runtime_dispatch",
+                    )
+                    report = self._report(
+                        task, decision, ExecutionStatusV0.TIMED_OUT,
+                        "LOCAL_NOT_DISPATCHED", failure, obs,
+                    )
+                    self._record_failure("local_not_dispatched", {
+                        "decision": decision, "transport_fact": fact,
+                        "report": report,
+                    })
+                    # Reserve the decision identity even though it never crossed
+                    # the backend boundary. The recovery exchange must use its
+                    # own sequence and can never masquerade as this decision.
+                    self._request_sequence += 1
+                    return RuntimeStepResultV1(
+                        obs, decision, report, transport_fact=fact,
+                    )
                 self._request_sequence += 1
                 phase_code = FailureCodeV0.BACKEND_IO
                 self._submit_input_record(action, selected_execution_window)
@@ -501,11 +545,51 @@ class PlayerRuntimeV1:
                 backend_result = self._backend_step(
                     backend_action, backend_action.deadline_monotonic_ns, request,
                 )
+                if type(backend_result) is not BackendStepResultV1:
+                    raise ContractViolation(
+                        "formal backend returned legacy/invalid result"
+                    )
+                receipt = backend_result.receipt
+                transport_fact = None
+                rejection_proof_error = None
+                if (receipt.status == "rejected"
+                        and type(receipt) is ClientBehaviorReceiptV4
+                        and action.first_effect_window is not None):
+                    try:
+                        transport_fact = prove_remote_rejected_before_sampling(
+                            action, receipt,
+                            expected_generation_id=obs.sequence_id + 1,
+                        )
+                    except ContractViolation as error:
+                        rejection_proof_error = error
+                if rejection_proof_error is not None:
+                    if (receipt.episode_id == action.episode_id
+                            and receipt.request_sequence_id == action.request_sequence_id
+                            and receipt.generation_id == obs.sequence_id + 1):
+                        try:
+                            self._input_ledger.observe_receipt(receipt)
+                        except ContractViolation:
+                            # The rejected receipt is already untrusted. Ledger
+                            # backfill failure strengthens uncertainty; it must
+                            # not escape into the generic failure/seal path.
+                            pass
+                    return self._transport_unresolved_result(
+                        task, decision, BackendDeliveryUnknown(
+                            "remote rejection lacks complete not_applied proof"
+                        ), obs, phase_code=FailureCodeV0.CONTRACT,
+                        activation=activation,
+                    )
                 self._validate_result(backend_action, backend_result, request)
                 self._ensure_input_record(
                     backend_action, backend_result, selected_execution_window,
                 )
-                self._input_ledger.observe_receipt(backend_result.receipt)
+                self._input_ledger.observe_receipt(
+                    receipt,
+                    confirmed_not_applied_sequence=(
+                        action.request_sequence_id
+                        if transport_fact is not None else None
+                    ),
+                )
                 self._report_stream_applications(backend_result)
                 self._observation = backend_result.observation
                 # Returned application facts already happened. A deadline may
@@ -517,7 +601,6 @@ class PlayerRuntimeV1:
                     self._last_navigation_ingest_ns = max(
                         0, time.perf_counter_ns() - ingest_started,
                     )
-                receipt = backend_result.receipt
                 failure = None
                 status = ExecutionStatusV0.RUNNING
                 phase = "constraint_filtered" if any(r.startswith("task_forbidden_")
@@ -529,6 +612,8 @@ class PlayerRuntimeV1:
                     failure = FailureV0(FailureCodeV0.DEADLINE_EXCEEDED if status is ExecutionStatusV0.TIMED_OUT else FailureCodeV0.CONTRACT,
                         receipt.reason, True, "client_behavior")
                     phase = "action_rejected"
+                    if transport_fact is not None:
+                        phase = "REMOTE_REJECTED_BEFORE_SAMPLING"
                     if cancel_reason is not None or status is ExecutionStatusV0.TIMED_OUT:
                         self._apply_failure(failure, record=False)
                 elif receipt.status == "operation_rejected":
@@ -558,8 +643,17 @@ class PlayerRuntimeV1:
                                           "backend_result": backend_result, "report": report,
                                           "dispatched_monotonic_ns": dispatched_ns,
                                           "decision_observation_received_ns": obs.received_at_monotonic_ns})
-                return RuntimeStepResultV1(self._observation, decision, report, backend_result, dispatched_ns, activation)
+                return RuntimeStepResultV1(
+                    self._observation, decision, report, backend_result,
+                    dispatched_ns, activation, transport_fact,
+                )
             except Exception as error:
+                if isinstance(error, (BackendDeliveryUnknown, BackendChannelLost)):
+                    assert decision is not None
+                    return self._transport_unresolved_result(
+                        task, decision, error, obs,
+                        phase_code=phase_code, activation=activation,
+                    )
                 failure = self._exception_failure(error, phase_code)
                 self._apply_failure(failure, record=False)
                 report = self._report(task, decision,
@@ -575,6 +669,141 @@ class PlayerRuntimeV1:
             except BaseException:
                 self._seal()
                 raise
+
+    def complete_local_not_dispatched(
+        self,
+        task: TaskIntentV0,
+        profile: BehaviorProfileV0,
+        deadline_monotonic_ns: int,
+        fact: TransportLifecycleFactV1,
+        *,
+        observation_request: ObservationRequestV3 | None = None,
+    ) -> RuntimeStepResultV1:
+        """Run one independent timed-neutral exchange after the incumbent default."""
+        with self._io_lock:
+            self._require_ready()
+            if (type(fact) is not TransportLifecycleFactV1
+                    or fact.kind is not TransportLifecycleKind.LOCAL_NOT_DISPATCHED):
+                raise ContractViolation("local recovery requires its dispatch decision fact")
+            if type(task) is not TaskIntentV0 or type(profile) is not BehaviorProfileV0:
+                raise ContractViolation("local recovery requires formal task/profile")
+            obs = self._observation
+            if (type(obs) is not ObservationSnapshotV3
+                    or obs.episode_id != fact.episode_id
+                    or fact.request_sequence_id >= self._request_sequence):
+                raise ContractViolation("local recovery fact is stale or foreign")
+            request = resolve_observation_request(
+                self._observation_schema, observation_request,
+            )
+            deadline = min(deadline_monotonic_ns, task.deadline_monotonic_ns)
+            self._check_deadline(deadline)
+            parent = next((
+                record for record in reversed(self._input_ledger.snapshot())
+                if record.action.safe_default is not None
+                and not input_application_has_finished(record)
+            ), None)
+            if parent is None:
+                raise ContractViolation(
+                    "local not-dispatched recovery lacks an incumbent safe default"
+                )
+            default = parent.action.safe_default
+            assert default is not None
+            exchange_tick = default.activation_tick + default.valid_for_ticks
+            action = ActionSnapshotV1(
+                obs.episode_id,
+                self._request_sequence,
+                obs.sequence_id,
+                deadline,
+                movement=MovementV1(),
+                first_effect_window=MovementTickWindowV1(
+                    exchange_tick, exchange_tick,
+                ),
+            )
+            decision = ArbitrationDecisionV1(
+                action, (), (), (), MovementTickWindowV1(
+                    exchange_tick, exchange_tick,
+                ),
+            )
+            self._trace.write("dispatch", {
+                "decision": decision,
+                "task": task,
+                "profile": profile,
+                "observation_request": request,
+                "local_not_dispatched_parent": fact,
+            })
+            self._request_sequence += 1
+            self._submit_input_record(
+                action,
+                CandidateExecutionWindow(exchange_tick, exchange_tick),
+            )
+            dispatched_ns = self._clock()
+            try:
+                result = self._backend_step(
+                    action, action.deadline_monotonic_ns, request,
+                )
+                self._validate_result(action, result, request)
+                self._input_ledger.observe_receipt(result.receipt)
+                self._observation = result.observation
+                if type(self._observation) is ObservationSnapshotV3:
+                    self._navigation_observation_adapter.ingest(self._observation)
+                record = self._input_ledger.record(action.request_sequence_id)
+                if (record is None or not input_application_has_finished(record)
+                        or result.receipt.status not in {"executed", "confirmed_local"}):
+                    raise ContractViolation(
+                        "local recovery exchange lacks a completed neutral sample"
+                    )
+                report = self._report(
+                    task, decision, ExecutionStatusV0.RUNNING,
+                    "local_not_dispatched_observation_exchange", None,
+                    self._observation,
+                )
+                self._trace.write("step", {
+                    "task": task, "profile": profile,
+                    "decision": decision, "backend_result": result,
+                    "report": report,
+                    "dispatched_monotonic_ns": dispatched_ns,
+                    "local_not_dispatched_parent": fact,
+                })
+                return RuntimeStepResultV1(
+                    self._observation, decision, report, result,
+                    dispatched_ns,
+                )
+            except (BackendDeliveryUnknown, BackendChannelLost) as error:
+                return self._transport_unresolved_result(
+                    task, decision, error, obs,
+                    phase_code=FailureCodeV0.BACKEND_IO,
+                )
+
+    @staticmethod
+    def _transport_causal_tick(action, observation) -> int:
+        if action.first_effect_window is not None:
+            return action.first_effect_window.earliest_tick
+        own = (None if type(observation) is not ObservationSnapshotV3
+               else observation.self_state.value)
+        return (0 if own is None or own.movement_tick_id is None
+                else own.movement_tick_id + 1)
+
+    def _transport_unresolved_result(
+        self, task, decision, error, observation, *, phase_code, activation=None,
+    ) -> RuntimeStepResultV1:
+        action = decision.action
+        fact = error.lifecycle_fact(
+            action, observation.sequence_id + 1,
+            self._transport_causal_tick(action, observation),
+        )
+        failure = self._exception_failure(error, phase_code)
+        self._seal_unresolved()
+        report = self._report(
+            task, decision, ExecutionStatusV0.FAILED,
+            "BODY_RESPONSIBILITY_UNRESOLVED", failure, None,
+        )
+        self._record_failure("transport_unresolved", {
+            "decision": decision, "transport_fact": fact, "report": report,
+        })
+        return RuntimeStepResultV1(
+            None, decision, report,
+            stream_activation=activation, transport_fact=fact,
+        )
 
     def _incumbent_fallback(self, decision, dispatches):
         selected = dict(decision.selected_intents).get("movement")
@@ -765,6 +994,9 @@ class PlayerRuntimeV1:
 
     def close(self) -> None:
         with self._io_lock:
+            if self._body_responsibility_unresolved:
+                self.close_resources_only()
+                return
             if self._state is RuntimeStateV1.CLOSED:
                 return
             try:
@@ -964,6 +1196,54 @@ class PlayerRuntimeV1:
         self._force_neutral_reason = None
         self._arbiter.clear()
         self._close_backend()
+
+    def _seal_unresolved(self) -> None:
+        """Freeze Runtime state; the driver snapshots owners before I/O closes."""
+        self._state = RuntimeStateV1.FAILED
+        self._force_neutral_reason = None
+        self._body_responsibility_unresolved = True
+
+    def seal_unresolved_after_owner_snapshot(self) -> None:
+        """Close the channel only after the formal owner froze responsibility."""
+        with self._io_lock:
+            if not self._body_responsibility_unresolved:
+                raise ContractViolation(
+                    "transport seal requires unresolved body responsibility"
+                )
+            self._close_backend()
+
+    def close_resources_only(self) -> RuntimeResourceCloseReportV1:
+        """Close local handles without clearing unresolved control ownership."""
+        with self._io_lock:
+            if not self._body_responsibility_unresolved:
+                raise ContractViolation(
+                    "resource-only Runtime close requires unresolved body responsibility"
+                )
+            if self._local_resources_closed:
+                return RuntimeResourceCloseReportV1(
+                    self._backend_closed, True, 0,
+                    len(self._cleanup_failures),
+                )
+            failures_before = len(self._cleanup_failures)
+            self._close_backend()
+            trace_closed = False
+            try:
+                trace_close = self._trace.close()
+                if getattr(trace_close, "sealed", True) is not True:
+                    raise RuntimeError("asynchronous trace evidence was not sealed")
+                trace_closed = True
+            except Exception as error:
+                self._cleanup_failures.append(
+                    self._exception_failure(
+                        error, FailureCodeV0.CLEANUP, classify=False,
+                    )
+                )
+            open_handles = int(not self._backend_closed) + int(not trace_closed)
+            self._local_resources_closed = open_handles == 0
+            return RuntimeResourceCloseReportV1(
+                self._backend_closed, trace_closed, open_handles,
+                len(self._cleanup_failures) - failures_before,
+            )
 
     def _apply_failure(
         self, failure: FailureV0, *, record: bool,

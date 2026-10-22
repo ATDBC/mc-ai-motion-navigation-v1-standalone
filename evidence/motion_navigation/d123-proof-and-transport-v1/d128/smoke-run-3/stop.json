@@ -1,0 +1,18 @@
+{
+  "schema": "mc2p.d129-invalid-environment-run.v1",
+  "status": "INVALID_ENVIRONMENT_RUN",
+  "classification": "BUILD_CACHE_RUNTIME_CLASSPATH",
+  "return_code": 1,
+  "failure": "offline exportClientLaunch lacked org.jline 3.20.0 reader and terminal jars",
+  "offline_preflight": "PASS",
+  "source_run": null,
+  "minecraft_started": false,
+  "fabric_started": false,
+  "pre_trial_started": false,
+  "movement_trial_started": false,
+  "attempt_consumed": false,
+  "product_conclusion": "NONE",
+  "retry_policy": "D129",
+  "retry_output": "evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-4",
+  "manifest_sha256": "aed4d35bfc25bc00df736226ad55e5b0de7964e22aeb24575114eacf93be7e1d"
+}

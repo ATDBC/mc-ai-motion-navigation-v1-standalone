@@ -1,0 +1,48 @@
+{
+  "schema": "mc2p.d129-invalid-harness-classification-review.v1",
+  "status": "PASS",
+  "classification": "INVALID_HARNESS_RUN/fixture-scheduling",
+  "source_manifest": {
+    "path": "manifest.json",
+    "sha256": "0c69ea7f59de5513e62b6c748d6aae0319e2620ac46ef30754273969f36f4f5d",
+    "bound_file_count": 50
+  },
+  "conjunction": {
+    "fixture_or_tool_causally_broke_registered_precondition": true,
+    "raw_request_receipt_ftick_physics_identity_is_unique": true,
+    "tested_non_neutral_input_application_count": 0,
+    "safe_default_application_count": 0,
+    "body_entered_tested_behavior": false,
+    "health_decrease_points": 0.0,
+    "independent_transport_protocol_or_product_safety_failure": false
+  },
+  "identity_boundary": {
+    "episode_id": "fabric-21001-0",
+    "request_sequence_id": 7,
+    "observation_sequence_id": 7,
+    "window": {
+      "earliest_tick": 8,
+      "latest_tick": 8
+    },
+    "client_window_pending_tick": 34,
+    "client_window_missed_tick": 35,
+    "note": "window_missed was the correct downstream rejection of the harness-staled request; no independent product or transport defect caused the stale dispatch"
+  },
+  "body_boundary": {
+    "physics_tick_range": [8, 125],
+    "start_position": [0.5, 64.0, -5.17],
+    "final_position": [0.5, 64.0, -5.17],
+    "on_ground_throughout": true,
+    "start_health_points": 20.0,
+    "final_health_points": 20.0
+  },
+  "disqualifiers": {
+    "any_tested_input_or_default_application": false,
+    "body_motion_or_damage": false,
+    "independent_transport_or_formal_safety_failure": false,
+    "raw_identity_ambiguous": false
+  },
+  "result_row_is_not_classification_evidence": true,
+  "historical_raw_bytes_modified": false,
+  "formal_rerun_authorized": false
+}

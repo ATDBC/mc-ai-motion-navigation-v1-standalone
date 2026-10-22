@@ -1,0 +1,48 @@
+{
+  "schema": "mc2p.d129-invalid-pretrial-run.v1",
+  "status": "INVALID_PRETRIAL_RUN",
+  "subtype": "fixture-adapter",
+  "decision": "D129",
+  "formal_command": "python scripts\\d123_fabric_transport.py --launch smoke --output evidence\\motion_navigation\\d123-proof-and-transport-v1\\d128\\smoke-run-8",
+  "launcher_return_code": 1,
+  "source_run": "artifacts/fabric-deployment/20261022T042351268876Z-7f5b9c08",
+  "failure": {
+    "type": "AttributeError",
+    "message": "'SelfStateV2' object has no attribute 'velocity_blocks_per_second'",
+    "location": "scripts/d122_fabric_timing.py:1252"
+  },
+  "execution_boundary": {
+    "minecraft_started": true,
+    "fabric_started": true,
+    "sessions": [],
+    "pre_trial_started": true,
+    "movement_trial_started": false,
+    "completed_trials": 0,
+    "smoke": {
+      "passed": 0,
+      "total": 3
+    },
+    "matrix": "NOT_RUN",
+    "product_conclusion": "NONE"
+  },
+  "attempt": {
+    "consumed": false,
+    "rerun_authorized": false,
+    "reason": "fixture adapter failed before the first movement trial; formal runs remain paused for review"
+  },
+  "manifest": {
+    "path": "manifest.json",
+    "sha256": "9bbdacfa28ea3010818fa386036e5ca15824ec814f3d33902b506eb65bae5c02",
+    "bound_file_count": 49
+  },
+  "preservation": {
+    "raw_bytes_copied": true,
+    "source_runtime_installation_excluded": [
+      "server/server.jar",
+      "server/libraries",
+      "server/versions",
+      "server/world"
+    ],
+    "reason": "generated server installation and world are not run evidence; all launcher, worker, client diagnostics, timing, trace, physics, fixture, teleport, cleanup and server logs are bound"
+  }
+}

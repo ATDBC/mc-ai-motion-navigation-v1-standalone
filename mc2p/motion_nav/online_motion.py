@@ -538,9 +538,33 @@ class InputApplicationLedger:
                 default_resolved_at_tick=movement_tick_id if candidate.action.safe_default is not None else None,
             )
 
-    def observe_receipt(self, receipt: ClientBehaviorReceipt) -> tuple[InputApplicationRecord, ...]:
+    def observe_receipt(
+        self,
+        receipt: ClientBehaviorReceipt,
+        *,
+        confirmed_not_applied_sequence: int | None = None,
+    ) -> tuple[InputApplicationRecord, ...]:
         if type(receipt) not in (ClientBehaviorReceiptV2, ClientBehaviorReceiptV3, ClientBehaviorReceiptV4):
             raise ContractViolation("input ledger requires a formal behavior receipt")
+        if confirmed_not_applied_sequence is not None:
+            require_nonnegative_int(
+                confirmed_not_applied_sequence,
+                "confirmed not-applied sequence",
+            )
+            if (type(receipt) is not ClientBehaviorReceiptV4
+                    or receipt.status != "rejected"
+                    or receipt.request_sequence_id != confirmed_not_applied_sequence):
+                raise ContractViolation(
+                    "not-applied confirmation is detached from the rejected receipt"
+                )
+        suppressed_sequence = (
+            receipt.request_sequence_id
+            if (type(receipt) is ClientBehaviorReceiptV4
+                and receipt.status == "rejected"
+                and receipt.request_sequence_id in self._records
+                and confirmed_not_applied_sequence != receipt.request_sequence_id)
+            else None
+        )
         if (self._last_input_samples is not None
                 and receipt.input_samples < self._last_input_samples):
             raise ContractViolation("input sample counter regressed")
@@ -551,6 +575,8 @@ class InputApplicationLedger:
         changed: list[InputApplicationRecord] = []
         if type(receipt) in (ClientBehaviorReceiptV3, ClientBehaviorReceiptV4):
             for application in receipt.input_applications:
+                if application.request_sequence_id == suppressed_sequence:
+                    continue
                 record = self.observe_sample(application)
                 if record is not None:
                     changed.append(record)
@@ -564,10 +590,11 @@ class InputApplicationLedger:
                 }
                 if not expected_ticks.issubset(observed_ticks):
                     for record in tuple(self._records.values()):
-                        if record.status in {
+                        if (record.control_sequence != suppressed_sequence
+                                and record.status in {
                             InputApplicationStatus.IN_FLIGHT,
                             InputApplicationStatus.PARTIALLY_APPLIED,
-                        }:
+                        }):
                             changed.append(self.mark_ambiguous(
                                 record.control_sequence,
                                 at_tick=receipt.input_samples,
@@ -585,10 +612,11 @@ class InputApplicationLedger:
             previous_dropped = self._last_dropped_input_samples or 0
             if receipt.dropped_input_samples > previous_dropped:
                 for record in tuple(self._records.values()):
-                    if record.status in {
+                    if (record.control_sequence != suppressed_sequence
+                            and record.status in {
                         InputApplicationStatus.IN_FLIGHT,
                         InputApplicationStatus.PARTIALLY_APPLIED,
-                    }:
+                    }):
                         changed.append(self.mark_ambiguous(
                             record.control_sequence, at_tick=receipt.input_samples,
                         ))
@@ -596,6 +624,8 @@ class InputApplicationLedger:
         self._last_input_samples = receipt.input_samples
         if type(receipt) is ClientBehaviorReceiptV4:
             for event in receipt.timing_events:
+                if event.request_sequence_id == suppressed_sequence:
+                    continue
                 record = self._records.get(event.request_sequence_id)
                 if record is None or record.action.episode_id != event.episode_id:
                     continue
@@ -616,7 +646,9 @@ class InputApplicationLedger:
                     updated = replace(record, default_resolved_at_tick=event.movement_tick_id)
                     self._records[record.control_sequence] = updated
                     changed.append(updated)
-            changed.extend(self._observe_client_arrangement(receipt))
+            changed.extend(self._observe_client_arrangement(
+                receipt, ignored_sequence=suppressed_sequence,
+            ))
         sequence = receipt.request_sequence_id
         if sequence is not None and sequence in self._records:
             record = self._records[sequence]
@@ -644,13 +676,19 @@ class InputApplicationLedger:
                 changed.append(self._resolve(sequence, InputApplicationStatus.CANCELLED,
                                              receipt.input_samples))
                 self._client_current_sequence = self._client_pending_sequence = self._client_default_sequence = None
-            elif receipt.status in {"rejected", "cancelled"}:
+            elif (receipt.status in {"rejected", "cancelled"}
+                  and sequence != suppressed_sequence):
                 changed.append(self.reject(sequence, at_tick=receipt.input_samples))
             elif receipt.status == "timed_out":
                 changed.append(self.expire(sequence, at_tick=receipt.input_samples))
         return tuple(changed)
 
-    def _observe_client_arrangement(self, receipt: ClientBehaviorReceiptV4) -> tuple[InputApplicationRecord, ...]:
+    def _observe_client_arrangement(
+        self,
+        receipt: ClientBehaviorReceiptV4,
+        *,
+        ignored_sequence: int | None = None,
+    ) -> tuple[InputApplicationRecord, ...]:
         """Apply only fresh client membership facts in physical tick order."""
         changed = []
 
@@ -666,6 +704,8 @@ class InputApplicationLedger:
             if tick <= self._client_arrangement_tick:
                 continue
             sequence = fact.request_sequence_id
+            if sequence == ignored_sequence:
+                continue
             record = self._records.get(sequence)
             if record is None or record.action.episode_id != fact.episode_id:
                 continue

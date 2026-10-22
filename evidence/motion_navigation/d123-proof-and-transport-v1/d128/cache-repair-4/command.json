@@ -1,0 +1,13 @@
+{
+  "java_home": "D:\\My_project\\mc_ai\\.venv\\Library",
+  "cwd": "D:\\My_project\\mc_ai\\deployment\\fabric-observation-probe",
+  "command": [
+    "D:\\My_project\\mc_ai\\.gradle\\wrapper\\dists\\gradle-8.8-bin\\cx57xx7zsiden606ef8ncmv16\\gradle-8.8\\bin\\gradle.bat",
+    "--no-daemon",
+    "--console=plain",
+    "exportClientLaunch"
+  ],
+  "schema": "mc2p.d129-cache-prefetch.v1",
+  "gradle_user_home": "D:\\My_project\\mc_ai\\.gradle",
+  "build_gradle_sha256": "aec3a5c11d9b998169601dcbfe10bdbe7c6b4c78919093f0421c535130a02be6"
+}

@@ -1,0 +1,8 @@
+SOURCE: root terminal observation, manually sealed after the stopped command.
+BOUNDARY: this is a faithful summary of the observed terminal failure, not byte-for-byte redirected stderr.
+
+Call path:
+scripts/d123_fabric_transport.py -> offline_preflight -> _java_overlay_gate -> discover_java_tools
+
+Final exception observed:
+scripts.export_motion_navigation_standalone.ExportViolation: OpenJDK 21 was not found through JAVA_HOME or PATH

@@ -1,0 +1,26 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\scripts\probe_fabric_deployment_observation.py", line 1753, in run_worker
+    stages, rows, episode_checks = run_fabric_runtime(
+                                   ~~~~~~~~~~~~~~~~~~^
+        runtime, backend, episode, d123_directory, deadline,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        direction_index=direction, repetition=repetition,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\My_project\mc_ai\scripts\d123_fabric_transport.py", line 668, in run_fabric_runtime
+    return d122.run_fabric_runtime(
+           ~~~~~~~~~~~~~~~~~~~~~~~^
+        runtime, backend, episode, directory, deadline_ns,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<9 lines>...
+        expected_trial_count=3,
+        ^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\My_project\mc_ai\scripts\d122_fabric_timing.py", line 1387, in run_fabric_runtime
+    raise RuntimeError(
+        f"{stage_name} trial failed: {trial.trial_id}: {failures}"
+    )
+RuntimeError: D123 trial failed: d123-south-0-timely: ('parent_default_not_installed_before_l', 'successor_window_not_l_plus_1', 'default_duration_not_positive_int', 'source_not_released', 'driver_not_terminal', 'forced_frame_limit_release', 'timely_first_effect_differs', 'timely_not_success')

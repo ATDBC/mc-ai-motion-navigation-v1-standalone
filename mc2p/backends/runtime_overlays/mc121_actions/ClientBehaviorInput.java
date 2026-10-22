@@ -147,6 +147,11 @@ public final class ClientBehaviorInput extends Input {
     public boolean timingOwns(long sequence) { return timing.ownsSequence(sequence); }
     public java.util.List<ClientTimingSchedule.Event> drainTimingEvents() { return timing.drainEvents(); }
 
+    public void reportNotApplied(long movementTick, String episode, long sequence) {
+        gate.requireOwnerThread();
+        timing.notApplied(movementTick, episode, sequence);
+    }
+
     public void beginSnapshot() {
         // Clear desired state on admission, even if the new operation is later rejected.
         // Keep the previous sample until vanilla consumes its edges and calls Input.tick.

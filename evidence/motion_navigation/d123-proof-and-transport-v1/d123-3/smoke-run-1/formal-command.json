@@ -1,0 +1,9 @@
+{
+  "schema": "mc2p.d123-3-formal-command.v1",
+  "source": "root_terminal_observation",
+  "working_directory": "D:\\My_project\\mc_ai",
+  "argv_display": "python scripts\\d123_fabric_transport.py --launch smoke --output evidence\\motion_navigation\\d123-proof-and-transport-v1\\d123-3\\smoke-run-1",
+  "mode": "smoke",
+  "output": "evidence/motion_navigation/d123-proof-and-transport-v1/d123-3/smoke-run-1",
+  "tested_commit": "1a835b131fdbab89ed9d269aabfb41a1a1ce514f"
+}

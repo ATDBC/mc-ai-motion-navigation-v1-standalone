@@ -1,0 +1,120 @@
+{
+  "assembler": {
+    "caused_parent_window_miss": false,
+    "fail_closed": true,
+    "failure": "D123 Fabric successor identity is missing",
+    "note": "The assembler correctly rejected absent successor identity, but its pre-write exception hid the earlier stale parent request from the formal trial row.",
+    "trial_json_written": false
+  },
+  "body": {
+    "damage_events": 0,
+    "health_points_range": [
+      20.0,
+      20.0
+    ],
+    "observation_sequence_range": [
+      8,
+      13
+    ],
+    "on_ground_throughout": true,
+    "physics_tick_range": [
+      20,
+      34
+    ],
+    "position": [
+      0.5,
+      64.0,
+      -5.17
+    ],
+    "position_unchanged": true,
+    "tested_behavior_entered": false
+  },
+  "classification": "INVALID_HARNESS_RUN/fixture-scheduling",
+  "close_boundary": {
+    "case_close_returned_before_assembler_exception": true,
+    "close_release_trace_present": false,
+    "motion_worker_close_report_recoverable": false,
+    "resource_close_payload_persisted": false,
+    "runtime_cleanup_failure": "Fabric backend is closed; recreate the client and backend",
+    "source_release_proved": false,
+    "supervision_cleanup_failures": 0,
+    "supervision_process_stopped": true
+  },
+  "conclusion": {
+    "expected_smoke_trials": 3,
+    "matrix_run": false,
+    "product_motion_result": null,
+    "reason": "The exact-window parent reached the client six movement ticks late and was never applied; successor work was submitted only after that rejection, so the run never reached a measurable handoff.",
+    "valid_smoke_trials": 0
+  },
+  "driver_session": {
+    "after_parent_reason": "committed_input_rejected",
+    "last_complete_movement_tick_id": 34,
+    "last_complete_observation_sequence_id": 13,
+    "last_complete_request_sequence_id": 12,
+    "last_route_state": "cancelling",
+    "last_session_state": "executing",
+    "later_reason": "BODY_RESPONSIBILITY_UNRESOLVED",
+    "request_13_dispatch_only": true
+  },
+  "formal_rerun_authorized": false,
+  "historical_raw_bytes_modified": false,
+  "method": {
+    "generic_d129_validator_applied": false,
+    "kind": "independent_read_only_causal_attribution",
+    "note": "This conclusion was recomputed directly from run-11 raw trace, V4 receipt, F-TICK, physics and supervision evidence; it is not a claim that the run-10-specific D129 validator covers run-11."
+  },
+  "parent": {
+    "anchor_movement_tick": 20,
+    "client_frame_received_monotonic_ns": 115475906632400,
+    "client_window_missed_tick": 28,
+    "client_window_pending_tick": 27,
+    "default_active_applications": 0,
+    "dispatched_monotonic_ns": 115475897965000,
+    "dropped_input_samples": 0,
+    "episode_id": "fabric-21001-0",
+    "fallback_armed_events": 0,
+    "host_pre_submit_elapsed_ns": 380015800,
+    "intent_submitted_monotonic_ns": 115475897550500,
+    "movement": {
+      "forward": 1,
+      "jump": false,
+      "sneak": false,
+      "sprint": true,
+      "strafe": 0
+    },
+    "observation_received_monotonic_ns": 115475517534700,
+    "observation_sequence_id": 8,
+    "receipt_generation_id": 9,
+    "receipt_reason": "window_pending",
+    "receipt_status": "pending_confirmation",
+    "request_sequence_id": 8,
+    "safe_default": null,
+    "target_input_applications": 0,
+    "window": {
+      "earliest_tick": 21,
+      "latest_tick": 21
+    }
+  },
+  "prepared_successor": {
+    "admission_observed": false,
+    "inbox_result_observed": false,
+    "prepared_proposal_observed": false,
+    "prewarmed_worker_existed_before_anchor": true,
+    "product_worker_latency_measured": false,
+    "stream_activation_observed": false,
+    "submit_after_parent_window_missed": true,
+    "submit_order": "after_parent_first_result",
+    "submit_status_inferred_from_formal_control_flow": "ACCEPTED",
+    "successor_dispatch_observed": false,
+    "successor_receipt_observed": false,
+    "worker_result_observed": false
+  },
+  "schema": "mc2p.d129-run11-independent-causal-attribution.v1",
+  "source_manifest": {
+    "bound_file_count": 48,
+    "path": "manifest.json",
+    "sha256": "9e2310042281238f883dabe47d4fe36e3c93c2e20530432548ae935b06355b79"
+  },
+  "status": "PASS"
+}

@@ -10,7 +10,8 @@ import json
 import time
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Callable
+from inspect import getattr_static
+from typing import Callable, cast
 
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.action_v1 import MovementV1
@@ -30,11 +31,15 @@ from mc2p.motion_nav.goal_planning_policy import GoalPlanningPolicy
 from mc2p.motion_nav.body_control import HandoffDisposition, BodyControlActivity
 from mc2p.motion_nav.navigation_session import (
     NavigationSessionPort, NavigationSessionProposal, NavigationSessionState,
+    NavigationSessionResourceClosePort, NavigationSessionTransportOwnerPort,
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.online_motion import input_application_has_finished
 from mc2p.runtime.player_runtime_v1 import (
     PlayerRuntimeV1, RuntimeStateV1, RuntimeStepResultV1,
+)
+from mc2p.runtime.transport_lifecycle import (
+    TransportLifecycleFactV1, TransportLifecycleKind,
 )
 
 
@@ -51,6 +56,7 @@ class RuntimeNavigationDriverState(StrEnum):
     STOPPED = "stopped"
     INTERACTION_REQUIRED = "interaction_required"
     INTERACTION_SUSPENDED = "interaction_suspended"
+    UNRESOLVED = "unresolved"
 
 
 class _ReleaseResult(StrEnum):
@@ -74,6 +80,16 @@ class NavigationFrameDiagnostics:
     action_movement: MovementV1 | None
     action_deadline_ns: int | None
     movement_activity: BodyControlActivity | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class BodyResponsibilityUnresolvedV1:
+    transport_fact: TransportLifecycleFactV1
+    ledger_records: tuple[object, ...]
+    source_id: str
+    source_episode_id: str
+    route_identity: object | None
+    proof_responsibilities: tuple[object, ...]
 
 
 class RuntimeNavigationDriver:
@@ -124,6 +140,9 @@ class RuntimeNavigationDriver:
         self._prepared_proposal: NavigationSessionProposal | None = None
         self._last_frame_diagnostics: NavigationFrameDiagnostics | None = None
         self._last_runtime_failure: str | None = None
+        self._unresolved_evidence: BodyResponsibilityUnresolvedV1 | None = None
+        self._local_resources_closed = False
+        self._local_not_dispatched: TransportLifecycleFactV1 | None = None
 
     @property
     def state(self) -> RuntimeNavigationDriverState:
@@ -146,6 +165,14 @@ class RuntimeNavigationDriver:
     @property
     def has_prepared_frame(self) -> bool:
         return self._prepared_deadline_ns is not None
+
+    @property
+    def unresolved_evidence(self) -> BodyResponsibilityUnresolvedV1 | None:
+        return self._unresolved_evidence
+
+    @property
+    def local_resources_closed(self) -> bool:
+        return self._local_resources_closed
 
     @property
     def prepared_streams(self):
@@ -263,8 +290,38 @@ class RuntimeNavigationDriver:
         if self.source is None or self.state in {
             RuntimeNavigationDriverState.READY, RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED, RuntimeNavigationDriverState.STOPPED,
             RuntimeNavigationDriverState.INTERACTION_REQUIRED,
+            RuntimeNavigationDriverState.UNRESOLVED,
         }:
             raise ContractViolation("runtime navigation driver cannot tick")
+        if self._local_not_dispatched is not None:
+            fact = self._local_not_dispatched
+            now = self._clock()
+            deadline = min(owner_deadline_ns, now + self._step_window_ns)
+            result = self.runtime.complete_local_not_dispatched(
+                self._task(deadline), profile, deadline, fact,
+                observation_request=self._current_observation_request(),
+            )
+            if result.transport_fact is not None and result.transport_fact.unresolved:
+                self._enter_transport_unresolved(result.transport_fact)
+                return result
+            self._local_not_dispatched = None
+            if type(result.observation) is ObservationSnapshotV3:
+                self.session.ingest(result.observation)
+                self.session.body_handoff(
+                    result.observation, self.runtime.input_ledger,
+                )
+            self._sync_report()
+            if self.state in {
+                RuntimeNavigationDriverState.FAILED,
+                RuntimeNavigationDriverState.CANCELLED,
+            }:
+                release = self._release_if_quiescent()
+                if release is _ReleaseResult.PENDING:
+                    self._set_state(
+                        RuntimeNavigationDriverState.STOPPING,
+                        "body_handoff_waiting_for_evidence",
+                    )
+            return result
         try:
             proposals = self.prepare_proposals(owner_deadline_ns)
         except _OwnerDeadlineExpired:
@@ -324,6 +381,7 @@ class RuntimeNavigationDriver:
         if self.source is None or self.state in {
             RuntimeNavigationDriverState.READY, RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED, RuntimeNavigationDriverState.STOPPED,
             RuntimeNavigationDriverState.INTERACTION_REQUIRED,
+            RuntimeNavigationDriverState.UNRESOLVED,
         }:
             raise ContractViolation("runtime navigation driver cannot prepare")
         now = self._clock()
@@ -423,6 +481,22 @@ class RuntimeNavigationDriver:
              and any(group == "movement" and intent in {i.intent.intent_id for i in intents}
                      for group, intent in decision.selected_intents) else None),
         )
+        transport_fact = result.transport_fact
+        if transport_fact is not None and transport_fact.unresolved:
+            self._enter_transport_unresolved(transport_fact)
+            return
+        if (transport_fact is not None
+                and transport_fact.kind is TransportLifecycleKind.LOCAL_NOT_DISPATCHED):
+            self._local_not_dispatched = transport_fact
+            if not self.session.report.terminal:
+                self.session.handle_internal_contract_failure(
+                    "local_not_dispatched",
+                )
+            self._set_state(
+                RuntimeNavigationDriverState.STOPPING,
+                "local_not_dispatched_observation_pending",
+            )
+            return
         if result.report.failure is not None:
             self._last_runtime_failure = (
                 f"{result.report.failure.code.value}:"
@@ -496,6 +570,71 @@ class RuntimeNavigationDriver:
         self._prepared_deadline_ns = None
         self._prepared_proposal = None
 
+    def _enter_transport_unresolved(
+        self, fact: TransportLifecycleFactV1,
+    ) -> None:
+        if type(fact) is not TransportLifecycleFactV1 or not fact.unresolved:
+            raise ContractViolation("driver unresolved transition requires uncertain transport")
+        if self._unresolved_evidence is not None:
+            if self._unresolved_evidence.transport_fact != fact:
+                raise ContractViolation("body responsibility unresolved result is immutable")
+            return
+        source = self.source
+        if source is None:
+            raise ContractViolation("unresolved body responsibility requires its input owner")
+        try:
+            getattr_static(self.session, "active_proof_responsibilities")
+            getattr_static(self.session, "body_route_snapshot")
+        except AttributeError as exc:
+            raise ContractViolation(
+                "unresolved navigation owner lacks transport owner evidence"
+            ) from exc
+        owner = cast(NavigationSessionTransportOwnerPort, self.session)
+        proof_responsibilities = tuple(
+            owner.active_proof_responsibilities
+        )
+        self._unresolved_evidence = BodyResponsibilityUnresolvedV1(
+            fact,
+            tuple(self.runtime.input_ledger.snapshot()),
+            source.source_id,
+            source.episode_id,
+            owner.body_route_snapshot,
+            proof_responsibilities,
+        )
+        self._prepared_deadline_ns = None
+        self._prepared_proposal = None
+        self._set_state(
+            RuntimeNavigationDriverState.UNRESOLVED,
+            "BODY_RESPONSIBILITY_UNRESOLVED",
+        )
+        self.runtime.seal_unresolved_after_owner_snapshot()
+
+    def close_local_resources(self) -> None:
+        """Close process-local resources without claiming physical release."""
+        if self.state is not RuntimeNavigationDriverState.UNRESOLVED:
+            raise ContractViolation("resource-only close requires unresolved responsibility")
+        if self._local_resources_closed:
+            return
+        if not isinstance(self.session, NavigationSessionResourceClosePort):
+            raise ContractViolation(
+                "unresolved navigation owner lacks resource-only close"
+            )
+        runtime_report = self.runtime.close_resources_only()
+        session_report = self.session.close_resources_only()
+        self._local_resources_closed = (
+            getattr(runtime_report, "backend_closed", False) is True
+            and getattr(runtime_report, "trace_closed", False) is True
+            and getattr(runtime_report, "open_handles", 1) == 0
+            and getattr(runtime_report, "cleanup_failures", 0) == 0
+            and getattr(session_report, "live_workers", 1) == 0
+            and getattr(session_report, "live_receivers", 1) == 0
+            and getattr(session_report, "live_lease_returners", 1) == 0
+            and getattr(session_report, "live_queue_feeders", 1) == 0
+            and getattr(session_report, "open_handles", 1) == 0
+            and getattr(session_report, "unexpected_feeder_errors", 0) == 0
+            and getattr(session_report, "timed_out", False) is False
+        )
+
     def stop(
         self,
         profile: BehaviorProfileV0,
@@ -555,6 +694,8 @@ class RuntimeNavigationDriver:
         """Release a terminal session, or begin cancellation without abandoning it."""
         if not isinstance(reason, str) or not reason.strip():
             raise ContractViolation("runtime navigation release requires reason")
+        if self.state is RuntimeNavigationDriverState.UNRESOLVED:
+            return False
         if self.source is None and self.session.report.terminal:
             return True
         if self.source is None:

@@ -1,0 +1,15 @@
+{
+  "schema": "mc2p.d129-invalid-tooling-run.v1",
+  "status": "INVALID_ENVIRONMENT_RUN",
+  "classification": "TOOLING_EXPORT_MANIFEST",
+  "return_code": 1,
+  "failure": "standalone required list named a .log file excluded by export policy",
+  "minecraft_started": false,
+  "fabric_started": false,
+  "pre_trial_started": false,
+  "movement_trial_started": false,
+  "attempt_consumed": false,
+  "product_conclusion": "NONE",
+  "retry_policy": "D129",
+  "retry_output": "evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-3"
+}

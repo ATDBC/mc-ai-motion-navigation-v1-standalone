@@ -1,0 +1,37 @@
+{
+  "schema": "mc2p.d128-smoke-stop-manifest.v1",
+  "status": "PARTIAL_STOPPED",
+  "source_build_evidence": "artifacts/fabric-deployment-build/20261022T024718508750Z-0420fce8",
+  "files": {
+    "offline-preflight.json": {
+      "bytes": 19198,
+      "sha256": "de352c6acb6e41b9baeb2c9f9e0fa966dc9af78eb9cde8f1020866d789bf61dd",
+      "provenance": "formal_launcher_output"
+    },
+    "probe-stdout.txt": {
+      "bytes": 416,
+      "sha256": "feeea940a40ccf0c71ae414f22b734f4008b2f2d573d5796fb9e71ebe07e7c3b",
+      "provenance": "formal_launcher_output"
+    },
+    "probe-stderr.txt": {
+      "bytes": 1004,
+      "sha256": "d3b2e04b4c7b86ee75505f9904ed0ab36ac4ae9c38a9c2e08102822e36709524",
+      "provenance": "formal_launcher_output"
+    },
+    "summary.json": {
+      "bytes": 19709,
+      "sha256": "ebb0a0be665a959c038f01ae2f5fdc9f9223eca1f1db5d29a45b170dc4fc3aa6",
+      "provenance": "formal_launcher_output"
+    },
+    "build.log": {
+      "bytes": 4829,
+      "sha256": "24124b6bc060c5a76b89439154ad55c43f2f93762b43f46027da5b6efa97cf94",
+      "provenance": "byte_copy_of_artifacts/fabric-deployment-build/20261022T024718508750Z-0420fce8/build.log"
+    },
+    "result.json": {
+      "bytes": 422,
+      "sha256": "26220680aff5db0022155fde1f4c416697ea48a65219758f3c7cba4fad2d0f45",
+      "provenance": "byte_copy_of_artifacts/fabric-deployment-build/20261022T024718508750Z-0420fce8/result.json"
+    }
+  }
+}

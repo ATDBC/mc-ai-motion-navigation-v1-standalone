@@ -1,0 +1,31 @@
+{
+  "schema": "mc2p.d129-invalid-environment-manifest.v1",
+  "status": "INVALID_ENVIRONMENT_RUN",
+  "source_launch_evidence": "artifacts/fabric-deployment-launch/20261022T025702657223Z-e1915832",
+  "files": {
+    "offline-preflight.json": {
+      "bytes": 19197,
+      "sha256": "31dab3788f76e6074eb61354cad94fb216ac3c657b660ace778e9e5642ef88bb"
+    },
+    "probe-stdout.txt": {
+      "bytes": 416,
+      "sha256": "feeea940a40ccf0c71ae414f22b734f4008b2f2d573d5796fb9e71ebe07e7c3b"
+    },
+    "probe-stderr.txt": {
+      "bytes": 741,
+      "sha256": "a46a4a03f77d2438d888ffa5d457bd11a2bcb129f8df8196e2b093925be47ef4"
+    },
+    "summary.json": {
+      "bytes": 19708,
+      "sha256": "8bc1d20fef3fb7578e91f4b67a3c60be6153ef06fdd0d75507a9c42be9f4e241"
+    },
+    "export.log": {
+      "bytes": 1941,
+      "sha256": "5db429f53b8480e2f267a2c1e2b8b4a08a3db26f1be88725b14e0bda35868180"
+    },
+    "launch-export-result.json": {
+      "bytes": 423,
+      "sha256": "0854e7e8911bc0b39aa6476306751201298afd368602903bb9e97d47c0db7222"
+    }
+  }
+}

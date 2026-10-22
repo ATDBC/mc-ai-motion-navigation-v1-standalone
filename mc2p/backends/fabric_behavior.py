@@ -30,6 +30,10 @@ from mc2p.contracts.common import ContractViolation, require_nonnegative_int
 from mc2p.contracts.report import FailureCodeV0, FailureV0
 from mc2p.contracts.reset import ResetRequestV0, ResetResultV0
 from mc2p.runtime.backend_v1 import BackendStepResultV1
+from mc2p.runtime.backend_v1 import BackendDeliveryUnknown, BackendChannelLost
+from mc2p.runtime.transport_lifecycle import (
+    TransportDispatchStage, TransportLifecycleKind, classify_transport_failure,
+)
 
 
 _DIAGNOSTIC_COUNTERS = {"client_tick", "world_render_attempts", "world_render_completions",
@@ -41,6 +45,10 @@ _JVM_PIPELINE_COUNTERS = {
     "block_read_count", "store_record_count", "packed_block_count",
     "packed_box_count", "culled_block_count", "halo_read_count",
 }
+
+
+class _PostReceiveDeadline(TimeoutError):
+    """The response arrived; local validation/projection exceeded its bound."""
 
 
 def _json_bytes(value: object) -> bytes:
@@ -252,7 +260,9 @@ class FabricBehaviorBackendV1:
                 raise ContractViolation("deployment client clock changed or regressed")
         received = self._clock_ns()
         if received >= deadline_ns:
-            raise TimeoutError("deployment sample validation exceeded deadline")
+            raise _PostReceiveDeadline(
+                "deployment sample validation exceeded deadline"
+            )
         projector = snapshot_v3_from_payload if v3 else snapshot_v2_from_payload
         snapshot_started = time.perf_counter_ns()
         observation = projector(decoded, episode_id=episode, request_sequence_id=request_sequence,
@@ -260,7 +270,9 @@ class FabricBehaviorBackendV1:
             controller_clock_id=self._controller_clock_id, source_backend="fabric")
         snapshot_finished = time.perf_counter_ns()
         if self._clock_ns() >= deadline_ns:
-            raise TimeoutError("deployment snapshot construction exceeded deadline")
+            raise _PostReceiveDeadline(
+                "deployment snapshot construction exceeded deadline"
+            )
         self._diagnostics, self._receipt = envelope["diagnostics"], receipt
         self._last_observation_timing = {
             "transport_payload_bytes": len(frame),
@@ -318,6 +330,8 @@ class FabricBehaviorBackendV1:
         limit = min(deadline_monotonic_ns, action.deadline_monotonic_ns)
         started = self._clock_ns()
         self._receipt = None
+        outbound_started = False
+        outbound_completed = False
         try:
             payload = encode_behavior_action(replace(action, deadline_monotonic_ns=limit), now_ns=started,
                 observation_received_at_ns=self._observation.received_at_monotonic_ns,
@@ -327,16 +341,56 @@ class FabricBehaviorBackendV1:
                                            observation_request=asdict(request)))
                 if len(payload) > 16384:
                     raise ContractViolation("deployment step exceeds size bound")
-            self._transport.send(payload, limit)
-            observation, receipt = self._read_sample(self._episode, self._sequence + 1,
-                action.request_sequence_id, started, limit, request)
+            try:
+                outbound_started = True
+                self._transport.send(payload, limit)
+                outbound_completed = True
+            except (TimeoutError, OSError, EOFError, RuntimeError) as error:
+                raise self._typed_transport_failure(
+                    error, outbound_started=outbound_started,
+                    outbound_completed=outbound_completed,
+                ) from error
+            try:
+                observation, receipt = self._read_sample(
+                    self._episode, self._sequence + 1,
+                    action.request_sequence_id, started, limit, request,
+                )
+            except _PostReceiveDeadline:
+                raise
+            except (TimeoutError, OSError, EOFError, RuntimeError) as error:
+                raise self._typed_transport_failure(
+                    error, outbound_started=outbound_started,
+                    outbound_completed=outbound_completed,
+                ) from error
             self._sequence += 1
             self._last_request = action.request_sequence_id
             self._observation = observation
             return BackendStepResultV1(observation, 0.0, False, False, receipt)
+        except (BackendDeliveryUnknown, BackendChannelLost):
+            raise
         except BaseException as error:
             self._seal(error)
             raise
+
+    def _typed_transport_failure(
+        self, error: BaseException, *, outbound_started: bool,
+        outbound_completed: bool,
+    ) -> BackendDeliveryUnknown | BackendChannelLost:
+        kind, stage = classify_transport_failure(
+            channel_sealed=self._transport.closed,
+            outbound_started=outbound_started,
+            outbound_completed=outbound_completed,
+            response_correlated=False,
+        )
+        if kind is TransportLifecycleKind.CHANNEL_LOST:
+            return BackendChannelLost(
+                "Fabric action channel is sealed without a correlated response",
+                dispatch_stage=stage,
+            )
+        return BackendDeliveryUnknown(
+            "Fabric action delivery ended without a correlated response",
+            dispatch_stage=stage,
+        )
 
     def close(self) -> None:
         self._closed = True

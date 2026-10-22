@@ -1,0 +1,8 @@
+{
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "schema": "mc2p.d129-formal-offline-build-result.v1",
+  "tracked_product_diff": [],
+  "build_gradle_sha256": "aec3a5c11d9b998169601dcbfe10bdbe7c6b4c78919093f0421c535130a02be6",
+  "stdout_sha256": "85b1acb43da6553bde74f31be0222403d18a78b0dd661f3aea339be041d92c57",
+  "return_code": 0
+}

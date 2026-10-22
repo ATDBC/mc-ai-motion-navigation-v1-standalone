@@ -71,6 +71,7 @@ NEUTRAL_VALUE_SYMBOLS = {'mc2p.motion_nav.physics_types.JAVA_1_21_RULESET', 'mat
 # unknown enum as harmless would hide a newly introduced action/controller
 # selector from this ruler.
 TYPED_LIFECYCLE_CLASSIFICATIONS = {
+    'TransportLifecycleKind': 'Runtime transport 交付生命周期，不选择动作或控制器',
     'ClientTimingStatusV1': '客户端首效窗口与预排默认的时序事实，不选择动作或控制器',
     'ActivationStatus': 'Runtime 激活结果，不选择动作或控制器',
     'CommittedExecutionPhase': '同一执行器消费主后缀、尾段和释放见证的阶段，不选择动作或控制器',

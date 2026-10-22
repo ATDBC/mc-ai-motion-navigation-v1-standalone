@@ -1,0 +1,77 @@
+{
+  "schema": "mc2p.d123-3-smoke-stop.v1",
+  "status": "PARTIAL_STOPPED",
+  "reason": "OFFLINE_JAVA_DISCOVERY_ENVIRONMENT",
+  "observed_date_local": "2026-10-22",
+  "tested_commit": "1a835b131fdbab89ed9d269aabfb41a1a1ce514f",
+  "failure_stage": "offline_preflight.java_overlay_gate.discover_java_tools",
+  "failure": {
+    "type": "scripts.export_motion_navigation_standalone.ExportViolation",
+    "message": "OpenJDK 21 was not found through JAVA_HOME or PATH",
+    "exit_code": 1,
+    "source": "root_terminal_observation_manually_sealed"
+  },
+  "pre_registered_rule": {
+    "fabric_attempt_consumed": false,
+    "stage_stops": true,
+    "same_stage_environment_repair_and_retry_allowed": false
+  },
+  "execution": {
+    "offline_preflight_completed": false,
+    "minecraft_started": false,
+    "fabric_started": false,
+    "pre_trial_started": false,
+    "movement_trials_started": 0,
+    "smoke_passed": 0,
+    "smoke_total": 3,
+    "matrix_started": false,
+    "matrix_trials_run": 0
+  },
+  "output_directory": {
+    "created_by_formal_command": true,
+    "empty_before_manual_stop_seal": true,
+    "contains_formal_result_json": false
+  },
+  "harness": {
+    "commits": [
+      "bf9dcfb3 refactor: share Fabric timing trial loop",
+      "1e031ff7 feat: add D123 Fabric transport harness",
+      "c47cadd5 fix: harden D123 Fabric evidence gates",
+      "1a835b13 fix: parse D123 raw receipts before validation"
+    ],
+    "review": "PASS_AFTER_FIX_ROUND_2",
+    "component_smoke": "3/3",
+    "component_matrix": "36/36",
+    "review_round_1_affected_and_adjacent_tests": "130/130",
+    "review_round_2_adjacent_tests": "39/39",
+    "review_round_2_d123_tests": "12 unaffected tests passed plus the corrected target test 1/1",
+    "final_raw_receipt_mutations": "input_applications and timing_events each reject None, string, dict, and invalid element",
+    "production_raw_hash_file_count": 32,
+    "launcher_raw_hash_file_count": 59
+  },
+  "sealed_inputs": {
+    "environment.json": {
+      "sha256": "3f8605c6bc0fb03ce301668c3cfbd7b1482460ec35ff04f413540c3c6c7d7116",
+      "bytes": 737
+    },
+    "exit-code.txt": {
+      "sha256": "2cf1b0675862fed98f79d268722d693ae5cf204d59c0249a5437859b33cb5c34",
+      "bytes": 91
+    },
+    "formal-command.json": {
+      "sha256": "5f830480ee56a034a140b195b6c2dc104b638396f512bd4b3d8bb4a2e0729b69",
+      "bytes": 472
+    },
+    "stderr-observation.txt": {
+      "sha256": "8bcb3a65515a2cf5a35c761fb6c89ed82d9a83852e1664b87fe7a23892e2a1c2",
+      "bytes": 436
+    }
+  },
+  "limits": [
+    "The stderr and exit evidence were manually sealed from the root terminal observation; they are not redirected process artifacts.",
+    "No Fabric or Minecraft process started and no movement trial ran.",
+    "No smoke, matrix, movement, safety, health, timing, owner, or source-release result may be inferred from this stop.",
+    "The repository-local java.exe existence check happened after the stop and cannot rewrite the formal process environment.",
+    "D123-3 cannot be retried without a later decision."
+  ]
+}

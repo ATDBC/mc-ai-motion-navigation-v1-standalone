@@ -1,0 +1,128 @@
+{
+  "schema": "mc2p.d129-invalid-harness-run.v1",
+  "status": "INVALID_HARNESS_RUN",
+  "subtype": "fixture-scheduling",
+  "decision": "D129",
+  "formal_command": "python scripts\\d123_fabric_transport.py --launch smoke --output evidence\\motion_navigation\\d123-proof-and-transport-v1\\d128\\smoke-run-10",
+  "launcher_return_code": 1,
+  "source_run": "artifacts/fabric-deployment/20261022T052517317488Z-95541af3",
+  "failure": {
+    "type": "RuntimeError",
+    "trial_id": "d123-south-0-timely",
+    "failures": [
+      "parent_default_not_installed_before_l",
+      "successor_window_not_l_plus_1",
+      "default_duration_not_positive_int",
+      "source_not_released",
+      "driver_not_terminal",
+      "forced_frame_limit_release",
+      "timely_first_effect_differs",
+      "timely_not_success"
+    ]
+  },
+  "execution_boundary": {
+    "minecraft_started": true,
+    "fabric_started": true,
+    "sessions": [],
+    "formal_movement_request_dispatched": true,
+    "formal_movement_request_reached_client": true,
+    "movement_behavior_started": false,
+    "completed_trials": 0,
+    "smoke": {
+      "passed": 0,
+      "total": 3
+    },
+    "matrix": "NOT_RUN",
+    "product_conclusion": "NONE"
+  },
+  "causal_evidence": {
+    "anchor": {
+      "observation_sequence_id": 7,
+      "movement_tick_id": 7,
+      "position": [0.5, 64.0, -5.17],
+      "health_points": 20.0,
+      "on_ground": true
+    },
+    "first_dispatched_movement_request": {
+      "episode_id": "fabric-21001-0",
+      "request_sequence_id": 7,
+      "observation_sequence_id": 7,
+      "first_effect_window": {
+        "earliest_tick": 8,
+        "latest_tick": 8
+      },
+      "movement": {
+        "forward": 1,
+        "strafe": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": true
+      },
+      "safe_default": null,
+      "decision_observation_received_ns": 107938427262300,
+      "dispatched_monotonic_ns": 107939816793000,
+      "pre_dispatch_elapsed_ns": 1389530700
+    },
+    "client_admission": {
+      "frame_received_before_movement_tick": 35,
+      "window_pending_tick": 34,
+      "window_missed_tick": 35,
+      "matching_non_neutral_input_applications": 0,
+      "dropped_input_samples": 0
+    },
+    "body": {
+      "physics_tick_range_checked": [8, 125],
+      "start_position": [0.5, 64.0, -5.17],
+      "final_position": [0.5, 64.0, -5.17],
+      "start_health_points": 20.0,
+      "final_health_points": 20.0,
+      "all_checked_ticks_on_ground": true,
+      "non_neutral_input_applications": 0
+    },
+    "parent": {
+      "movement_application_started": false,
+      "safe_default_installed": false,
+      "fallback_armed": false
+    },
+    "driver": {
+      "first_reason": "committed_main",
+      "rejection_reason": "committed_input_rejected",
+      "subsequent_reason": "BODY_RESPONSIBILITY_UNRESOLVED",
+      "subsequent_reason_frame_count": 88,
+      "owner_gap": false,
+      "forced_frame_limit_release": true,
+      "final_state": "stopping",
+      "source_released": false
+    },
+    "harness_root_cause": "the live exact parent window was bound before synchronous proof and prepared-worker work; the client clock advanced by 27 ticks before dispatch",
+    "row_assembly_defect": "the first windowed parent request was misidentified as the successor; raw_successor_receipt and successor_applied therefore do not describe a real successor"
+  },
+  "classification_gate": {
+    "fixture_or_tool_broke_registered_precondition": true,
+    "tested_input_application_count": 0,
+    "body_entered_tested_behavior": false,
+    "failure_from_product_rejection": false,
+    "failure_from_product_safety_logic": false,
+    "eligible_for_repair_and_append_only_retry": true
+  },
+  "attempt": {
+    "consumed": false,
+    "rerun_authorized": false,
+    "reason": "strict post-submit invalid-harness gate passed; a new formal run still requires design review"
+  },
+  "manifest": {
+    "path": "manifest.json",
+    "sha256": "0c69ea7f59de5513e62b6c748d6aae0319e2620ac46ef30754273969f36f4f5d",
+    "bound_file_count": 50
+  },
+  "preservation": {
+    "raw_bytes_copied": true,
+    "source_runtime_installation_excluded": [
+      "server/server.jar",
+      "server/libraries",
+      "server/versions",
+      "server/world"
+    ],
+    "reason": "generated server installation and world are not run evidence; all launcher, worker, failed trial, client diagnostics, timing, trace, F-TICK, physics, fixture, teleport, cleanup and server logs are bound"
+  }
+}

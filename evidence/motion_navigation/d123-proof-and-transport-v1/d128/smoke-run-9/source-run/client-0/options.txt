@@ -1,0 +1,10 @@
+pauseOnLostFocus:false
+renderDistance:2
+simulationDistance:5
+maxFps:60
+enableVsync:false
+tutorialStep:none
+joinedFirstServer:true
+skipMultiplayerWarning:true
+soundCategory_master:0.0
+autoJump:false

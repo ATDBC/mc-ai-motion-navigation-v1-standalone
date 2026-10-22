@@ -1,0 +1,69 @@
+{
+  "schema": "mc2p.d123-3-final-stop.v1",
+  "date": "2026-10-22",
+  "stage": "D123-3",
+  "status": "PARTIAL/STOPPED",
+  "result": {
+    "valid_smoke_passed": 0,
+    "valid_smoke_total": 3,
+    "matrix": "NOT_RUN",
+    "product_conclusion": null
+  },
+  "invalid_harness_runs": [
+    {
+      "run": "smoke-run-10",
+      "classification": "INVALID_HARNESS_RUN/fixture-scheduling",
+      "manifest": {
+        "path": "../smoke-run-10/manifest.json",
+        "sha256": "0c69ea7f59de5513e62b6c748d6aae0319e2620ac46ef30754273969f36f4f5d"
+      },
+      "archive_commit": "60f58c2c",
+      "product_conclusion": null
+    },
+    {
+      "run": "smoke-run-11",
+      "classification": "INVALID_HARNESS_RUN/fixture-scheduling",
+      "manifest": {
+        "path": "../smoke-run-11/manifest.json",
+        "sha256": "9e2310042281238f883dabe47d4fe36e3c93c2e20530432548ae935b06355b79"
+      },
+      "archive_commit": "3f5c3804",
+      "attribution_scope": "independent read-only causal attribution; no claim that the run-10-specific D129 validator covers run-11",
+      "product_conclusion": null
+    }
+  ],
+  "read_only_design_review": {
+    "replay_verified_commands_ms": {
+      "minimum": 49.8,
+      "maximum": 52.2
+    },
+    "bind_fixed_successor_ms": {
+      "minimum": 16.4,
+      "maximum": 17.0
+    },
+    "movement_tick_budget_ms": 50.0,
+    "serial_path_conservative_lower_bound_exceeds_tick": true,
+    "action_boundary_revalidation_replays_full_proof": true,
+    "authorized_lightweight_retime_api_exists": false,
+    "manual_harness_proof_translation_authorized": false
+  },
+  "stop_reason": "The current formal API cannot rebind the proof to a live exact-window anchor within the demonstrated one-tick budget without a full replay or an unauthorized manual proof translation.",
+  "continuation_requires_new_decision": [
+    "authorize a formal proof retime or relative-time certificate",
+    "or change the trial startup structure and refreeze the exact-window registration point, identity binding and regression gates"
+  ],
+  "authorization": {
+    "smoke_run_12": false,
+    "matrix": false
+  },
+  "preservation": {
+    "smoke_run_10_modified": false,
+    "smoke_run_11_modified": false,
+    "append_only_final_stop": true
+  },
+  "related_harness_commits": [
+    "5eeb778b",
+    "16a4e0d6",
+    "1331db6b"
+  ]
+}

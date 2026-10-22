@@ -10,6 +10,7 @@ from mc2p.motion_nav.online_motion import (InputApplicationLedger, InputApplicat
                                            input_application_has_finished)
 from mc2p.motion_nav.world_model import WorldSessionId
 from mc2p.contracts.common import ContractViolation
+from mc2p.runtime.transport_lifecycle import prove_remote_rejected_before_sampling
 from tests.test_action_receipt import receipt_value
 
 
@@ -64,12 +65,36 @@ class D122JavaPermissionBridgeTests(unittest.TestCase):
         ledger.submit(session, successor, requested_first_tick=1)
         value = dict(receipt_value(episode_id="ep", request_sequence_id=26, input_samples=10),
                      schema_version="mc2p.client_action_receipt.v4", status="rejected",
+                     generation_id=8,
                      reason="safe_default_budget_insufficient", input_applications=applications,
                      dropped_input_samples=0, oldest_retained_input_tick=1, timing_events=events)
-        ledger.observe_receipt(behavior_receipt_from_mapping(value))
+        receipt = behavior_receipt_from_mapping(value)
+        proof = prove_remote_rejected_before_sampling(successor, receipt)
+        ledger.observe_receipt(
+            receipt,
+            confirmed_not_applied_sequence=proof.request_sequence_id,
+        )
         self.assertEqual(ledger.record(26).status, InputApplicationStatus.REJECTED)
         self.assertEqual(len(ledger.record(25).default_samples), 8)
         self.assertTrue(input_application_has_finished(ledger.record(25)))
+
+        missing_value = dict(
+            value,
+            timing_events=[
+                event for event in events if event["status"] != "not_applied"
+            ],
+        )
+        missing_receipt = behavior_receipt_from_mapping(missing_value)
+        unresolved = InputApplicationLedger()
+        unresolved.submit(session, parent, requested_first_tick=1)
+        unresolved.submit(session, successor, requested_first_tick=1)
+        with self.assertRaises(ContractViolation):
+            prove_remote_rejected_before_sampling(successor, missing_receipt)
+        unresolved.observe_receipt(missing_receipt)
+        self.assertEqual(
+            unresolved.record(26).status,
+            InputApplicationStatus.IN_FLIGHT,
+        )
 
     def test_python_and_java_share_default_relation_vectors(self):
         from tests.sim.client_timing import ClientTimingSampler
@@ -112,11 +137,20 @@ class D122JavaPermissionBridgeTests(unittest.TestCase):
         parent = ActionSnapshotV1("ep", 25, 0, 2_000_000_000, movement=MovementV1(forward=1),
                                   safe_default=SafeDefaultV1(2, MovementV1(sneak=True), 8, 400_000_000))
         pending = ActionSnapshotV1("ep", 26, 0, 2_000_000_000, movement=MovementV1(jump=True),
-                                   first_effect_window=MovementTickWindowV1(3, 3))
+                                   first_effect_window=MovementTickWindowV1(1, 1))
         ledger = InputApplicationLedger()
         session = WorldSessionId("w")
         ledger.submit(session, parent, requested_first_tick=1)
-        ledger.submit(session, pending, requested_first_tick=3)
+        ledger.submit(session, pending, requested_first_tick=1)
+        events = []
+        for encoded in filter(None, facts["events"].split(";")):
+            status, tick, sequence = encoded.split(":")
+            events.append(dict(
+                status=status,
+                movement_tick_id=int(tick),
+                episode_id="ep",
+                request_sequence_id=int(sequence),
+            ))
         value = dict(receipt_value(episode_id="ep", request_sequence_id=26,
                                    input_samples=facts["input_samples"]),
                      schema_version="mc2p.client_action_receipt.v4",
@@ -127,13 +161,13 @@ class D122JavaPermissionBridgeTests(unittest.TestCase):
                          episode_id="ep", request_sequence_id=facts["sample_sequence"],
                          sampled_at_jvm_ns=1, state="disallowed", forward=0.0, strafe=0.0,
                          jump=False, sneak=False, sprint=False)],
-                     timing_events=[
-                         dict(status="window_pending", movement_tick_id=facts["pending_tick"],
-                              episode_id="ep", request_sequence_id=26),
-                         dict(status="window_missed", movement_tick_id=facts["missed_tick"],
-                              episode_id="ep", request_sequence_id=26),
-                     ])
-        ledger.observe_receipt(behavior_receipt_from_mapping(value))
+                     timing_events=events)
+        receipt = behavior_receipt_from_mapping(value)
+        proof = prove_remote_rejected_before_sampling(pending, receipt)
+        ledger.observe_receipt(
+            receipt,
+            confirmed_not_applied_sequence=proof.request_sequence_id,
+        )
         self.assertEqual(ledger.record(25).status, InputApplicationStatus.REJECTED)
         self.assertEqual(ledger.record(26).status, InputApplicationStatus.REJECTED)
 

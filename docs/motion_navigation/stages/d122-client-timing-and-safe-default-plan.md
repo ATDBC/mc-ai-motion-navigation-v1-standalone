@@ -138,3 +138,7 @@ v8 在第一场协议 trial 前的 actor 观察门禁停止：67 个 proof 依�
 所以 D122-4 的共用 validator 现在要求：typed Runtime failure 与场景严格匹配；身体终态取精确父请求的 physics sidecar 最后一个 `post_state`；健康必须来自后续正式只读／中性观察或既有正式诊断；driver 必须有界终结并释放 source。证据缺失就失败，不用旧 observation 补空。
 
 下一次继续前需另立语义决定，区分“单请求丢失但通道仍活”和“通道失联”。前者需要正式 typed backend rejection、新观察和责任收尾；后者只能执行默认后报告身体责任未解决或对应 typed 终态。本阶段不实现这两条新路径，不再运行 Fabric。
+
+## D126 纠偏
+
+运动夹具现在从服务器实际使用的同一组有序 fixture rows 生成已知地图，并写入 Runtime 自己的 owner。原 D122-4 可见性门槛保留为历史失败，不再作为运动 trial 前置。D122-4 的 transport 问题仍保持打开，转由 D123-2 处理。

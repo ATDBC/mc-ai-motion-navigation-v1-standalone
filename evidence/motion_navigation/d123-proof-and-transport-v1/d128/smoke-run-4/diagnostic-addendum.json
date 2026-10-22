@@ -1,0 +1,22 @@
+{
+  "schema": "mc2p.d129-fixture-diagnostic-addendum.v1",
+  "run": "smoke-run-4",
+  "statement": "The stale local z reference was one independent rejection cause. A later exact replay also found the frozen y bounds remained at 64 while the live fixture feet_y was 0.",
+  "independent_causes": [
+    {
+      "field": "reference_point.z",
+      "difference": 1.0730168353845215e-06,
+      "tolerance": 1e-09
+    },
+    {
+      "fields": [
+        "minimum_feet_y",
+        "maximum_feet_y"
+      ],
+      "frozen_center": 64.0,
+      "live_center": 0.0,
+      "difference": 64.0
+    }
+  ],
+  "history_rewritten": false
+}

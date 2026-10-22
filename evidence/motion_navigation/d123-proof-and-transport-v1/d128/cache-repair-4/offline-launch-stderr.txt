@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\scripts\fabric_deployment_launch.py", line 161, in <module>
+    print(export_launch())
+          ^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\scripts\fabric_deployment_launch.py", line 154, in export_launch
+    "assets": verify_assets(gradle_home=gradle_home),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\scripts\fabric_deployment_launch.py", line 113, in verify_assets
+    raise ValueError("asset metadata is not the locked Minecraft release")
+ValueError: asset metadata is not the locked Minecraft release

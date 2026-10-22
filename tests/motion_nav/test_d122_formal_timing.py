@@ -21,9 +21,13 @@ class D122FormalTimingProjectionTests(unittest.TestCase):
     def test_never_transport_failure_closes_the_formal_driver_lifecycle(self):
         row = run_case("never_delivered", direction_index=0)
         self.assertIsNone(row["error"])
-        self.assertTrue(row["source_released"])
+        self.assertFalse(row["source_released"])
         self.assertFalse(row["prepared_frame"])
-        self.assertIn(row["driver_state"], {"failed", "stopped", "cancelled"})
+        self.assertEqual(row["driver_state"], "unresolved")
+        self.assertEqual(
+            [fact["kind"] for fact in row["transport_facts"]],
+            ["delivery_unknown"],
+        )
 
     def test_formal_reachable_reject_and_cancel_are_bounded(self):
         for policy in ("explicit_reject", "cancel"):
@@ -129,8 +133,11 @@ class D122FormalTimingProjectionTests(unittest.TestCase):
         timely = [row for row in result["runs"]
                   if row["policy"] == "timely_l1"]
         bounded = [row for row in result["runs"]
-                   if row["policy"] != "timely_l1"]
-        fallback = [row for row in bounded if row["policy"] != "cancel"]
+                   if row["policy"] not in {"timely_l1", "never_delivered"}]
+        unresolved = [row for row in result["runs"]
+                      if row["policy"] == "never_delivered"]
+        fallback = [row for row in result["runs"]
+                    if row["policy"] in {"late_l2", "explicit_reject", "never_delivered"}]
         for row in timely:
             self.assertEqual(len(row["successor_samples"]), 1)
             self.assertEqual(row["successor_samples"][0]["movement_tick_id"], 27)
@@ -143,6 +150,13 @@ class D122FormalTimingProjectionTests(unittest.TestCase):
             self.assertIsNone(row["error"])
         for row in fallback:
             self.assertEqual(len(row["default_samples"]), 9)
+        for row in unresolved:
+            self.assertFalse(row["source_released"])
+            self.assertEqual(row["driver_state"], "unresolved")
+            self.assertEqual(
+                [fact["kind"] for fact in row["transport_facts"]],
+                ["delivery_unknown"],
+            )
 
     def test_v1_component_keeps_the_legacy_unwindowed_projection(self):
         case = ExecutionCase()

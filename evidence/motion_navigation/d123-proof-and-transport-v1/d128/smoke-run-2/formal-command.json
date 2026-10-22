@@ -1,0 +1,4 @@
+{
+  "schema": "mc2p.d129-formal-command.v1",
+  "command": "python scripts\\d123_fabric_transport.py --launch smoke --output evidence\\motion_navigation\\d123-proof-and-transport-v1\\d128\\smoke-run-2"
+}

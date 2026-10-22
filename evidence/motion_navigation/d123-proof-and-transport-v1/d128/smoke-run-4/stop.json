@@ -1,0 +1,49 @@
+{
+  "schema": "mc2p.d129-invalid-fixture-run.v1",
+  "status": "INVALID_FIXTURE_RUN",
+  "classification": "ENVIRONMENT_TOOLING_FIXTURE",
+  "formal_command": "python scripts\\d123_fabric_transport.py --launch smoke --output evidence\\motion_navigation\\d123-proof-and-transport-v1\\d128\\smoke-run-4",
+  "offline_preflight": "PASS",
+  "probe_return_code": 1,
+  "source_run": "artifacts/fabric-deployment/20261022T030205148113Z-30fc96b2",
+  "execution_boundary": {
+    "minecraft_started": true,
+    "fabric_started": true,
+    "pre_trial_started": true,
+    "movement_trial_started": false,
+    "completed_trials": 0,
+    "sessions": 0,
+    "smoke": "0/3",
+    "matrix": "NOT_RUN"
+  },
+  "failure": {
+    "type": "RuntimeError",
+    "reason": "first proof replay used stale hard-coded successor reference",
+    "reported_reasons": [
+      "start_window_commands_failed",
+      "successor_entry"
+    ],
+    "frozen_reference_local_z": 2.0502355877734346,
+    "stale_harness_local_z": 2.05023666079027,
+    "absolute_difference": 1.0730168353845215e-06,
+    "window_tolerance": 1e-09
+  },
+  "attempt": {
+    "consumed": false,
+    "stage_stopped": false,
+    "rerun_authorized": true,
+    "retry_output": "evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-5"
+  },
+  "product_conclusion": "NONE",
+  "policy": "D129",
+  "manifest": {
+    "path": "manifest.json",
+    "sha256": "1a75fb6a8f66d3b28a5242e4d76c583e7e3cf7d1a4fcff80bdd6137ef7549f4c",
+    "bound_file_count": 10
+  },
+  "constraints": {
+    "same_output_rerun": "FORBIDDEN",
+    "product_semantics_change": "FORBIDDEN",
+    "matrix_before_smoke_3_of_3": "FORBIDDEN"
+  }
+}

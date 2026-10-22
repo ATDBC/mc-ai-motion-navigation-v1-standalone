@@ -17,6 +17,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(ROOT))
 
 from scripts import d122_fabric_timing as d122
+from scripts import d123_transport_preflight
 from scripts.control_probe_core import write_json_atomic
 
 MAX_CALIBRATION_TICKS = 80
@@ -57,9 +58,14 @@ def within_bounds(tick, wall_ns, start_tick, start_wall_ns):
 
 
 def dispatch(mode, offline, launch):
-    """Structural preflight ordering seam only; this probe has no live launcher."""
-    # Product modes intentionally have no implementation before D123-2 sign off.
-    if mode != "calibration-only" or offline.get("status") != "PASS":
+    """Structural preflight ordering seam; the caller still owns any launcher."""
+    if offline.get("status") != "PASS":
+        return 2
+    if mode == "calibration-only":
+        return launch()
+    transport = offline.get("transport_lifecycle")
+    if (mode not in {"smoke", "matrix"}
+            or not d123_transport_preflight.validate(transport)):
         return 2
     return launch()
 

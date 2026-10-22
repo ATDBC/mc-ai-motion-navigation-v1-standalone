@@ -1,0 +1,21 @@
+{
+  "command": [
+    "D:\\My_project\\mc_ai\\.gradle\\wrapper\\dists\\gradle-8.8-bin\\cx57xx7zsiden606ef8ncmv16\\gradle-8.8\\bin\\gradle.bat",
+    "--no-daemon",
+    "--console=plain",
+    "build"
+  ],
+  "build_gradle_sha256": "aec3a5c11d9b998169601dcbfe10bdbe7c6b4c78919093f0421c535130a02be6",
+  "versions": {
+    "fabric_loader": "0.15.11",
+    "fabric_api": "0.100.6+1.21",
+    "gradle": "8.8",
+    "lwjgl": "3.3.3",
+    "minecraft": "1.21",
+    "yarn": "1.21+build.9"
+  },
+  "schema": "mc2p.d129-cache-prefetch.v1",
+  "gradle_user_home": "D:\\My_project\\mc_ai\\.gradle",
+  "cwd": "D:\\My_project\\mc_ai\\deployment\\fabric-observation-probe",
+  "java_home": "D:\\My_project\\mc_ai\\.venv\\Library"
+}

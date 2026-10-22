@@ -1,0 +1,10 @@
+{
+  "schema": "mc2p.d129-formal-offline-launch.v1",
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "scripts/fabric_deployment_launch.py"
+  ],
+  "java_home": "D:\\My_project\\mc_ai\\.venv\\Library",
+  "gradle_user_home": "D:\\My_project\\mc_ai\\.gradle",
+  "tracked_product_diff": []
+}

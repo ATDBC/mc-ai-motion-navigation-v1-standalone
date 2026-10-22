@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\scripts\probe_fabric_deployment_observation.py", line 2865, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\My_project\mc_ai\scripts\probe_fabric_deployment_observation.py", line 2771, in main
+    launch_path = args.launch_json or export_launch(gradle_home=gradle_home)
+                                      ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\scripts\fabric_deployment_launch.py", line 148, in export_launch
+    raise RuntimeError(f"independent launch export failed: {log_dir}")
+RuntimeError: independent launch export failed: D:\My_project\mc_ai\artifacts\fabric-deployment-launch\20261022T025702657223Z-e1915832

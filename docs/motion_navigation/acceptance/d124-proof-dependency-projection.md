@@ -118,3 +118,7 @@ D124 完成只签署依赖合同与已证明范围。剩余 3 格缺失就继续
 `targeted/run-1` 是实现过程中的首次探针，`targeted/run-2` 是首次实现字节。`targeted/run-3` 保留独立审查修复后的过程记录，但源码清单尚未纳入 `safe_ground_control.py`；`targeted/run-4` 保留首次完整源码清单；`targeted/run-5` 绑定跨 section 修复后的最终生产字节和 action 体积；`targeted/run-6` 增加活塞动态边界审计；`targeted/run-7` 因 Java float token 写错而停止并保留失败；`targeted/run-8` 是修正后的最终规则审计。D120 紧凑记录保留四方向的旧／新签名和原始结果哈希；D122 紧凑记录保留 20 场结果、性能分位数和完整结果哈希。历史 D121—D123 证据未改写。
 
 完整 Windows 源码树正逆分片、独立 standalone 正逆分片、Java 相邻门禁和最终导出均已通过。首次源码全量与首次 standalone 的失败报告没有改写：前者暴露旧合同断言，后者暴露缺少 D122 紧凑历史和 D123 历史证据；限定修正后最终字节全绿。完整原始分片报告保留在本地 `.tmp/d124-raw/windows/`，公开 `windows/summary.json` 记录其 SHA-256、大小与统计。D124 只签署依赖合同与已证明范围，不授权 D123-2、连续跑酷或新 Fabric。
+
+## D126 纠偏记录
+
+D126 没有修改 D124 proof 或生产地图语义。四方向仍各有 58 个必要依赖；测试夹具以已知地图提供这些事实。少一格和改错材质的反例继续由同一门禁拒绝。

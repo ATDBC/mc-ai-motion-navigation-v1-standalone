@@ -1,0 +1,25 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\scripts\probe_fabric_deployment_observation.py", line 1753, in run_worker
+    stages, rows, episode_checks = run_fabric_runtime(
+                                   ~~~~~~~~~~~~~~~~~~^
+        runtime, backend, episode, d123_directory, deadline,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        direction_index=direction, repetition=repetition,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\My_project\mc_ai\scripts\d123_fabric_transport.py", line 668, in run_fabric_runtime
+    return d122.run_fabric_runtime(
+           ~~~~~~~~~~~~~~~~~~~~~~~^
+        runtime, backend, episode, directory, deadline_ns,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<9 lines>...
+        expected_trial_count=3,
+        ^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\My_project\mc_ai\scripts\d122_fabric_timing.py", line 1331, in run_fabric_runtime
+    None if current is None else runtime.observation.sequence_id
+            ^^^^^^^
+NameError: name 'current' is not defined

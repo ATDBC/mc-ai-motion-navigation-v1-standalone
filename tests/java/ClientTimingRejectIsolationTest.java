@@ -34,6 +34,7 @@ public final class ClientTimingRejectIsolationTest {
         var admitted = ClientTimingAdmission.admit(gate, successor, 7, 100_000_000L, now[0], 1);
         yes(admitted.denial() == null);
         yes(successor.requiredSafeDefaultBudgetNs(1) > 100_000_000L); // Executor rejects before stageWindowed.
+        input.reportNotApplied(input.sampleCount() + 1L, "ep", 26);
         boolean installed = input.rejectTimingForRequest(26, false);
         yes(!installed);
         yes(ClientTimingAdmission.preStageRejectionDisposition(successor, false)

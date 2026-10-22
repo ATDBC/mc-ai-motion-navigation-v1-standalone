@@ -193,6 +193,7 @@ class ClientTimingStatusV1(StrEnum):
     WINDOW_MISSED = "window_missed"
     DEFAULT_ACTIVE = "default_active"
     DEFAULT_EXHAUSTED = "default_exhausted"
+    NOT_APPLIED = "not_applied"
 
 
 @dataclass(frozen=True, slots=True)

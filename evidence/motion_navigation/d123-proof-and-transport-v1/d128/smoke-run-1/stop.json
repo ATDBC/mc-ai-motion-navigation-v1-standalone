@@ -1,0 +1,97 @@
+{
+  "schema": "mc2p.d128-invalid-environment-run.v1",
+  "status": "INVALID_ENVIRONMENT_RUN",
+  "decision": "D128",
+  "defect": {
+    "id": "D128-ENV-02",
+    "kind": "BUILD_CACHE"
+  },
+  "formal_command": "python scripts\\d123_fabric_transport.py --launch smoke --output evidence\\motion_navigation\\d123-proof-and-transport-v1\\d128\\smoke-run-1",
+  "offline_preflight": {
+    "status": "PASS",
+    "fabric_started": false,
+    "component_smoke": {
+      "passed": 3,
+      "total": 3
+    },
+    "component_matrix": {
+      "passed": 36,
+      "total": 36
+    },
+    "java_overlay": "PASS",
+    "d128_env_01_jdk_fix": "PASS"
+  },
+  "probe": {
+    "return_code": 1,
+    "source_run": null,
+    "build_evidence": "artifacts/fabric-deployment-build/20261022T024718508750Z-0420fce8"
+  },
+  "build_failure": {
+    "task": ":remapJar",
+    "configuration": ":minecraftRuntimeLibraries",
+    "mode": "offline",
+    "reason": "required LWJGL 3.3.3 Windows native artifacts were absent from the fixed cache",
+    "families": [
+      "lwjgl-freetype",
+      "lwjgl-glfw",
+      "lwjgl-jemalloc",
+      "lwjgl-openal",
+      "lwjgl-opengl",
+      "lwjgl-stb",
+      "lwjgl-tinyfd",
+      "lwjgl"
+    ],
+    "classifiers": [
+      "natives-windows",
+      "natives-windows-arm64",
+      "natives-windows-x86"
+    ],
+    "missing_artifact_count": 24,
+    "completed_before_failure": {
+      "compileJava": "UP_TO_DATE",
+      "processResources": "UP_TO_DATE",
+      "classes": "UP_TO_DATE",
+      "jar": "UP_TO_DATE"
+    },
+    "bounded_process": {
+      "process_stopped": true,
+      "cleanup_failures": []
+    }
+  },
+  "execution_boundary": {
+    "minecraft_started": false,
+    "fabric_started": false,
+    "pre_trial_started": false,
+    "movement_trial_started": false,
+    "smoke": {
+      "passed": 0,
+      "total": 3
+    },
+    "matrix": "NOT_RUN",
+    "fabric_product_conclusion": "NONE"
+  },
+  "attempt": {
+    "consumed": false,
+    "stage_stopped": false,
+    "rerun_authorized": true,
+    "retry_output": "evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-2",
+    "reason": "environment build failed before Minecraft/Fabric and the first movement trial"
+  },
+  "constraints": {
+    "same_output_rerun": "FORBIDDEN",
+    "environment_cache_repair": "AUTHORIZED_BY_D129",
+    "product_code_change": "FORBIDDEN",
+    "dependency_versions": "UNCHANGED_BUILD_GRADLE_ONLY"
+  },
+  "manifest": {
+    "path": "manifest.json",
+    "sha256": "1eb408b9ee3de81da0ec68241b1ac64c329f7e6663d07f55477f51a7070a5bd8",
+    "bound_file_count": 6
+  },
+  "classification": {
+    "category": "ENVIRONMENT_TOOLING_FIXTURE",
+    "product_failure": false,
+    "product_conclusion": "NONE",
+    "policy": "D129"
+  }
+}

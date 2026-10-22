@@ -1,9 +1,13 @@
 # D123：先查清证明依赖，再区分传输事实
 
+2026-10-22，D123-3 第一次正式 south smoke 在同进程 offline preflight 的 Java 工具发现阶段停止。正式进程的 `JAVA_HOME` 为空，`PATH` 没有 Java、JDK 或仓库 `.venv`；`discover_java_tools()` 找不到 OpenJDK 21，命令以 1 退出。Minecraft／Fabric、pre-trial 和 movement trial 均未开始，smoke 0／3，矩阵未运行。按本决定第 5 节，Fabric attempt 未消耗，但 D123-3 状态为 **PARTIAL／STOPPED**，本阶段不能补环境后重跑。
+
+2026-10-22，D123-2 已完成并签署，状态为 **COMPLETED／SIGNED**。正式边界现在区分 `local_not_dispatched`、`remote_rejected_before_sampling`、`delivery_unknown` 和 `channel_lost`。现有 V4 receipt 不能单独证明 windowed full-request 在采样前未应用，因此 wire 只新增最小 `not_applied` timing event；`operation_rejected` 继续不能作为整条请求的未应用证明。交付未知或通道失联时，Runtime 进入 `failed`，driver 进入不可逆 `UNRESOLVED`，先封存 ledger、source、route 和 registry 的 `EXECUTING`／`SAFE_TAIL` 身份，再关闭 backend；resource-only close 单独报告本地资源，不冒充身体责任释放。正式 preflight 的 `timely`／`late_window_rejected`／`remote_rejected_before_sampling` 为 3／3。Windows 源码树正逆各 212 模块／2788 项、独立 standalone 正逆各 211 模块／2764 项，失败、错误、超时、跳过和清理失败均为 0；Java／wire 38／38，standalone export／verify 3222 个文件。D123-2 签署时没有运行 Minecraft／Fabric。
+
 2026-10-20，D123-1 已明确授权并执行到固定视点只读验证，现为 **PARTIAL／STOPPED，独立审查 PASS／已签署**。全部 67 个依赖（含 12 个下层格）保留。Windows 原生可见性核心完成四方向共 1248 个相机朝向样本，每方向 12 格均未出现可见空气；其中 9 格另有不依赖相机朝向的完整立方体遮挡论证。仅转头无法补齐所有依赖，继续需要改变观察位置或新增 sensing，触发预登记停止条件。未启动新的 Minecraft／Fabric，未提交 movement trial；actor-only 实机校准和两阶段启动命令未交付。D123-0 继续 PARTIAL／STOPPED，删除依赖未授权；本次签署仅批准 D123-1 PARTIAL／STOPPED 的停止收尾，不授权 D123-2；D123-2／D123-3 未开始。见 D123 验收第 10 节和 `evidence/motion_navigation/d123-proof-and-transport-v1/d123-1/fixed-eye-run-2/stop.json`。
 
 
-日期：2026-10-20。状态：**D123-0 PARTIAL／STOPPED，已签署；D123-1 PARTIAL／STOPPED，独立审查 PASS／已签署**。
+日期：2026-10-22。状态：**D123-0 PARTIAL／STOPPED，已签署；D123-1 PARTIAL／STOPPED，已签署；D123-2 COMPLETED／SIGNED；D123-3 PARTIAL／STOPPED**。
 
 关联：[D122](0122-enforce-first-effect-window-and-prearm-safe-default.md)、[阶段计划](../stages/d123-proof-dependency-and-transport-loss-plan.md)、[验收](../acceptance/d123-proof-dependency-and-transport-loss.md)。
 
@@ -147,3 +151,25 @@ D122 的历史结果保持不变：D122-3 已通过，D122-4 仍为 `PARTIAL／S
 D123-0 最终结论为 PARTIAL／STOPPED，独立审查 PASS／已签署。当前 `BlockGeometry` 正式契约下，尚不能证明删除 12 个下层依赖格安全；签署的是只读实验及停止结论，没有批准删除。正式 gate 重算 396 行：PASS 52、FACT_MISMATCH 160、NEEDS_WORLD 100、NEEDS_WORLD_AND_FACT_MISMATCH 84。D120 四份原始 coverage 的历史哈希核验通过，972 个入口和 2916 个后缀重算完全一致，旧成功退步 0；最终定向检查 40／40。实验、修正和历史失败见验收第 8／9 节及 `evidence/motion_navigation/d123-proof-and-transport-v1/d123-0/`。
 
 D123-1 没有自动进入；现有证据支持后续保留全部 12 个依赖并验证 actor-only 观察／校准路线。该校准尚未运行，D123-1—D123-3 仍未运行，也没有 D123 Fabric 通过结论。D122 和本批历史失败均保持原结论。
+
+## 9. D126 纠偏
+
+2026-10-21，D123-1 的 actor-only 可见性结果改作独立视觉诊断，不再是已知地图运动试验的前置条件。它证明固定视点不能看见全部事实，但不能推出测试已知地图不可用。
+
+D123-2 只处理 transport 生命周期，可在 D126 通过后开始。D123-3 的前置条件改为 D126 已知地图门禁和 D123-2；不再要求 D123-1 视觉诊断通过。D123-0／D123-1 的历史状态和证据不改写。
+
+## 10. D123-2 结果
+
+D123-2 采用四个互斥事实。`local_not_dispatched` 表示请求未出站；`remote_rejected_before_sampling` 必须有完整 request identity、零目标 input application 和唯一 `not_applied` 因果 tick；`delivery_unknown` 用 `PARTIAL_SEND` 或 `SENT_NO_RECEIPT` 表达发送进度，通道健康为未知；`channel_lost` 表示通道已经 seal。分类不再由异常发生在 send 还是 receive 调用中推断。
+
+windowed full-request 缺少 `not_applied`、identity／generation 错误或出现目标 input application 时，目标 ledger 保持 `IN_FLIGHT` 并进入 `UNRESOLVED`。driver 先保存不可变责任快照，再允许 backend seal。普通 `release`、discard、cancel 和重试都不能改写该终态。资源关闭读取实际 worker、receiver、returner、feeder、trace、backend 和 handle 报告；保留 `EXECUTING`／`SAFE_TAIL` proof 责任本身不算本地资源关闭失败。
+
+D123 产品 preflight 只接受仓内 typed 结果，不接受调用方提供的 PASS 字典。正式组件链三态为 3／3；四类 transport 定向合同、最小 Java wire 和 Fabric backend 相邻边界均已通过独立代码复审。公开证据位于 `evidence/motion_navigation/d123-proof-and-transport-v1/d123-2/run-1/`。本批没有运行 Fabric，不产生 smoke 或 36 场矩阵结论。
+
+发布收尾中，源码树前一最终字节正逆各 212 模块／2787 项全绿。其后只增加一项 D125 source-only native build 测试；最终源码树正逆各 212／2788，全零失败、错误、超时、跳过和清理失败。旧 standalone 正序在 211 个模块中有 210 个通过，D125 因导出不携带生成 DLL 而出现 1 error；修复后全新 source-only 快照已从导出的 native 源码实际构建 DLL，D125 10／10。最终 standalone 正逆各 211／2764，同样全零。Java／wire 38／38，export／verify 3222 个文件。旧 standalone 失败和 D122／D123-0／D123-1 历史证据不回写。
+
+## 11. D123-3 正式环境停止
+
+D123-3 harness 经两轮独立复核通过。冻结提交依次为 `bf9dcfb3`、`1e031ff7`、`c47cadd5` 和 `1a835b13`；组件 smoke 3／3、组件矩阵 36／36。复核 round 1 的受影响与相邻检查为 130／130；round 2 的相邻检查为 39／39，D123 其余 12 项和修正后的目标项 1／1 通过。正式入口在启动 Minecraft 前必须同进程重跑完整 offline preflight，并冻结 32 个生产 raw 文件和 59 个完整 launcher raw 文件。
+
+唯一一次正式 smoke 命令在 Java 工具发现阶段触发既有环境门禁，没有进入 Fabric。该停止不改变 harness 代码复核结论，也不产生任何 Fabric 产品结论。后续若要修正正式终端的 Java 暴露方式并重新运行，必须另立决定，不能把本次未消耗 attempt 解释为允许在 D123-3 内重试。手工封存证据位于 `evidence/motion_navigation/d123-proof-and-transport-v1/d123-3/smoke-run-1/`。
