@@ -1,0 +1,137 @@
+{
+ "test_passed": true,
+ "directions": [
+  {
+   "anchor_movement_tick": 6,
+   "parent_window": [
+    7,
+    7
+   ],
+   "calculator_tick_at_dispatch": 6,
+   "anchor_to_dispatch_ms": 3252.4,
+   "real_time_ticks_elapsed_at_20hz": 65,
+   "phases_ms": {
+    "_replay_verified_commands (all callers)": [
+     282.5
+    ],
+    "assemble_frozen_fixture_pretrial (replay)": [
+     315.2
+    ],
+    "seal_snapshot_version": [
+     2714.0
+    ],
+    "bind_fixed_successor": [
+     52.1
+    ],
+    "install_manual_route": [
+     0.3
+    ],
+    "admit_committed": [
+     17.8
+    ],
+    "driver.prepare_proposals": [
+     2.3
+    ]
+   }
+  },
+  {
+   "anchor_movement_tick": 6,
+   "parent_window": [
+    7,
+    7
+   ],
+   "calculator_tick_at_dispatch": 6,
+   "anchor_to_dispatch_ms": 3053.5,
+   "real_time_ticks_elapsed_at_20hz": 61,
+   "phases_ms": {
+    "_replay_verified_commands (all callers)": [
+     257.3
+    ],
+    "assemble_frozen_fixture_pretrial (replay)": [
+     286.8
+    ],
+    "seal_snapshot_version": [
+     2654.4
+    ],
+    "bind_fixed_successor": [
+     39.5
+    ],
+    "install_manual_route": [
+     0.2
+    ],
+    "admit_committed": [
+     13.6
+    ],
+    "driver.prepare_proposals": [
+     1.4
+    ]
+   }
+  },
+  {
+   "anchor_movement_tick": 6,
+   "parent_window": [
+    7,
+    7
+   ],
+   "calculator_tick_at_dispatch": 6,
+   "anchor_to_dispatch_ms": 3193.6,
+   "real_time_ticks_elapsed_at_20hz": 63,
+   "phases_ms": {
+    "_replay_verified_commands (all callers)": [
+     251.8
+    ],
+    "assemble_frozen_fixture_pretrial (replay)": [
+     283.1
+    ],
+    "seal_snapshot_version": [
+     2680.9
+    ],
+    "bind_fixed_successor": [
+     43.1
+    ],
+    "install_manual_route": [
+     0.3
+    ],
+    "admit_committed": [
+     14.0
+    ],
+    "driver.prepare_proposals": [
+     1.4
+    ]
+   }
+  },
+  {
+   "anchor_movement_tick": 6,
+   "parent_window": [
+    7,
+    7
+   ],
+   "calculator_tick_at_dispatch": 6,
+   "anchor_to_dispatch_ms": 3217.0,
+   "real_time_ticks_elapsed_at_20hz": 64,
+   "phases_ms": {
+    "_replay_verified_commands (all callers)": [
+     250.5
+    ],
+    "assemble_frozen_fixture_pretrial (replay)": [
+     277.9
+    ],
+    "seal_snapshot_version": [
+     2822.1
+    ],
+    "bind_fixed_successor": [
+     40.3
+    ],
+    "install_manual_route": [
+     0.3
+    ],
+    "admit_committed": [
+     13.8
+    ],
+    "driver.prepare_proposals": [
+     1.5
+    ]
+   }
+  }
+ ]
+}

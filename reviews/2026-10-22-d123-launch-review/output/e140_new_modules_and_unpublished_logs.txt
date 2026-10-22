@@ -1,0 +1,40 @@
+test_d122_fabric_timing  Ran 18 tests in 53.720s OK
+test_d123_fabric_transport  Ran 16 tests in 217.544s FAILED (failures=1, errors=4)
+          4 FileNotFoundError: [Errno 2] No such file or directory: '<PROJECT>/.venv'
+test_d125_three_fact_observation  Ran 10 tests in 23.628s FAILED (errors=14)
+          1 NotImplementedError: cannot instantiate 'WindowsPath' on your system
+         13 OSError: <PROJECT>/artifacts/surface-cache/native-build/Release/surface_cache.dll: cannot open shared object file: No such file or directory
+test_d126_known_map_motion  Ran 8 tests in 3.646s OK
+test_d127_transport_lifecycle  Ran 19 tests in 30.494s FAILED (errors=1)
+          1 FileNotFoundError: [Errno 2] No such file or directory: 'D:/My_project/mc_ai/.venv/Library/bin/javac.exe'
+test_d128_repository_jdk_launch  Ran 10 tests in 0.013s FAILED (errors=7)
+          7 FileNotFoundError: [Errno 2] No such file or directory: '<PROJECT>/.venv'
+test_d129_invalid_harness  Ran 0 tests in 0.002s FAILED (errors=1)
+          1 ValueError: D129 run-10 manifest hash differs: source-run/client-0/console.log
+
+manifest 绑定、但公开快照中不存在的文件：
+24
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-10/source-run/client-0/console.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-10/source-run/client-0/logs/debug.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-10/source-run/client-0/logs/latest.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-10/source-run/server/logs/latest.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-10/source-run/server-console.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-10/source-run/worker.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-11/source-run/client-0/console.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-11/source-run/client-0/logs/debug.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-11/source-run/client-0/logs/latest.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-11/source-run/server/logs/latest.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-11/source-run/server-console.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-11/source-run/worker.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-8/source-run/client-0/console.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-8/source-run/client-0/logs/debug.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-8/source-run/client-0/logs/latest.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-8/source-run/server/logs/latest.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-8/source-run/server-console.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-8/source-run/worker.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-9/source-run/client-0/console.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-9/source-run/client-0/logs/debug.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-9/source-run/client-0/logs/latest.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-9/source-run/server/logs/latest.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-9/source-run/server-console.log
+evidence/motion_navigation/d123-proof-and-transport-v1/d128/smoke-run-9/source-run/worker.log

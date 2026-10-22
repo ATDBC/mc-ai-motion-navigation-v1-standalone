@@ -1,0 +1,134 @@
+{
+ "0": {
+  "prelude_fixed_point": true,
+  "start_tick": 1,
+  "exit_tick": 26,
+  "same_as_k0_ignoring_tick_ids": {
+   "trajectory": true,
+   "tick_inputs": true,
+   "fallback_tails": true,
+   "release_safe": true,
+   "dependencies": true,
+   "successor_inputs": true,
+   "successor_exit": true
+  },
+  "successor_binding": "solved",
+  "successor_first_start_tick": 1,
+  "successor_window": [
+   27,
+   27
+  ],
+  "prelude_plus_replay_ms": 107.8,
+  "bind_fixed_successor_ms": 38.3
+ },
+ "1": {
+  "prelude_fixed_point": true,
+  "start_tick": 2,
+  "exit_tick": 27,
+  "same_as_k0_ignoring_tick_ids": {
+   "trajectory": true,
+   "tick_inputs": true,
+   "fallback_tails": false,
+   "release_safe": true,
+   "dependencies": true,
+   "successor_inputs": true,
+   "successor_exit": true
+  },
+  "successor_binding": "solved",
+  "successor_first_start_tick": 2,
+  "successor_window": [
+   28,
+   28
+  ],
+  "prelude_plus_replay_ms": 106.0,
+  "bind_fixed_successor_ms": 38.9
+ },
+ "5": {
+  "prelude_fixed_point": true,
+  "start_tick": 6,
+  "exit_tick": 31,
+  "same_as_k0_ignoring_tick_ids": {
+   "trajectory": true,
+   "tick_inputs": true,
+   "fallback_tails": false,
+   "release_safe": true,
+   "dependencies": true,
+   "successor_inputs": true,
+   "successor_exit": true
+  },
+  "successor_binding": "solved",
+  "successor_first_start_tick": 6,
+  "successor_window": [
+   32,
+   32
+  ],
+  "prelude_plus_replay_ms": 105.3,
+  "bind_fixed_successor_ms": 37.9
+ },
+ "10": {
+  "prelude_fixed_point": true,
+  "start_tick": 11,
+  "exit_tick": 36,
+  "same_as_k0_ignoring_tick_ids": {
+   "trajectory": true,
+   "tick_inputs": true,
+   "fallback_tails": false,
+   "release_safe": true,
+   "dependencies": true,
+   "successor_inputs": true,
+   "successor_exit": true
+  },
+  "successor_binding": "solved",
+  "successor_first_start_tick": 11,
+  "successor_window": [
+   37,
+   37
+  ],
+  "prelude_plus_replay_ms": 109.5,
+  "bind_fixed_successor_ms": 37.9
+ },
+ "20": {
+  "prelude_fixed_point": true,
+  "start_tick": 21,
+  "exit_tick": 46,
+  "same_as_k0_ignoring_tick_ids": {
+   "trajectory": true,
+   "tick_inputs": true,
+   "fallback_tails": false,
+   "release_safe": true,
+   "dependencies": true,
+   "successor_inputs": true,
+   "successor_exit": true
+  },
+  "successor_binding": "solved",
+  "successor_first_start_tick": 21,
+  "successor_window": [
+   47,
+   47
+  ],
+  "prelude_plus_replay_ms": 109.5,
+  "bind_fixed_successor_ms": 39.1
+ },
+ "40": {
+  "prelude_fixed_point": true,
+  "start_tick": 41,
+  "exit_tick": 66,
+  "same_as_k0_ignoring_tick_ids": {
+   "trajectory": true,
+   "tick_inputs": true,
+   "fallback_tails": false,
+   "release_safe": true,
+   "dependencies": true,
+   "successor_inputs": true,
+   "successor_exit": true
+  },
+  "successor_binding": "solved",
+  "successor_first_start_tick": 41,
+  "successor_window": [
+   67,
+   67
+  ],
+  "prelude_plus_replay_ms": 112.3,
+  "bind_fixed_successor_ms": 38.9
+ }
+}

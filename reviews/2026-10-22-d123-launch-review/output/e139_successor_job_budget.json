@@ -1,0 +1,25 @@
+{
+ "test_passed": true,
+ "prepared_jobs": [
+  {
+   "execute_job_ms": 367.8,
+   "result_type": "PreparedWireMessage",
+   "parent_ticks_available_ms": 1300
+  },
+  {
+   "execute_job_ms": 408.0,
+   "result_type": "PreparedWireMessage",
+   "parent_ticks_available_ms": 1300
+  },
+  {
+   "execute_job_ms": 444.1,
+   "result_type": "PreparedWireMessage",
+   "parent_ticks_available_ms": 1300
+  },
+  {
+   "execute_job_ms": 367.5,
+   "result_type": "PreparedWireMessage",
+   "parent_ticks_available_ms": 1300
+  }
+ ]
+}
